@@ -1,0 +1,46 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyw~
+*.spec
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# Databases (keep your .db backed up separately - never commit it)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Logs & runtime state
+*.log
+*.log.*
+mainbox_status.json
+dismissed_candidates.json
+pipeline_ui_config.json
+
+# Sensitive / personal data
+contacts.json
+contact_aliases.json
+settings.json
+*.key
+*.pem
+*.env
+.env
+secrets.*
+bridge_data/
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
