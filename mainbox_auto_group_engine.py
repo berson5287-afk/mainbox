@@ -25,7 +25,7 @@ import tempfile
 import zlib  # v1.1.0: cheap order-independent membership signature
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple
 
-ENGINE_VERSION = "1.2.0"
+ENGINE_VERSION = "1.2.1"
 # v1.2.0 CHANGELOG (integration-audit batch; three deliberate behavior changes, all
 # in the precision-improving direction, each individually tested):
 #   1. IDENTIFIER CAPTURE STOPS AT THE NEXT LABEL: 'Job 1598 PO 100' now extracts
@@ -333,7 +333,13 @@ def extract_business_ids(value: Any) -> Dict[str, Set[str]]:
     ):
         for m in re.finditer(pat, upper):
             c = compact(m.group(0)).upper()
-            if len(c) >= 4:
+            # v1.2.1: a loose (unlabeled) code must contain BOTH a letter and a digit.
+            # Pure-numeric fragments are almost always street numbers or quantities
+            # ("31-03" -> "3103", "20-14" -> "2014") rather than job/quote codes, and
+            # they manufacture false id matches between unrelated jobs at nearby
+            # addresses. Labeled ids (JOB/PO/...) are unaffected: they parse via
+            # _clean_identifier, which requires only a digit.
+            if len(c) >= 4 and any(ch.isalpha() for ch in c) and any(ch.isdigit() for ch in c):
                 loose.add(c)
     out["loose"] = loose
     return out
@@ -985,6 +991,7 @@ class AutoGroupEngine:
                     _matched_id_kinds.add(kind)
                     weight = 760 if kind in {"po", "job", "rfq"} else 620
                     c.score += weight + min(60, 15 * len(shared)); c.families.add("business_id")
+                    c.details["business_id_labeled"] = True  # v1.2.1: a LABELED id (JOB/PO/RFQ/QUOTE/ORDER/REF) is real corroboration
                     id_hits.extend(f"{kind.upper()} {x}" for x in sorted(shared))
                 elif _has_lineage:
                     # v1.2.0 policy split: PO/QUOTE/ORDER/REF/RFQ are per-transaction
@@ -1021,6 +1028,11 @@ class AutoGroupEngine:
             c.details["id_conflict_review_suggest"] = True
         loose_hits = set(ids.get("loose", set())) & fp.loose_tokens
         if loose_hits and not c.hard_veto:
+            # v1.2.1: loose (unlabeled) tokens still add confidence, but they routinely
+            # capture manufacturer part numbers and street-address fragments -- the same
+            # evidence the materials family represents -- so a business_id built ONLY
+            # from loose tokens does NOT satisfy the two-family independence gate (see
+            # decide()). business_id_labeled is left unset here on purpose.
             c.score += min(330, 180 + 35 * len(loose_hits)); c.families.add("business_id")
             id_hits.extend(sorted(loose_hits))
         if id_hits:
@@ -1172,7 +1184,18 @@ class AutoGroupEngine:
         deterministic = ("lineage" in best.families and best.confidence >= 0.99
                          and not best.details.get("job_conflict_review")
                          and not best.details.get("id_conflict_review_suggest"))  # v1.2.0: thread-reuse guards
-        enough_families = len(best.families - {"subject", "learning"}) >= 2 or deterministic
+        # v1.2.1: a business_id family built ONLY from loose (unlabeled) tokens is not
+        # independent corroboration. Loose tokens routinely capture manufacturer part
+        # numbers (Hubbell "HBL5369C") and street-address fragments (the Astoria address
+        # "31-03" -> "3103") -- the SAME evidence the materials family already carries.
+        # Counting it as a second family let two different GCs at one building, quoting
+        # the same commodity devices, AUTO-group. It still contributes confidence; it
+        # just cannot be the second independent family. A LABELED id match
+        # (business_id_labeled) is real corroboration and still counts.
+        _independent = set(best.families) - {"subject", "learning"}
+        if "business_id" in _independent and not best.details.get("business_id_labeled"):
+            _independent.discard("business_id")
+        enough_families = len(_independent) >= 2 or deterministic
         action = "none"
         if deterministic and self.settings.deterministic_lineage_auto:
             action = "auto"
