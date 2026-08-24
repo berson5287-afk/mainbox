@@ -282,7 +282,16 @@ class AssistantEngine:
     # States that still represent a "live" item the user hasn't resolved yet.
     # A new handle() with the same dedup_key as one of these is a duplicate and
     # is collapsed onto the existing record instead of stacking a new row.
-    _LIVE_STATES = ("pending", "auto", "flagged", "corrected", "armed")
+    #
+    # v4.2.82: "rejected" belongs here too. Dismiss sets state="rejected", and
+    # with rejected NOT counted as live, the next re-triage pass (every ~15 min)
+    # found no live record for the same dedup_key and minted a brand-new pending
+    # ask -- so a dismissed follow-up came back forever (reported live: the
+    # Dennis McCloskey "Re: Material list 6531" ask). The collapse branch in
+    # handle() deliberately never changes an existing record's state, so
+    # re-scans now land silently on the dismissed row (repeat_count ticks) and
+    # Dismiss finally means dismissed.
+    _LIVE_STATES = ("pending", "auto", "flagged", "corrected", "armed", "rejected")
 
     def _find_live_by_dedup(self, dedup_key):
         """Return the most recent still-live record carrying this dedup_key, or
@@ -1418,6 +1427,30 @@ def _selftest():
     assert r5c["state"] == "armed"
     assert eng.reject(r5c["id"]) is True and eng._find(r5c["id"])["state"] == "rejected"
     assert eng.fire_due_auto_sends() == 0, "a cancelled armed send must never fire"
+
+    # v4.2.82 regression (live bug: the Dennis McCloskey follow-up): a DISMISSED
+    # record must swallow re-scans of the same dedup_key. "rejected" was missing
+    # from _LIVE_STATES, so every re-triage re-created the ask as a fresh pending
+    # row and Dismiss never stuck.
+    n_before = len(eng.activity)
+    r5c2 = eng.handle(kind="Reply draft", stakes=HIGH,
+                      confidence=confidence_from_triage(dict(business_relevance=0.98, spam_likelihood=0.0)),
+                      subject="fu3", summary="x", dedup_key="t2")
+    assert r5c2["id"] == r5c["id"], "re-scan must collapse onto the dismissed record"
+    assert r5c2["state"] == "rejected", "collapse must not resurrect a dismissed record"
+    assert len(eng.activity) == n_before, "no new row for a dismissed dedup_key"
+    assert eng.fire_due_auto_sends() == 0
+    # ...and the pending-ask variant, the exact reported shape: ask -> Dismiss ->
+    # re-scan must NOT bring it back.
+    p1 = eng.handle(kind="Follow-up", stakes=LOW, confidence=0.5,
+                    subject="fu5", summary="ask me", dedup_key="t3", hold_for_user=True)
+    assert p1["state"] == "pending", p1
+    assert eng.reject(p1["id"]) is True
+    n_before = len(eng.activity)
+    p2 = eng.handle(kind="Follow-up", stakes=LOW, confidence=0.5,
+                    subject="fu5", summary="ask me", dedup_key="t3", hold_for_user=True)
+    assert p2["id"] == p1["id"] and p2["state"] == "rejected", p2
+    assert len(eng.activity) == n_before, "dismissed follow-up came back"
 
     # with the delay OFF, the same high-stakes high-conf send fires immediately
     eng_now = AssistantEngine(config=AssistantConfig(autosend_delay_enabled=False),
