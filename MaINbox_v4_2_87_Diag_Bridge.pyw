@@ -116,7 +116,7 @@ try:
 except Exception:
     pythoncom = None
 
-APP_TITLE = "MaINbox v4.2.86 AI Assistant"  # v4.2.86 (Steve): Danny/campbellanddawes threads 1590-085 + 1586-226 -- rows sat Needs Reply / Waiting on Customer with active trackers AFTER the orders were quoted, PO'd and INVOICED, because the whole deal happened in the ERP and no sent reply ever existed for the scans to see. Two fixes. (1) DN-unclearable trackers: _reply_sender_matches_tracker_recipient sorted candidates by 'contains @'; an unresolved Exchange DN ('/O=EXCHANGELABS/...') has no '@', was treated as a DISPLAY NAME, matched no human reply ever, and returned False -- the tracker became permanently unclearable by the very party it was waiting on (ops-proven: clear_skipped_sender_mismatch waiting_on='/O=EXCHANGE...' reply_sender=danny@, 8/22). DNs are now skipped as non-identifying; a tracker whose only recipient identity is a DN falls to the documented fail-open. The real-SMTP mismatch guard (v4.1.77 wrong-vendor case) is unchanged. (2) INVOICE-CLOSES-THREAD: new _sweep_invoice_completed_threads in _refresh_finalize_pass -- an internal invoice copy naming a PO ('Invoice S100101798.001 PO# 1590-085' from our own domain) closes open Needs-Reply/Waiting-on-Customer rows from EXTERNAL senders whose subject carries the same PO token, via the EXACT 3-step sequence the closed-thread pass already uses (Completed + cancel followups + assistant 'won' Cleanup: logged, undoable, honors Auto-Archive). Conservative: token >=5 chars w/ digit, user-locked rows untouched, max 6 threads/pass, once per invoice per session, idempotent. Verified at delivery: compile+guards+confinement (2 changed + 1 added), harness replaying Danny's REAL rows + the DN tracker case (both threads close, DN tracker clears, wrong-vendor guard + external-invoice + user-locked negatives hold). Live: on the first refresh after restart the sweep should close both threads -- result in MAINBOX_TEST_LOG.md v4.2.86.  # v4.2.85 (Steve): George's Brewster xlsx has 8 real items; 25 were kept. The 17 extras were two artifact classes the v4.2.84 rules could not see: (a) QTY-ECHO -- 13 template rows whose ONLY filled cell was the pre-filled cost-code column each became 'qty=92002 desc=| 92002' (same number counted twice; they carried a qty, so the v4.2.27 qty-less chrome gate passed them, and bare digits are deliberately kept by the letterhead filter as possible part numbers); (b) SPREADSHEET HELPER chrome -- a literal VLOOKUP formula, 'Must use data validation if the table is filled out', 'Fomula to use...' (template's own typo), and a 'Location | Address' column legend. Fixes at the same write-time choke point: (1) update_coverage_requested drops a LETTERLESS description whose digits exactly equal the qty digits (bare-digit part numbers with a real qty differ and survive; qty-less bare numbers untouched); (2) _looks_like_contact_or_letterhead learns vlookup(/data-validation/if-table-is-filled fragments and pipe-joined column-legend rows. Data surgery at restart trims George's ledger to the true 8 lines. Verified at delivery: compile+guards+confinement (2 methods), harness replaying all 17 REAL artifact rows (all dropped) + the 8 real lines and bare-part/qty regression suite (all kept). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.85.  # v4.2.84 (Steve): purchase-form header chrome no longer lands as requested items. The v4.2.83 re-scan ingested George Caruso's Brewster xlsx (34 rows) but ~9 were form-header cells: "PURCHASE INFORMATON" (the template's own TYPO evaded the existing 'purchase information' rule), "SPECIAL INSTRUCTIONS", "BUY AMERICA", "DBE", "BOTH", an ISO date cell ("2026-08-24 00:00:00"), and "Independent Way Brewster NY 10509" (no comma, so the city-state-zip rule missed; house number had been split into qty). Junk outstanding rows are harmful, not cosmetic: they can never be quoted, so the job can never reach EVERYTHING QUOTED. Fixes in _looks_like_contact_or_letterhead (the single write-time choke point): (1) ISO datetime whole-row added to the date-chrome rule; (2) whole-row label vocabulary gains special instructions / buy america* / purchase informat\w* (typo-tolerant) / dbe|mbe|sbe|wbe|lbe / both / vendor / supplier / date needed / needed by / required by -- fullmatch only, "both ends threaded" untouched; (3) city-state-zip comma now optional. Deliberately NOT filtered (could be real part numbers): whole-row bare digits ("6515") and NNN-NNNN ("882-6209") -- those two removed from George's ledger by data surgery at restart. Verified at delivery: compile+guards+confinement (one method), harness replaying all 9 real junk rows (7 filtered by rule, regression suite of real material lines untouched). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.84.  # v4.2.83 (Steve): George Caruso's 8/24 1:13pm quote request ("FW: 6515 material request", Brewster xlsx attached) never reached quote coverage. Root cause proven from the store: the intake scan EXAMINED it and negative-checkpointed it under gate v5 (request_scan_negative[entry_id]=5) -- his ask "Please send me a quote" matched no COVERAGE_ATTACH_REQUEST_PHRASES entry ("send me pricing" yes, "send me a quote" no), the subject's "material request" is in the DASL Restrict vocabulary but NOT in the in-loop request gate, and "my request for materials" misses the material-LIST regex. Fixes: (1) "send me/us/over a quote" + "send me a price/prices" phrase family added; (2) "material request" / "request for materials" wording added to the v4.2.68 KNOWN-CUSTOMER-gated branch (durable C only -- unknown/vendor senders still cannot qualify); (3) COVERAGE_REQUEST_GATE_VERSION 5 -> 6, the designed mechanism that automatically re-examines every v5 negative on the next scan pass, George's message included -- no store surgery needed. Verified at delivery: compile+guards+confinement (one method + constants), harness replaying George's REAL body/subject through the extracted gate expressions (old gate rejects, new gate accepts; bland-submittal wording still rejected). Live re-scan after restart follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.83.  # v4.2.82 (Steve): assistant Dismiss finally sticks. Reported live: the Dennis McCloskey "Re: Material list 6531" follow-up ask kept returning after every Dismiss. Root cause in mainbox_assistant.py, NOT this file: Dismiss sets state="rejected", but "rejected" was missing from AssistantEngine._LIVE_STATES, so the dedup gate saw no live record for the same dedup_key ("followup:<entry_id>") and every ~15-min re-triage minted a brand-new pending ask; the flood guard never helped because it only trips once a follow-up was actually SCHEDULED, which a dismissed ask never was. Fix (module): "rejected" added to _LIVE_STATES -- the collapse branch never changes an existing record's state, so re-scans now land silently on the dismissed row (repeat_count ticks). Applies to every dedup-keyed suggestion kind, incl. cancelled armed auto-sends (must never re-arm). App file change: this title line only. Verified: module ast+py_compile+--selftest incl. two new regression cases (dismissed armed send swallows re-scan; ask->Dismiss->re-scan does not return); app compile+guards+confinement (zero function changes). Data fix at restart: the still-pending Dennis ask flipped to rejected so it does not need one more dismiss.  # v4.2.81 (Steve): "Quote Scan" header button removed as obsolete (Steve's call, agreed). It was the ONLY caller of mainbox_quote_pipeline_entry.run_quote_scan -- the June manual pipeline (possible-quotes window, mint, ack draft, extractor handoff) now superseded by automatic intake (v4.2.54-61: coverage + group + pre-seeded RFQ at arrival) and the P&A picker (v4.2.78-80). Removed: the button (main setup_ui) + the orphaned _mb_quote_scan handler; NOTHING else -- the pipeline entry module stays (load_saved_senders/add_saved_sender still used by typing + Settings), the refresh-time scan_recent_inbox_for_quotes pass is separate machinery and untouched, Settings texts naming "Quote Scan" for saved-sender recognition left as-is. Rollback = previous version file. Verified at delivery: compile+guards+confinement (main setup_ui + removed handler only; small setup_ui byte-identical), grep proves run_quote_scan unreferenced in the app. Restart into this version follows delivery (result in MAINBOX_TEST_LOG.md v4.2.81).  # v4.2.80 (Steve): picker record-pick no longer appends near-duplicate requested rows. Live rig 0822B (2026-08-22, Steve's real pick): _resolve_record_link_choice matched the request's re-typed lines against the job with the strict distinctive-noun gate -- built to keep money off the wrong line -- and plural/word-order drift ('200A meter sockets' vs '200A meter socket', '4\" square 1900 boxes' vs '4\" square box 1900') failed it, so both landed as appended near-dupes. Fix: two-tier match in the append decision only -- strict gate first (unchanged, still picks the flip target), then plain coverage_items_match as the 'already on this job?' bar; append only when both miss. Confined to the one v4.2.78 method. Verified at delivery: compile+guards+confinement, harness replaying the exact live lines (0 appends, THHN + plural forms all recognized; genuinely-new line still appends). Live rig round 3 follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.80.  # v4.2.79 (Steve): known-customer veto no longer decided by dict order. Live rig failure (2026-08-22): a real bare-'P&A' vendor RFQ send parsed fine (waiting-flip proved the v4.2.78 parsers live) but auto-coverage bailed ok:false in 30ms -- the recipient had 5 status rows typed C (July rig tests, address played customer) and 9 typed V (later tests), and the first-match-wins walk hit a C while /why's durable resolver said V for the same address. Fix: (a) consult the per-sender registry first (same v4.1.55 priority _durable_email_type_for_email uses); (b) MAJORITY vote over all matching saved rows instead of first-match ('a confident C', as the docstring always said). Single-type addresses behave exactly as before. Verified at delivery: compile+guards+confinement, harness on the extracted method (mixed 5C/9V -> allow, all-C -> veto, registry C overrides V rows, tie -> allow, no rows -> learning-hint fallback intact). Live rig re-run of the picker chain follows this delivery -- result recorded in MAINBOX_TEST_LOG.md v4.2.79.  # v4.2.78 (Steve): bare-'P&A' sent RFQs now reach a group picker instead of silently mis-grouping. Root cause chain (proven by harness + injection): sentence-form bodies ("can you quote 25 X and 500ft of Y?") and qty-last lines ("<item> - qty 25") parsed to ZERO items, so auto-coverage bailed before ledger/picker and the outgoing-request >=2-item link could never fire. Fixes: (1) _QTY_LAST_LINE_RE reads "- qty N" / "- 10 pcs/ea/box..." endings (explicit unit or qty keyword still required -- bare trailing numbers stay rejected); (2) _REQ_SENTENCE_ITEM_RE anchors on and/also-need continuations and makes for/on optional, so multi-item request sentences yield every item; (3) both parsers are the fallback ladder in _auto_create_coverage_for_sent_rfq_inner AND update_coverage_waiting_from_request; (4) the v4.1.12 link picker now ALSO lists existing coverage records ranked by gated item-name + exact-qty evidence (_score_coverage_record_candidates), picking one adopts its group, flips its matched items to Waiting, appends genuinely-new lines, drops the auto ledger and retires the auto group (_resolve_record_link_choice; no blind merge -- re-typed/typo'd lines would shelve near-duplicates); Skip renamed "Keep as new group", Enter links / Escape keeps (standing popup rule); (5) diag bridge /coverage read the never-shipped "jobs" key -- now reads "threads". Verified: compile+guards+confinement, parser/scorer/resolve/dialog harnesses on extracted code, /coverage live. NOT verified: a real Outlook send driving the picker end-to-end (needs the live rig).  # v4.2.77 (Steve): Quote Review "Requested item / vendor" column no longer opens huge. Root cause: it was the ONLY stretch=True column, so ttk handed it every pixel of window slack (430 default -> ~600+ shown) AND snapped it back when dragged smaller -- freed space returns to the sole stretchable column. Fix: 280px fixed width (stretch off, resizable), slack moved to the last column (Stock / Lead). Plus app-wide column-width PERSISTENCE: new tree-column memory (mainbox_tree_columns.json, keyed by column ids + heading texts) installed once via bind_class on the main root -- restores saved widths after a Treeview's first <Map>+layout (after_idle; harness caught the stretch pass overwriting an at-Map restore), saves on <ButtonRelease-1> only when the press landed on a header separator (deliberate drag), so window-resize stretching is never recorded. Zero per-window wiring. Verified: compile+guards+confinement, live-Tk harness (drag-save/restore round trip, all-stretch tree, minwidth clamp, re-Map no-stomp) on extracted helpers. Not live-Outlook-dependent.  # v4.2.76: availability wording no longer breaks quote-line matching (caught by the live rig test minutes after v4.2.75). Root cause: per-line stock/lead text ("in stock", "2-3 weeks lead", "backordered") rides in the parsed description and its words landed in the DISTINCTIVE-NOUN sets -- {connectors, weeks, lead} vs {connectors} fails the v3.9.57 same-product subset gate, so a priced line carrying stock info could not match its requested line (first-reply case would never flip). Fix: _COVERAGE_AVAIL_NOISE_WORDS excluded in both noun collectors (+ digit-range fragments like "2-3"). Verified: compile+guards+confinement (2 collectors), harness fresh-first-reply matching with stock-noted lines, window render shows latest per-vendor prices+avail, live rig re-check.
+APP_TITLE = "MaINbox v4.2.87 AI Assistant"  # v4.2.87 (Steve): PO-received flow for Danny's '$OK' pattern. His go-ahead is OUR OWN bid PDF (S100101819-0001.pdf) annotated '$OK' and returned through Acrobat -- the body is pure Adobe boilerplate, so no wording detector can see it; the attachment FILENAME is the signal (a customer does not send your own S-numbered bid back unless acting on it). New: (1) the attachment scan detects a durable-C sender returning an S-numbered PDF and queues it (worker-side, no UI); (2) main-thread drain closes the job's open rows as WON -- same-token rows included (his request row and '$OK' row share the job number, e.g. 1582-324) via the 3-step close now extracted as _complete_row_as_won (shared with the v4.2.86 invoice sweep, behavior unchanged) -- then shows the congrats popup Steve asked for: 'Processing it now' (default, Enter/Escape) or 'Remind me in 1 hour', which appends a process_po scenario reminder DIRECTLY (deliberate: schedule_scenario_reminder refuses Completed rows, and the thread was just completed by this very flow -- that is why the nudge is wanted); new process_po fire branch shows the reminder and completes the item. Close happens at detection regardless of the popup answer. (3) gate version 6->7 so the two existing '$OK' messages re-examine and fire live. Verified at delivery: compile+guards+confinement, harness on Danny's REAL shapes (filename regex, token close incl. request-row sibling, reminder append + dedupe, negatives: vendor sender / non-S pdf / user-locked). Live result in MAINBOX_TEST_LOG.md v4.2.87.  # v4.2.86 (Steve): Danny/campbellanddawes threads 1590-085 + 1586-226 -- rows sat Needs Reply / Waiting on Customer with active trackers AFTER the orders were quoted, PO'd and INVOICED, because the whole deal happened in the ERP and no sent reply ever existed for the scans to see. Two fixes. (1) DN-unclearable trackers: _reply_sender_matches_tracker_recipient sorted candidates by 'contains @'; an unresolved Exchange DN ('/O=EXCHANGELABS/...') has no '@', was treated as a DISPLAY NAME, matched no human reply ever, and returned False -- the tracker became permanently unclearable by the very party it was waiting on (ops-proven: clear_skipped_sender_mismatch waiting_on='/O=EXCHANGE...' reply_sender=danny@, 8/22). DNs are now skipped as non-identifying; a tracker whose only recipient identity is a DN falls to the documented fail-open. The real-SMTP mismatch guard (v4.1.77 wrong-vendor case) is unchanged. (2) INVOICE-CLOSES-THREAD: new _sweep_invoice_completed_threads in _refresh_finalize_pass -- an internal invoice copy naming a PO ('Invoice S100101798.001 PO# 1590-085' from our own domain) closes open Needs-Reply/Waiting-on-Customer rows from EXTERNAL senders whose subject carries the same PO token, via the EXACT 3-step sequence the closed-thread pass already uses (Completed + cancel followups + assistant 'won' Cleanup: logged, undoable, honors Auto-Archive). Conservative: token >=5 chars w/ digit, user-locked rows untouched, max 6 threads/pass, once per invoice per session, idempotent. Verified at delivery: compile+guards+confinement (2 changed + 1 added), harness replaying Danny's REAL rows + the DN tracker case (both threads close, DN tracker clears, wrong-vendor guard + external-invoice + user-locked negatives hold). Live: on the first refresh after restart the sweep should close both threads -- result in MAINBOX_TEST_LOG.md v4.2.86.  # v4.2.85 (Steve): George's Brewster xlsx has 8 real items; 25 were kept. The 17 extras were two artifact classes the v4.2.84 rules could not see: (a) QTY-ECHO -- 13 template rows whose ONLY filled cell was the pre-filled cost-code column each became 'qty=92002 desc=| 92002' (same number counted twice; they carried a qty, so the v4.2.27 qty-less chrome gate passed them, and bare digits are deliberately kept by the letterhead filter as possible part numbers); (b) SPREADSHEET HELPER chrome -- a literal VLOOKUP formula, 'Must use data validation if the table is filled out', 'Fomula to use...' (template's own typo), and a 'Location | Address' column legend. Fixes at the same write-time choke point: (1) update_coverage_requested drops a LETTERLESS description whose digits exactly equal the qty digits (bare-digit part numbers with a real qty differ and survive; qty-less bare numbers untouched); (2) _looks_like_contact_or_letterhead learns vlookup(/data-validation/if-table-is-filled fragments and pipe-joined column-legend rows. Data surgery at restart trims George's ledger to the true 8 lines. Verified at delivery: compile+guards+confinement (2 methods), harness replaying all 17 REAL artifact rows (all dropped) + the 8 real lines and bare-part/qty regression suite (all kept). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.85.  # v4.2.84 (Steve): purchase-form header chrome no longer lands as requested items. The v4.2.83 re-scan ingested George Caruso's Brewster xlsx (34 rows) but ~9 were form-header cells: "PURCHASE INFORMATON" (the template's own TYPO evaded the existing 'purchase information' rule), "SPECIAL INSTRUCTIONS", "BUY AMERICA", "DBE", "BOTH", an ISO date cell ("2026-08-24 00:00:00"), and "Independent Way Brewster NY 10509" (no comma, so the city-state-zip rule missed; house number had been split into qty). Junk outstanding rows are harmful, not cosmetic: they can never be quoted, so the job can never reach EVERYTHING QUOTED. Fixes in _looks_like_contact_or_letterhead (the single write-time choke point): (1) ISO datetime whole-row added to the date-chrome rule; (2) whole-row label vocabulary gains special instructions / buy america* / purchase informat\w* (typo-tolerant) / dbe|mbe|sbe|wbe|lbe / both / vendor / supplier / date needed / needed by / required by -- fullmatch only, "both ends threaded" untouched; (3) city-state-zip comma now optional. Deliberately NOT filtered (could be real part numbers): whole-row bare digits ("6515") and NNN-NNNN ("882-6209") -- those two removed from George's ledger by data surgery at restart. Verified at delivery: compile+guards+confinement (one method), harness replaying all 9 real junk rows (7 filtered by rule, regression suite of real material lines untouched). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.84.  # v4.2.83 (Steve): George Caruso's 8/24 1:13pm quote request ("FW: 6515 material request", Brewster xlsx attached) never reached quote coverage. Root cause proven from the store: the intake scan EXAMINED it and negative-checkpointed it under gate v5 (request_scan_negative[entry_id]=5) -- his ask "Please send me a quote" matched no COVERAGE_ATTACH_REQUEST_PHRASES entry ("send me pricing" yes, "send me a quote" no), the subject's "material request" is in the DASL Restrict vocabulary but NOT in the in-loop request gate, and "my request for materials" misses the material-LIST regex. Fixes: (1) "send me/us/over a quote" + "send me a price/prices" phrase family added; (2) "material request" / "request for materials" wording added to the v4.2.68 KNOWN-CUSTOMER-gated branch (durable C only -- unknown/vendor senders still cannot qualify); (3) COVERAGE_REQUEST_GATE_VERSION 5 -> 6, the designed mechanism that automatically re-examines every v5 negative on the next scan pass, George's message included -- no store surgery needed. Verified at delivery: compile+guards+confinement (one method + constants), harness replaying George's REAL body/subject through the extracted gate expressions (old gate rejects, new gate accepts; bland-submittal wording still rejected). Live re-scan after restart follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.83.  # v4.2.82 (Steve): assistant Dismiss finally sticks. Reported live: the Dennis McCloskey "Re: Material list 6531" follow-up ask kept returning after every Dismiss. Root cause in mainbox_assistant.py, NOT this file: Dismiss sets state="rejected", but "rejected" was missing from AssistantEngine._LIVE_STATES, so the dedup gate saw no live record for the same dedup_key ("followup:<entry_id>") and every ~15-min re-triage minted a brand-new pending ask; the flood guard never helped because it only trips once a follow-up was actually SCHEDULED, which a dismissed ask never was. Fix (module): "rejected" added to _LIVE_STATES -- the collapse branch never changes an existing record's state, so re-scans now land silently on the dismissed row (repeat_count ticks). Applies to every dedup-keyed suggestion kind, incl. cancelled armed auto-sends (must never re-arm). App file change: this title line only. Verified: module ast+py_compile+--selftest incl. two new regression cases (dismissed armed send swallows re-scan; ask->Dismiss->re-scan does not return); app compile+guards+confinement (zero function changes). Data fix at restart: the still-pending Dennis ask flipped to rejected so it does not need one more dismiss.  # v4.2.81 (Steve): "Quote Scan" header button removed as obsolete (Steve's call, agreed). It was the ONLY caller of mainbox_quote_pipeline_entry.run_quote_scan -- the June manual pipeline (possible-quotes window, mint, ack draft, extractor handoff) now superseded by automatic intake (v4.2.54-61: coverage + group + pre-seeded RFQ at arrival) and the P&A picker (v4.2.78-80). Removed: the button (main setup_ui) + the orphaned _mb_quote_scan handler; NOTHING else -- the pipeline entry module stays (load_saved_senders/add_saved_sender still used by typing + Settings), the refresh-time scan_recent_inbox_for_quotes pass is separate machinery and untouched, Settings texts naming "Quote Scan" for saved-sender recognition left as-is. Rollback = previous version file. Verified at delivery: compile+guards+confinement (main setup_ui + removed handler only; small setup_ui byte-identical), grep proves run_quote_scan unreferenced in the app. Restart into this version follows delivery (result in MAINBOX_TEST_LOG.md v4.2.81).  # v4.2.80 (Steve): picker record-pick no longer appends near-duplicate requested rows. Live rig 0822B (2026-08-22, Steve's real pick): _resolve_record_link_choice matched the request's re-typed lines against the job with the strict distinctive-noun gate -- built to keep money off the wrong line -- and plural/word-order drift ('200A meter sockets' vs '200A meter socket', '4\" square 1900 boxes' vs '4\" square box 1900') failed it, so both landed as appended near-dupes. Fix: two-tier match in the append decision only -- strict gate first (unchanged, still picks the flip target), then plain coverage_items_match as the 'already on this job?' bar; append only when both miss. Confined to the one v4.2.78 method. Verified at delivery: compile+guards+confinement, harness replaying the exact live lines (0 appends, THHN + plural forms all recognized; genuinely-new line still appends). Live rig round 3 follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.80.  # v4.2.79 (Steve): known-customer veto no longer decided by dict order. Live rig failure (2026-08-22): a real bare-'P&A' vendor RFQ send parsed fine (waiting-flip proved the v4.2.78 parsers live) but auto-coverage bailed ok:false in 30ms -- the recipient had 5 status rows typed C (July rig tests, address played customer) and 9 typed V (later tests), and the first-match-wins walk hit a C while /why's durable resolver said V for the same address. Fix: (a) consult the per-sender registry first (same v4.1.55 priority _durable_email_type_for_email uses); (b) MAJORITY vote over all matching saved rows instead of first-match ('a confident C', as the docstring always said). Single-type addresses behave exactly as before. Verified at delivery: compile+guards+confinement, harness on the extracted method (mixed 5C/9V -> allow, all-C -> veto, registry C overrides V rows, tie -> allow, no rows -> learning-hint fallback intact). Live rig re-run of the picker chain follows this delivery -- result recorded in MAINBOX_TEST_LOG.md v4.2.79.  # v4.2.78 (Steve): bare-'P&A' sent RFQs now reach a group picker instead of silently mis-grouping. Root cause chain (proven by harness + injection): sentence-form bodies ("can you quote 25 X and 500ft of Y?") and qty-last lines ("<item> - qty 25") parsed to ZERO items, so auto-coverage bailed before ledger/picker and the outgoing-request >=2-item link could never fire. Fixes: (1) _QTY_LAST_LINE_RE reads "- qty N" / "- 10 pcs/ea/box..." endings (explicit unit or qty keyword still required -- bare trailing numbers stay rejected); (2) _REQ_SENTENCE_ITEM_RE anchors on and/also-need continuations and makes for/on optional, so multi-item request sentences yield every item; (3) both parsers are the fallback ladder in _auto_create_coverage_for_sent_rfq_inner AND update_coverage_waiting_from_request; (4) the v4.1.12 link picker now ALSO lists existing coverage records ranked by gated item-name + exact-qty evidence (_score_coverage_record_candidates), picking one adopts its group, flips its matched items to Waiting, appends genuinely-new lines, drops the auto ledger and retires the auto group (_resolve_record_link_choice; no blind merge -- re-typed/typo'd lines would shelve near-duplicates); Skip renamed "Keep as new group", Enter links / Escape keeps (standing popup rule); (5) diag bridge /coverage read the never-shipped "jobs" key -- now reads "threads". Verified: compile+guards+confinement, parser/scorer/resolve/dialog harnesses on extracted code, /coverage live. NOT verified: a real Outlook send driving the picker end-to-end (needs the live rig).  # v4.2.77 (Steve): Quote Review "Requested item / vendor" column no longer opens huge. Root cause: it was the ONLY stretch=True column, so ttk handed it every pixel of window slack (430 default -> ~600+ shown) AND snapped it back when dragged smaller -- freed space returns to the sole stretchable column. Fix: 280px fixed width (stretch off, resizable), slack moved to the last column (Stock / Lead). Plus app-wide column-width PERSISTENCE: new tree-column memory (mainbox_tree_columns.json, keyed by column ids + heading texts) installed once via bind_class on the main root -- restores saved widths after a Treeview's first <Map>+layout (after_idle; harness caught the stretch pass overwriting an at-Map restore), saves on <ButtonRelease-1> only when the press landed on a header separator (deliberate drag), so window-resize stretching is never recorded. Zero per-window wiring. Verified: compile+guards+confinement, live-Tk harness (drag-save/restore round trip, all-stretch tree, minwidth clamp, re-Map no-stomp) on extracted helpers. Not live-Outlook-dependent.  # v4.2.76: availability wording no longer breaks quote-line matching (caught by the live rig test minutes after v4.2.75). Root cause: per-line stock/lead text ("in stock", "2-3 weeks lead", "backordered") rides in the parsed description and its words landed in the DISTINCTIVE-NOUN sets -- {connectors, weeks, lead} vs {connectors} fails the v3.9.57 same-product subset gate, so a priced line carrying stock info could not match its requested line (first-reply case would never flip). Fix: _COVERAGE_AVAIL_NOISE_WORDS excluded in both noun collectors (+ digit-range fragments like "2-3"). Verified: compile+guards+confinement (2 collectors), harness fresh-first-reply matching with stock-noted lines, window render shows latest per-vendor prices+avail, live rig re-check.
 APP_NAME = "MaINbox"
 CURRENT_MAINBOX_SETTINGS = {}
 
@@ -11393,7 +11393,7 @@ COVERAGE_ATTACH_REQUEST_PHRASES = [
 # v4.1.22 (external audit round 4, finding #6): bump this when the request gate or the
 # extraction eligibility rules change -- negative examined-not-request decisions are
 # checkpointed against it, so a gate improvement automatically re-examines old mail.
-COVERAGE_REQUEST_GATE_VERSION = 6  # v4.2.83: "send me a quote" phrase family + customer-gated material-request wording -- re-examines every v5 negative (incl. George Caruso's 8/24 "FW: 6515 material request", examined and wrongly checkpointed as not-a-request)
+COVERAGE_REQUEST_GATE_VERSION = 7  # v4.2.87: returned-bid PO detection added to the scan -- re-examines v6 negatives so Danny's existing "$OK" PDFs (S-numbered bid docs sent back through Acrobat) trigger the new PO flow. (v6/v4.2.83: "send me a quote" family + material-request wording.)
 
 # v4.1.26 (external audit round 8, defect #3): same idea for the VENDOR QUOTE scan.
 # Only content-permanent non-candidates are ever checkpointed (no price in the body,
@@ -13841,18 +13841,10 @@ class OutlookWorkflowMonitor:
                     if _tkey in seen_threads:
                         continue
                     seen_threads.add(_tkey)
-                    row["status"] = "Completed"
-                    try:
-                        _srow = self.status_data.get(str(row.get("entry_id", "") or "")) if isinstance(self.status_data, dict) else None
-                        if isinstance(_srow, dict):
-                            _srow["status"] = "Completed"
-                    except Exception:
-                        pass
-                    try:
-                        self._cancel_active_followups_for_email(row, reason=f"Invoiced (PO {token})")
-                    except Exception:
-                        pass
-                    self._assistant_propose_cleanup(row, f"invoiced — {subj[:60]}", "won")
+                    # v4.2.87: 3-step close extracted to _complete_row_as_won (now
+                    # shared with the returned-bid PO flow); behavior unchanged.
+                    self._complete_row_as_won(row, cancel_reason=f"Invoiced (PO {token})",
+                                              cleanup_reason=f"invoiced — {subj[:60]}")
                     try:
                         ops_log("workflow", "invoice_closed_thread", po=str(token)[:30],
                                 row_subj=str(row.get("subject", ""))[:40], inv=inv_eid[-16:])
@@ -13862,6 +13854,193 @@ class OutlookWorkflowMonitor:
                 handled.add(inv_eid)
         except Exception:
             pass
+
+    def _complete_row_as_won(self, row, cancel_reason="", cleanup_reason=""):
+        """v4.2.87: the 3-step won-order close used by the invoice sweep and the
+        returned-bid PO flow -- exactly the sequence the closed-thread pass in
+        _refresh_finalize_pass established: status Completed (row + saved record),
+        active follow-ups cancelled, assistant 'won' Cleanup proposed (logged,
+        undoable, honors Auto-Archive). MAIN thread only."""
+        try:
+            row["status"] = "Completed"
+            try:
+                _srow = self.status_data.get(str(row.get("entry_id", "") or "")) if isinstance(self.status_data, dict) else None
+                if isinstance(_srow, dict):
+                    _srow["status"] = "Completed"
+            except Exception:
+                pass
+            try:
+                self._cancel_active_followups_for_email(row, reason=cancel_reason)
+            except Exception:
+                pass
+            self._assistant_propose_cleanup(row, cleanup_reason, "won")
+        except Exception:
+            pass
+
+    def _queue_po_congrats(self, entry_id, subject, sender, sender_email, filename):
+        """v4.2.87: worker-side queue for a detected returned-bid PO ('$OK' on our
+        own PDF). No UI here -- drained on the main thread by
+        _process_pending_po_congrats() after the scan repaints."""
+        try:
+            q = getattr(self, "_pending_po_congrats", None)
+            if not isinstance(q, list):
+                q = []
+                self._pending_po_congrats = q
+            if any(isinstance(p, dict) and p.get("entry_id") == entry_id for p in q):
+                return
+            q.append({"entry_id": str(entry_id or ""), "subject": str(subject or ""),
+                      "sender": str(sender or ""), "sender_email": str(sender_email or ""),
+                      "filename": str(filename or ""), "at": datetime.now().isoformat()})
+        except Exception:
+            pass
+
+    def _schedule_process_po_reminder(self, email_snapshot, minutes=60):
+        """v4.2.87: 'remind me to process this PO'. Appends the scenario item
+        directly instead of via schedule_scenario_reminder, ON PURPOSE: that
+        scheduler refuses Completed emails, and this thread was just completed BY
+        the PO close -- which is exactly why the user wants an external nudge. The
+        fire path (check_due_scenario_reminders) has no completed-row gate."""
+        try:
+            email = email_snapshot or {}
+            entry_id = str(email.get("entry_id", "") or "")
+            if not entry_id or self.scenario_reminder_exists("process_po", entry_id):
+                return False
+            due_at = datetime.now() + timedelta(minutes=minutes)
+            self.scenario_reminders.append({
+                "type": "process_po",
+                "entry_id": entry_id,
+                "store_id": email.get("store_id", ""),
+                "conversation_id": email.get("conversation_id", ""),
+                "group_id": self.get_group_id_for_email(entry_id),
+                "subject": email.get("subject", ""),
+                "sender": email.get("sender", ""),
+                "created_at": datetime.now().isoformat(),
+                "due_at": due_at.isoformat(),
+                "baseline_received_timestamp": email.get("received_timestamp", 0),
+                "note": "Process the PO (returned bid: %s)" % str(email.get("_po_filename", "") or ""),
+                "completed": False,
+                "cancelled": False,
+            })
+            self.save_scenario_reminders()
+            ops_log("workflow", "process_po_reminder_set", subj=str(email.get("subject", ""))[:40],
+                    minutes=minutes)
+            return True
+        except Exception:
+            return False
+
+    def _process_pending_po_congrats(self):
+        """v4.2.87 (Steve): MAIN-thread drain for detected returned-bid POs. For each:
+        close the job's open rows as WON (same-token rows included, like the invoice
+        sweep -- Danny's request row and his '$OK' row share the job number), then a
+        congrats popup: 'Processing it now' (default, Enter) just closes; 'Remind me
+        in 1 hour' schedules a process_po reminder. Escape = processing now. The
+        close happens on DETECTION regardless of the popup answer -- the popup only
+        decides the reminder."""
+        item = None
+        try:
+            q = getattr(self, "_pending_po_congrats", None)
+            if not isinstance(q, list) or not q:
+                return
+            item = q.pop(0)
+            eid = str(item.get("entry_id", "") or "")
+            subj = str(item.get("subject", "") or "")
+            sender = str(item.get("sender", "") or item.get("sender_email", "") or "customer")
+            fname = str(item.get("filename", "") or "")
+            trigger = self.get_email_by_id(eid) or {}
+            snapshot = dict(trigger) if isinstance(trigger, dict) else {}
+            snapshot.setdefault("entry_id", eid)
+            snapshot.setdefault("subject", subj)
+            snapshot["_po_filename"] = fname
+            # Close every open row carrying the job token (the subject usually IS
+            # the customer's PO/job number, e.g. '1582-324'), same rules as the
+            # invoice sweep: external senders only, not user-locked.
+            _own = set()
+            try:
+                _own = set(self._own_mailbox_domains(getattr(self, "namespace", None)) or ())
+            except Exception:
+                _own = set()
+            m = re.search(r"\b[A-Za-z]?\d{3,6}[-.]\d{2,4}\b", subj)
+            token = (m.group(0).lower() if m else "")
+            closed = 0
+            for row in list(getattr(self, "emails", []) or []):
+                if not isinstance(row, dict):
+                    continue
+                if str(row.get("status", "") or "") not in ("Needs Reply", "Waiting on Customer"):
+                    continue
+                if row.get("ai_user_locked"):
+                    continue
+                _rdom = str(get_email_domain(str(row.get("resolved_sender_smtp") or row.get("sender_email") or "")) or "").lower()
+                if _own and _rdom and _rdom in _own:
+                    continue
+                _rsub = str(row.get("subject", "") or "").lower()
+                if str(row.get("entry_id", "")) != eid and (not token or token not in _rsub):
+                    continue
+                self._complete_row_as_won(row, cancel_reason=f"PO received ({fname})",
+                                          cleanup_reason=f"customer returned our bid {fname} — PO/go-ahead")
+                ops_log("workflow", "returned_bid_closed_thread", token=token[:30],
+                        row_subj=str(row.get("subject", ""))[:40], doc=fname[:40])
+                closed += 1
+            try:
+                self.render_email_rows()
+                self.render_group_rows()
+            except Exception:
+                pass
+            # ---- congrats popup ----
+            win = tk.Toplevel(self.root)
+            win.title("You got a PO!")
+            win.configure(bg=_BG)
+            win.transient(self.root)
+            tk.Label(win, text="\U0001F389  Congrats — you got a PO!", font=(_FONT, 14, "bold"),
+                     fg=_ACCENT, bg=_BG).pack(anchor="w", padx=16, pady=(12, 4))
+            tk.Label(win, text=(f"{sender} sent back your bid ({fname}) — that's the go-ahead on:\n\n"
+                                f"{subj[:80]}\n\n"
+                                f"{closed} row(s) marked complete. Are you processing it now,\n"
+                                "or would you like a reminder?"),
+                     bg=_BG, fg=_FG, justify="left").pack(anchor="w", padx=16, pady=(0, 8))
+            btns = tk.Frame(win, bg=_BG)
+            btns.pack(fill="x", padx=16, pady=(4, 12))
+
+            def _done(event=None):
+                try:
+                    win.destroy()
+                except Exception:
+                    pass
+                self.root.after(200, self._process_pending_po_congrats)
+
+            def _remind(event=None):
+                try:
+                    self._schedule_process_po_reminder(snapshot, minutes=60)
+                except Exception:
+                    pass
+                _done()
+
+            _b_now = tk.Button(btns, text="Processing it now", command=_done,
+                               bg="#2f6feb", fg="white", padx=14, pady=4)
+            _b_now.pack(side="right", padx=4)
+            tk.Button(btns, text="Remind me in 1 hour", command=_remind,
+                      bg=_BTN_BG, fg=_FG, padx=10, pady=4).pack(side="right", padx=4)
+            win.protocol("WM_DELETE_WINDOW", _done)
+            win.bind("<Return>", _done)
+            win.bind("<Escape>", _done)
+            try:
+                win.lift()
+                win.focus_force()
+                _b_now.focus_set()
+            except Exception:
+                pass
+            try:
+                ops_log("workflow", "po_congrats_shown", subj=subj[:40], doc=fname[:40], closed=closed)
+            except Exception:
+                pass
+        except Exception as _exc:
+            _cov_debug(f"PO-CONGRATS drain failed: {_exc!r}")
+            try:
+                if isinstance(item, dict):
+                    item["_retries"] = int(item.get("_retries", 0) or 0) + 1
+                    if item["_retries"] <= 3 and isinstance(getattr(self, "_pending_po_congrats", None), list):
+                        self._pending_po_congrats.append(item)
+            except Exception:
+                pass
 
     def _assistant_propose_cleanup(self, email, reason="", kind="cancelled"):
         """When a quote/request is DONE -- a won order/PO, a cancellation, or a
@@ -34257,6 +34436,13 @@ class OutlookWorkflowMonitor:
                     self._process_pending_request_link_prompts()
                 except Exception:
                     pass
+                # v4.2.87: the scan may have spotted a customer returning OUR OWN bid
+                # document (Danny's "$OK" on the PDF) -- close those threads and show
+                # the congrats/remind popup now, on the main thread.
+                try:
+                    self._process_pending_po_congrats()
+                except Exception:
+                    pass
                 # v4.1.38: the scan may have recognized a customer PO and matched it to an
                 # open job -- show the award popup now, on the main thread, when idle.
                 try:
@@ -37222,6 +37408,25 @@ class OutlookWorkflowMonitor:
                 item["completed_at"] = datetime.now().isoformat()
                 item["completed_reason"] = "po_followup_draft_created" if ok else "po_followup_draft_failed"
                 email["followup_time"] = "Completed" if ok else "Draft failed"
+                due_count += 1
+                changed = True
+
+            elif scenario_type == "process_po":
+                # v4.2.87: the 'remind me to process this PO' nudge from the
+                # returned-bid congrats popup. Informational only -- no draft,
+                # no status change (the thread was completed at detection).
+                try:
+                    messagebox.showinfo(
+                        "PO processing reminder",
+                        "Reminder: process the PO for\n\n"
+                        f"{item.get('subject', '')}\n\n"
+                        f"from {item.get('sender', '') or 'the customer'}.\n"
+                        f"({item.get('note', '')})")
+                except Exception:
+                    pass
+                item["completed"] = True
+                item["completed_at"] = datetime.now().isoformat()
+                item["completed_reason"] = "process_po_reminder_shown"
                 due_count += 1
                 changed = True
 
@@ -53199,6 +53404,34 @@ class OutlookWorkflowMonitor:
                                     continue
                         except Exception as _po_exc:
                             _cov_debug(f"REQ-ATTACH PO detection error on {subj!r}: {_po_exc!r}")
+                        # v4.2.87 (Steve, Danny/campbellanddawes): the customer RETURNED
+                        # OUR OWN BID DOCUMENT -- Danny writes "$OK" on the ERP bid PDF
+                        # and sends it back through Acrobat, so the body is pure Adobe
+                        # boilerplate and no wording detector can ever see the go-ahead.
+                        # The attachment FILENAME is the signal: an S-numbered document
+                        # (S100101819-0001.pdf) is our paperwork; a customer does not
+                        # send your own bid back unless they are acting on it. Gated on
+                        # durable type C. Queued for the main thread: close the job's
+                        # open rows as WON + show the congrats/remind popup.
+                        if _dtype == "C":
+                            _ret_doc = ""
+                            try:
+                                for _a in msg.Attachments:
+                                    _fn = str(getattr(_a, "FileName", "") or "")
+                                    if re.match(r"^s\d{6,}[-_.]\d{1,4}\.pdf$", _fn, flags=re.I):
+                                        _ret_doc = _fn
+                                        break
+                            except Exception:
+                                _ret_doc = ""
+                            if _ret_doc:
+                                try:
+                                    self._queue_po_congrats(entry_id, subj, sender_name or sender_email,
+                                                            sender_email, _ret_doc)
+                                except Exception:
+                                    pass
+                                _mark_done()
+                                dirty = True
+                                continue
                         # v4.1.39: if customer-request attachment coverage is OFF (this
                         # scan is running only for PO detection), do not mine the message
                         # for requested items. It was not a PO (or the PO branch would
