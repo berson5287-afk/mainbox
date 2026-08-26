@@ -28,7 +28,7 @@ dependency.
 
 ## How it's built
 
-Python and Tkinter, roughly 55K lines, deliberately in one file. For a
+Python and Tkinter, roughly 56K lines, deliberately in one file. For a
 one-developer production tool that runs a live sales desk, that buys real
 things: no deployment step, no dependency drift, and rollback is literally
 launching the previous file. Every release is a copy of the last one plus the
@@ -38,8 +38,9 @@ A few rules the app lives by, all learned the hard way:
 
 Outlook COM never runs on the UI thread. Every COM operation happens on a
 worker with its own `pythoncom.CoInitialize()`, and results marshal back to
-Tkinter through the event loop. Breaking this rule freezes the app; the pattern
-is enforced everywhere.
+Tkinter through the event loop. Breaking this rule freezes the app. Work drifts
+back onto the UI thread as features get added, so `mainbox_thread_audit.py`
+walks the call graph and reports anything that has; it runs before a release.
 
 Messages are identified by their Internet Message-ID, not Outlook's EntryID —
 EntryID drifts under Cached Exchange Mode and will quietly orphan your
