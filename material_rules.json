@@ -1,0 +1,5327 @@
+{
+ "version": "1.2",
+ "categories": [
+  {
+   "id": "safety_ppe_jobsite",
+   "label": "Safety, PPE & jobsite supplies",
+   "group": "hardware_misc",
+   "keywords": [
+    "\\bgloves?\\b",
+    "\\bsafety\\s*(?:glasses|goggles|vests?|cones?|helmets?|harness(?:es)?)\\b",
+    "\\bhard\\s*hats?\\b",
+    "\\bhelmets?\\b",
+    "\\bhi-?\\s*vis\\b",
+    "\\bppe\\b",
+    "\\bpersonal\\s*protective\\b",
+    "\\bharness(?:es)?\\b(?!.*(?:wiring|wire\\s*harness))",
+    "\\blanyards?\\b(?!.*tool)",
+    "\\bfirst\\s*aid\\b",
+    "\\beyewash\\b",
+    "\\bear\\s*(?:plugs?|muffs?)\\b",
+    "\\bface\\s*shields?\\b",
+    "\\brespirators?\\b",
+    "\\bn95\\b",
+    "\\bknee\\s*pads?\\b",
+    "\\bwork\\s*boots?\\b",
+    "\\brain\\s*(?:gear|suit|jacket)s?\\b",
+    "\\bcoveralls?\\b",
+    "\\bladders?\\b",
+    "\\bscaffold(?:ing)?\\b",
+    "\\bbaker\\b(?=.*(?:scaffold|staging))",
+    "\\bstep\\s*stools?\\b",
+    "\\bwater\\b(?=.*(?:case|pack|bottles?|gallon))",
+    "\\bcase\\s*of\\s*water\\b",
+    "\\bgatorade\\b",
+    "\\bcleaning\\s*(?:supplies|chemicals?)\\b",
+    "\\bpaper\\s*towels?\\b",
+    "\\bhand\\s*(?:sanitizer|soap)\\b",
+    "\\bpip\\s*\\d{2}-",
+    "\\brhino\\s*safety\\b",
+    "\\bcaution\\s*tape\\b",
+    "\\bbarricade\\s*tape\\b"
+   ],
+   "negative": [
+    "\\bglove\\s*(?:box|bag)\\b|\\bgrip\\b",
+    "\\bladder\\s*(?:tray|rack)s?\\b|\\btray\\b|\\bcable\\s*ladder\\b"
+   ],
+   "priority": 42
+  },
+  {
+   "id": "firestop_sealing",
+   "label": "Firestop, wall/penetration seals & duct seal",
+   "group": "hardware_misc",
+   "keywords": [
+    "\\bfire\\s*-?\\s*(?:stop|caulk|block|seal|barrier|putty|collar|pillow)(?:ping)?s?\\b",
+    "\\bfirestop\\b",
+    "\\b(?:hilti\\s*(?:cp|fs|cfs)|3m\\s*(?:cp|fb|fire|fd))\\s*-?\\s*\\w+\\b",
+    "\\bcfs-?\\s*\\w+\\b(?=.*(?:hilti|fire|seal))",
+    "\\blink\\s*-?\\s*seals?\\b",
+    "\\bls-\\d{3}\\b",
+    "\\bwall\\s*(?:penetration\\s*)?seals?\\b",
+    "\\bpipe\\s*seals?\\b",
+    "\\bmodular\\s*seals?\\b",
+    "\\b(?:duct|dux)\\s*-?\\s*seal\\b",
+    "\\bputty\\s*pads?\\b",
+    "\\bsti\\b(?=.*(?:fire|ssp|ez-?path|spec\\s*seal|lc\\b))",
+    "\\bssp\\d",
+    "\\bez-?\\s*path\\b",
+    "\\bintumescent\\b",
+    "\\bsmoke\\s*seal\\b",
+    "\\bmineral\\s*wool\\b"
+   ],
+   "negative": [],
+   "priority": 41
+  },
+  {
+   "id": "fire_alarm_life_safety",
+   "label": "Fire alarm & life-safety devices",
+   "group": "devices",
+   "keywords": [
+    "\\b(?:smoke|co|carbon\\s*monoxide|heat)\\s*(?:detectors?|alarms?)\\b",
+    "\\bsmoke\\s*-?\\s*co\\b",
+    "\\bco\\s*alarms?\\b",
+    "\\b(?:horn|strobe|horn\\s*/?\\s*strobe|horn-?strobe)s?\\b(?!.*(?:light\\s*fixture|beacon\\s*mount))",
+    "\\bpull\\s*stations?\\b",
+    "\\bfire\\s*alarm\\b(?!\\s*(?:wire|cable|bracket))(?!.*(?:\\bft\\b|\\d+/\\d|awg|cable|wire))",
+    "\\bfacp\\b",
+    "\\bnotification\\s*(?:appliance|device)s?\\b",
+    "\\bnac\\b",
+    "\\b(?:brk|first\\s*alert|kidde|system\\s*sensor|edwards|gentex|wheelock|simplex|notifier|silent\\s*knight|firelite)\\b",
+    "\\bsmico\\d",
+    "\\bsc\\d{2,4}b\\b",
+    "\\b(?:9120|7010|3120)b\\b",
+    "\\b(?:interconnect|wireless|rf)\\s*alarms?\\b",
+    "\\balarms?\\s*with\\s*strobes?\\b",
+    "\\bduct\\s*detectors?\\b",
+    "\\bbeam\\s*detectors?\\b",
+    "\\bannunciators?\\b",
+    "\\barea\\s*of\\s*refuge\\b",
+    "\\bmonitor\\s*modules?\\b",
+    "\\brelay\\s*modules?\\b(?=.*(?:fire|fa\\b|addressable))",
+    "\\baddressable\\b",
+    "\\bsounder\\s*bases?\\b",
+    "\\bfire\\s*(?:extinguisher|blanket)s?\\b"
+   ],
+   "negative": [
+    "\\bfire\\s*alarm\\s*(?:wire|cable)\\b|\\bfpl[rp]?\\b|\\bshielded\\b"
+   ],
+   "priority": 40
+  },
+  {
+   "id": "lighting_controls",
+   "label": "Lighting controls",
+   "group": "lighting",
+   "keywords": [
+    "^photocontrols\\b|^occupancy\\s*sensors\\b|^timers\\b",
+    "\\bdimmers?\\b",
+    "\\b(?:occupancy|vacancy|motion|daylight)\\s*sensors?\\b",
+    "\\bocc\\s*sens(?:or)?s?\\b",
+    "\\bphoto\\s*-?(?:cell|control|eye)s?\\b",
+    "\\btimer\\s*switch(?:es)?\\b",
+    "\\btime\\s*-?clocks?\\b",
+    "\\blighting\\s*contactors?\\b",
+    "\\bwall\\s*stations?\\b",
+    "\\b0-10\\s*v\\b",
+    "\\blutron\\b",
+    "\\bwattstopper\\b",
+    "\\bsensor\\s*switch(?:es)?\\b",
+    "\\bcaseta\\b",
+    "\\bdecora\\s*smart\\b",
+    "\\btimers?\\b(?!.*relay)",
+    "\\btime\\s*switch(?:es)?\\b",
+    "\\bspring\\s*wound\\b",
+    "\\blrf2-",
+    "\\brmjs-",
+    "\\bpj2-",
+    "\\bpico\\b(?=.*(?:lutron|remote|control|wireless|pj2))",
+    "\\bclaro\\b",
+    "\\blut-",
+    "\\bvive\\b(?=.*(?:lutron|hub|module|sensor))",
+    "\\bmaestro\\b",
+    "\\bdiva\\b(?=.*(?:lutron|dimmer|dv-))",
+    "\\bdv-?\\d{3}p?\\b",
+    "\\bnlight\\b",
+    "\\bsensor\\b(?=.*(?:lutron|wattstopper|leviton|hubbell|acuity|ceiling|wall|pir|ultrasonic|dual\\s*tech))",
+    "\\bintermatic\\b(?=.*(?:timer|photo|t\\d{3,4}|et\\d|ej\\d|k4\\d{3}|astro|clock|switch))",
+    "\\btork\\b",
+    "\\b(?:ej|et|t|k)\\d{3,4}[a-z]{0,3}\\b(?=.*(?:intermatic|tork|timer|photo|clock))"
+   ],
+   "negative": [
+    "\\bmc\\b|\\d/\\d|\\bcable\\b|luminaire",
+    "\\bmc\\b|\\d/\\d|\\bcable\\b|luminaire|\\brelay\\s*(?:module|base)\\b(?!.*(?:lutron|lighting))"
+   ],
+   "priority": 39
+  },
+  {
+   "id": "lighting_fixtures",
+   "label": "Lighting fixtures",
+   "group": "lighting",
+   "keywords": [
+    "(?<!swivel )\\bfixtures?\\b(?!\\s*(?:clamp|clip|hanger|support|box|mount|whip|screw|stud|bar|suspension|stabilizer|ears?|chain|socket|raceway|nut|eyelet|vapor|rail|strap))(?!.*\\b(?:suspension\\s*bar|eyelet|nut\\b|hanger|clip|clamp|rail|vapor\\s*box|t-?grid))",
+    "(?<!\\d/\\d )(?<!\\d/\\d)\\bluminaires?\\b(?!.*(?:\\bmc\\b|m/c|hospital|\\d/\\d|cable))",
+    "\\btroffers?\\b(?!\\s*support)",
+    "\\bflat\\s*panels?\\b",
+    "\\b(?:1x4|2x2|2x4)\\b(?=.*(?:led|panel|troffer|lay-?in|flat|driver|lumen|cct|\\dk\\b))",
+    "\\b(?:high|low)\\s*-?bays?\\b",
+    "\\bwall\\s*-?packs?\\b",
+    "\\bdown\\s*-?lights?\\b",
+    "\\brecessed\\s*(?:can|light|led|housing)",
+    "\\bexit\\s*(?:sign|light|combo)s?\\b",
+    "\\bemergency\\s*(?:light|led|unit|combo|egress|battery\\s*(?:pack|backup))s?\\b",
+    "\\bstrip\\s*lights?\\b",
+    "\\bvapor\\s*-?(?:tight|proof)\\b",
+    "\\b(?:flood|area|canopy|step|security|under\\s*-?cabinet)\\s*lights?\\b",
+    "\\bsconces?\\b",
+    "\\b(?:2x2|2x4|1x4)\\b(?=.*\\b(?:led|panel|troffer|lay-?in|flat)\\b)",
+    "\\blithonia\\b",
+    "\\bwrap\\s*-?around\\b(?!\\s*strap)",
+    "\\bled\\s*(?:panel|strip|wrap|light|flat\\s*panel)s?\\b",
+    "(?<!indicator )(?<!pilot )(?<!work )(?<!flash )(?<!string )(?<!cam )(?<!street )\\blights?\\b(?!\\s*(?:switch|duty|pole|socket|transformer|control|fixture\\s*whip|bulb|gray|grey|junction|box|fixture\\s*(?:hanger|clip|clamp|support|nut|eyelet)))(?!.*\\b(?:junction\\s*box|j-?box|splice\\s*kit|street\\s*light\\s*(?:splice|conn)|\\bbox\\b))",
+    "\\bbollards?\\b",
+    "\\blight\\s*poles?\\b",
+    "\\bhousings?\\b(?=.*(?:recessed|can|led|downlight))",
+    "\\b\\d{4}k\\b(?=.*(?:lm\\b|lumen|cri|led|ft|watt|\\dw\\b))",
+    "\\b\\d{3,5}\\s*lm\\b",
+    "\\bcri\\s*\\d{2}\\b",
+    "\\bled\\s*(?:tape|ribbon)\\b",
+    "\\blight\\s*engines?\\b",
+    "\\buno\\s*x\\b",
+    "\\busai\\b",
+    "\\bled-\\d{3}-"
+   ],
+   "negative": [
+    "\\b(?:ears?|socket|raceway|swivel|bulbs?|entry\\s*plate|hospital\\s*grade)\\b|\\bmc\\b|light\\s*gr[ae]y|fixture\\s*(?:chain|hanger|clamp|clip|support|stud|bar|whip|screw)",
+    "\\b(?:ears?|socket|raceway|swivel|bulbs?|entry\\s*plate|hospital\\s*grade)\\b|\\bmc\\b|\\bm/c\\b|light\\s*gr[ae]y|fixture\\s*(?:chain|hanger|clamp|clip|support|stud|bar|whip|screw|nut|eyelet|vapor|rail|suspension)|\\bjunction\\s*box\\b|\\bsplice\\s*kit\\b|\\bsuspension\\s*bar\\b|\\d{1,2}/\\d\\s*(?:luminaire|mc|m/c)"
+   ],
+   "priority": 38
+  },
+  {
+   "id": "lamps_led",
+   "label": "Lamps, LED bulbs, ballasts & drivers",
+   "group": "lighting",
+   "keywords": [
+    "\\bled\\s*(?:lamp|bulb|tube)s?\\b",
+    "\\b(?:a19|a21|br30|br40|par20|par30|par38|mr16|g25)\\b",
+    "\\b(?:t8|t5|t12|t5ho)\\b(?=.*(?:lamp|tube|bulb|ballast|\\d+\\s*w\\b|watt|\\dk\\b|fluor|led|'|ft))",
+    "\\blamps?\\b(?!\\s*(?:post|holder|cord|socket|cage))",
+    "(?<!neon )\\bbulbs?\\b(?!\\s*tee)(?!\\))",
+    "\\bballasts?\\b",
+    "\\bled\\s*drivers?\\b",
+    "\\bdrivers?\\b(?=.*\\b(?:led|\\d+\\s*w(?:att)?|\\d+\\s*ma|dimmable|constant\\s*current)\\b)",
+    "(?<!zero )\\bhalogen\\b",
+    "\\bmetal\\s*halide\\b",
+    "\\bfluorescent\\b(?!.*(?:paint|hanger|fixture\\s*hanger|clip|bracket))",
+    "\\bcfl\\b",
+    "\\bincandescent\\b",
+    "\\btype\\s*[ab]\\s*(?:led\\s*)?tubes?\\b",
+    "\\b\\d+\\s*w(?:att)?\\s+(?:led\\s+)?(?:a19|br30|par38|tube|lamp|bulb)"
+   ],
+   "negative": [
+    "\\b(?:neon|indicator|tee\\s*clip|paint|sealtite|cage)\\b",
+    "\\b(?:neon|indicator|tee\\s*clip|paint|sealtite|cage|hanger)\\b"
+   ],
+   "priority": 37
+  },
+  {
+   "id": "medium_voltage_cable",
+   "label": "Medium-voltage cable (5-35 kV) & MV terminations",
+   "group": "wire_cable",
+   "keywords": [
+    "\\bmv\\s*-?\\s*(?:cable|105|90|wire)\\b",
+    "\\bmv\\b(?=.*(?:cable|splice|termination|kv|okonite|epr))",
+    "\\bmedium\\s*voltage\\b",
+    "\\b(?:5|8|15|25|28|35)\\s*kv\\b",
+    "\\b\\d{1,2}\\s*kv\\s*(?:cable|wire|splice|termination|epr|xlpe)\\b",
+    "\\bepr\\b",
+    "\\bokoguard\\b",
+    "\\bokonite\\b(?=.*(?:kv|mv|epr|shield))",
+    "\\b(?:tape|wire)\\s*shield(?:ed)?\\b(?=.*(?:kv|mv|mcm|kcmil|awg))",
+    "\\b(?:cold|heat)\\s*shrink\\s*(?:termination|splice)s?\\b(?=.*(?:kv|mv))",
+    "\\bmv\\s*(?:splice|termination|kit)s?\\b",
+    "\\b(?:elbow|loadbreak|deadbreak)\\s*(?:connector|elbow|termination)s?\\b",
+    "\\bloadbreak\\b",
+    "\\b\\d{3}\\s*(?:mcm|kcmil)\\b(?=.*\\bkv\\b)",
+    "\\bsubstation\\s*(?:cable|wire)\\b"
+   ],
+   "negative": [
+    "\\blow\\s*voltage\\b"
+   ],
+   "priority": 36
+  },
+  {
+   "id": "datacom_connectivity",
+   "label": "Datacom / RF connectivity: jacks, patch panels, coax & fiber connectors",
+   "group": "devices",
+   "keywords": [
+    "^keystones,?\\s*plates\\s*and\\s*panels\\b|^coaxial\\s*connectors\\b|^rj45\\s*connectors\\b",
+    "\\bkeystone\\s*(?:jacks?|inserts?|plates?|modules?|couplers?)\\b",
+    "\\bkeystone\\b(?=.*(?:cat|jack|rj|plate|blank|hdmi|coax|port|insert))",
+    "\\brj-?45\\b",
+    "\\brj-?11\\b",
+    "\\b(?:cat\\s*-?(?:5e?|6a?)\\s*)?(?:jacks?|plugs?|connectors?|couplers?)\\b(?=.*\\b(?:cat\\s*-?(?:5e?|6a?)|rj-?45|utp|ethernet|keystone)\\b)",
+    "\\bpatch\\s*panels?\\b",
+    "\\bpatch\\s*(?:cords?|cables?)\\b",
+    "\\b(?:f|bnc|n)-?\\s*(?:type\\s*)?(?:connectors?|conn|compression)\\b(?=.*(?:rg-?\\d|coax|f-?type|bnc))",
+    "\\bcoax(?:ial)?\\s*(?:connectors?|splitters?|couplers?|adapters?|f-?conn)\\b",
+    "\\b\\d\\s*-?\\s*way\\s*(?:coax\\s*)?splitters?\\b",
+    "\\bfiber\\s*(?:connectors?|adapters?|couplers?|pigtails?|patch|enclosures?|panels?|cassettes?|jumpers?|assembl(?:y|ies)|lc\\b|sc\\b|st\\b|mtp|mpo|terminat\\w+)\\b",
+    "\\b(?:lc|sc|st|mtp|mpo)\\s*(?:-|to)?\\s*(?:lc|sc|st|mtp|mpo)\\b(?=.*(?:fiber|om\\d|os\\d|patch|jumper|duplex|simplex))",
+    "\\bos2\\b",
+    "\\bom[1-5]\\b(?=.*(?:fiber|patch|jumper|lc|sc))",
+    "\\bradiax\\b",
+    "\\bez-?fit\\b",
+    "\\b4\\.3-10\\b",
+    "\\b7/16\\s*din\\b",
+    "\\bdin\\s*(?:male|female)\\b",
+    "\\b(?:7/8|1-?5/8|1/2)\\\"?\\s*(?:heliax|coax|radiating|leaky)\\b",
+    "\\bradiating\\s*cable\\b",
+    "\\bheliax\\b",
+    "\\bdas\\b(?=.*(?:cable|connector|antenna|coax))",
+    "\\bantennas?\\b",
+    "\\bjumpers?\\b(?=.*(?:fiber|coax|rf|n-?male|din|4\\.3))",
+    "\\bhdmi\\b",
+    "\\bwall\\s*plates?\\b(?=.*(?:rj45|keystone|cat\\s*6|coax|datacom|voice|data))",
+    "\\bfaceplates?\\b(?=.*(?:port|keystone|rj45))",
+    "\\bsurface\\s*mount\\s*box(?:es)?\\b(?=.*(?:port|keystone|rj45))",
+    "\\bmedia\\s*converters?\\b",
+    "\\bsfp\\b",
+    "\\bpoe\\s*(?:switch|injector|extender)s?\\b",
+    "\\bnetwork\\s*switch(?:es)?\\b",
+    "\\bpdrk\\d",
+    "\\bcflex\\b",
+    "\\b\\d+\\s*-?\\s*port\\s*(?:panel|switch|patch)\\b"
+   ],
+   "negative": [
+    "\\bplenum\\b|\\bcmp\\b|\\bcmr\\b|\\briser\\s*(?:cable|rated)\\b|\\d{3,}\\s*(?:ft|')\\b(?!.*(?:patch|jumper|assembl))"
+   ],
+   "priority": 35
+  },
+  {
+   "id": "motor_control",
+   "label": "Motor control, contactors, relays & pilot devices",
+   "group": "gear",
+   "keywords": [
+    "^switches\\s*and\\s*indicator\\s*lights\\b",
+    "\\bcontactors?\\b(?!.*lighting)",
+    "\\b(?:motor\\s*)?starters?\\b(?=.*(?:motor|nema|size|hp|contactor|overload|combination|iec|coil))",
+    "\\bmanual\\s*motor\\s*(?:starter|switch|controller)s?\\b",
+    "\\boverload\\s*(?:relay|heater|block)s?\\b",
+    "\\bheater\\s*(?:element|coil)s?\\b(?=.*(?:starter|overload|size))",
+    "\\bvfd\\b",
+    "\\bvariable\\s*frequency\\b",
+    "\\bsoft\\s*start(?:er)?s?\\b",
+    "\\benclosed\\s*(?:starter|contactor)\\b",
+    "\\brelays?\\b(?!.*(?:fire\\s*alarm|addressable))",
+    "\\brib\\d{2,4}[a-z]*\\b",
+    "\\bfunctional\\s*devices\\b",
+    "\\bdefinite\\s*purpose\\b",
+    "\\bdp\\s*contactor\\b",
+    "\\bpush\\s*-?\\s*buttons?\\b(?!.*(?:plate|\\dg\\b))",
+    "\\bpushbuttons?\\b",
+    "\\bindicator\\s*lights?\\b",
+    "\\bpilot\\s*(?:light|device|lamp)s?\\b(?!\\s*switch)",
+    "\\bselector\\s*switch(?:es)?\\b",
+    "\\be-?stops?\\b",
+    "\\bemergency\\s*stop\\b",
+    "\\bcontrol\\s*(?:relay|transformer|station|power\\s*transformer)s?\\b",
+    "\\bcpt\\b",
+    "\\bcurrent\\s*(?:transformer|transducer|sensor|switch)s?\\b",
+    "\\bct\\b(?=.*(?:\\d+:\\d|ratio|amp|donut|split\\s*core))",
+    "\\b(?:float|limit|pressure|flow|foot|photoelectric|proximity)\\s*switch(?:es)?\\b",
+    "\\bthermostats?\\b(?!\\s*(?:wire|cable))",
+    "\\bplc\\b",
+    "\\bmotor\\s*control\\b(?!\\s*center)",
+    "\\b(?:timing|time\\s*delay|control|ice\\s*cube|plug-?in|latching)\\s*relays?\\b",
+    "\\brelay\\s*(?:base|socket)s?\\b",
+    "\\bdin\\s*rail\\b",
+    "\\bterminal\\s*blocks?\\b(?=.*(?:din|relay|control))",
+    "\\b(?:allen\\s*-?\\s*bradley|ab\\s*\\d{3}|square\\s*d\\s*8536|8536|8910|8911|9001|9007|c25[a-z]|xt[a-z]{2}|cn15|cn35|lc1d|lrd)\\b",
+    "\\bnema\\s*size\\s*\\d\\b",
+    "\\bsize\\s*[0-5]\\s*starter\\b",
+    "\\bcoil\\b(?=.*(?:contactor|relay|starter|120\\s*v|24\\s*v|208|240|277|480))",
+    "\\bauxiliary\\s*contacts?\\b",
+    "\\bpower\\s*monitor(?:ing)?\\b",
+    "\\bphase\\s*(?:monitor|loss|failure)\\b",
+    "\\btime\\s*delay\\b(?=.*relay)",
+    "\\b(?:temperature|humidity)\\s*controllers?\\b",
+    "\\bac\\s*drives?\\b",
+    "\\bpowerflex\\b",
+    "\\baltivar\\b"
+   ],
+   "negative": [
+    "\\bstrap\\b|\\bstraps\\b|\\bmounting\\s*plate\\b"
+   ],
+   "priority": 34
+  },
+  {
+   "id": "power_distribution_misc",
+   "label": "SPD, EV charging, generator inlets & misc power distribution",
+   "group": "gear",
+   "keywords": [
+    "\\bspd\\b",
+    "\\bsurge\\s*(?:protective\\s*device|arrest(?:er|or)|protection|suppressor|protector)s?\\b",
+    "\\btvss\\b",
+    "\\bev\\s*(?:charger|charging|station)s?\\b",
+    "\\bevse\\b",
+    "\\bcharge\\s*point\\b",
+    "\\bjuicebox\\b",
+    "\\bwallbox\\b",
+    "\\b(?:generator|power)\\s*(?:inlet|receptacle)\\s*box(?:es)?\\b",
+    "\\bgenerator\\s*(?:inlet|cord|plug)s?\\b",
+    "\\binterlock\\s*kits?\\b",
+    "\\bmanual\\s*transfer\\b",
+    "\\bpower\\s*strips?\\b",
+    "\\bsurge\\s*strips?\\b",
+    "\\brack\\s*pdu\\b",
+    "\\bpdu\\b",
+    "\\bcamlocks?\\b",
+    "\\bcam-?\\s*locks?\\b",
+    "\\btap\\s*box(?:es)?\\b(?=.*(?:cam|generator|400a|200a))",
+    "\\bpower\\s*conditioners?\\b",
+    "\\bups\\b(?=.*(?:va\\b|kva|battery|rack|apc))",
+    "\\bapc\\b(?=.*(?:ups|battery|pdu))",
+    "\\bline\\s*reactors?\\b",
+    "\\bcapacitors?\\b(?=.*(?:kvar|power\\s*factor|motor|run|start))",
+    "\\bpower\\s*factor\\b"
+   ],
+   "negative": [],
+   "priority": 33
+  },
+  {
+   "id": "switchgear_meter_sockets",
+   "label": "Switchgear, switchboards, meter sockets, service entrance",
+   "group": "gear",
+   "keywords": [
+    "\\bswitch\\s*-?\\s*(?:gear|boards?)\\b",
+    "\\bmeter\\s*(?:sockets?|bases?|pans?|cans?|troughs?|pedestals?|mains?|combos?|combinations?|enclosures?|cabinets?|box(?:es)?|banks?)\\b(?!.*lugs?)",
+    "\\bmeter\\b(?=.*(?:\\d{3}\\s*a\\b|amp|ringless|ring\\s*type|lever\\s*bypass|bypass|jaw|con\\s*-?ed|utility|milbank|uni-?pak|talon|durham|socket|base))(?!.*(?:multi|volt|clamp|tester|fluke|klein|ideal|fiber|power\\s*meter|lugs?|hub))",
+    "\\bmilbank\\b(?=.*(?:meter|socket|ringless|ring\\s*type|bypass|jaw|pedestal|ct\\s*cab|\\d{3}\\s*a\\b|amp))(?!.*(?:gutter|gttr|wireway|junc|j-?box|sc\\s*box|nk\\b))",
+    "\\bringless\\b",
+    "\\bring\\s*type\\b",
+    "\\blever\\s*bypass\\b",
+    "\\b(?:4|5|7|13)\\s*-?\\s*jaw\\b",
+    "\\bct\\s*(?:cabinet|can|enclosure|rated|meter)s?\\b",
+    "\\bcon\\s*-?\\s*ed(?:ison)?\\b(?=.*(?:meter|socket|approved|spec|cabinet|can|trough))",
+    "\\b(?:pseg|o&r|lipa|nyseg|central\\s*hudson|national\\s*grid|orange\\s*(?:&|and)\\s*rockland)\\b(?=.*(?:meter|socket|approved|spec))",
+    "\\buni-?pak\\b",
+    "\\btalon\\b",
+    "\\b(?:power|rv|meter)\\s*pedestals?\\b",
+    "\\bservice\\s*(?:entrance\\s*(?:panel|device|equipment|breaker|switch|disconnect|rated|gear)|disconnect|mast|equipment)\\b",
+    "\\b(?:800|1000|1200|1600|2000|2500|3000|4000)\\s*a(?:mp)?\\b(?=.*(?:switch|breaker|main|gear|board|disconnect|bus|frame))",
+    "\\bmotor\\s*control\\s*center\\b",
+    "\\bmcc\\b",
+    "\\bbuckets?\\b(?=.*(?:mcc|starter|size|nema|combo))",
+    "(?<!tone )\\bgenerators?\\b(?!.*(?:portable|inverter|honda|dewalt|milwaukee|tone))",
+    "\\bgenset\\b",
+    "\\b(?:generac|kohler)\\b",
+    "\\bups\\b(?=.*(?:kva|kw|battery|va\\b))",
+    "\\b(?:draw|roll)\\s*-?\\s*out\\b",
+    "\\binsulated\\s*case\\b",
+    "\\b(?:masterpact|magnum|powerpact\\s*[pr]|wl\\b)",
+    "\\b(?:power|air)\\s*(?:circuit\\s*)?breakers?\\b",
+    "\\bacb\\b",
+    "\\bground\\s*fault\\s*(?:relay|protection|system)\\b"
+   ],
+   "negative": [
+    "\\b(?:tone|lug|lugs|clamp|caddy|j-?hook|conn|connector|connectors|cap|caps|strap|straps)\\b"
+   ],
+   "priority": 32
+  },
+  {
+   "id": "disconnects_safety_switches",
+   "label": "Disconnects, safety switches, motor control & relays",
+   "group": "gear",
+   "keywords": [
+    "\\bdisconnects?\\b(?!.*(?:awg|terminal|tab\\b|quick|din|pack))",
+    "\\bdisc\\b(?=.*(?:\\d+\\s*a\\b|amp|fus|nf|nema|3r|switch|sw\\b))",
+    "\\bsafety\\s*switch(?:es)?\\b",
+    "\\b(?:fused|fusible|non-?fus(?:ed|ible)|nf|unfused)\\s*(?:disc|disconnect|switch|sw|safety)\\b",
+    "\\b(?:heavy|general)\\s*duty\\s*(?:switch|disc|safety)\\b",
+    "\\b(?:hd|gd)\\s*(?:switch|disc|safety)\\b",
+    "\\b(?:h|d|hu|du|dg|dgu|dh|dhu|hf|hnf|gnf|gf|hnfd|hfd|dt)\\s*-?\\s*\\d{3}\\s*[a-z]{0,4}\\b(?=.*(?:disc|switch|nema|fus|sw\\b|\\d+\\s*a\\b|amp|3r))",
+    "\\bac\\s*disconnects?\\b",
+    "\\bpull\\s*-?\\s*outs?\\b",
+    "\\bmotor\\s*(?:rated\\s*)?switch(?:es)?\\b",
+    "\\bmanual\\s*motor\\s*(?:starter|switch|controller)s?\\b",
+    "\\benclosed\\s*switch(?:es)?\\b",
+    "\\btransfer\\s*switch(?:es)?\\b",
+    "\\b(?:ats|mts)\\b(?=.*(?:\\d+\\s*a\\b|amp|pole|\\dp\\b|transfer|asco|generac|kohler|nema|enclosure|automatic|manual|switch))",
+    "\\bdouble\\s*throw\\b",
+    "\\bdh\\d{3}[a-z]{2,}\\b",
+    "\\bnon\\s*-?\\s*fus(?:ed|ible)\\b",
+    "\\b\\d{2,4}\\s*(?:a|amp)\\b.*\\b(?:[23]\\s*-?\\s*pole|[23]p)\\b.*\\b(?:nema\\s*(?:1|3r|4x?|12)|non\\s*fused|fused|fusible)\\b",
+    "\\bnema\\s*(?:1|3r|4x?|12)\\b(?=.*(?:non\\s*fused|fusible|fused|\\d+\\s*a\\b.*(?:pole|p\\b)))",
+    "\\bmotor\\s*rated\\b",
+    "\\bautomatic\\s*transfer\\b",
+    "\\basco\\s*(?:300|7000|4000|series)\\b",
+    "\\bhbl\\d{4}\\b(?=.*(?:disc|switch))"
+   ],
+   "negative": [
+    "^\\d{5}[a-z]?\\s+\\d{1,2}g\\b|\\b(?:awg|pack|terminal|terminals|plate)\\b",
+    "^\\d{5}[a-z]?\\s+\\d{1,2}g\\b|\\b(?:awg|pack|terminal|terminals|plate)\\b|^'?\\s*\\d+\\s*fl\\b|\\bfl\\s*to\\s*ats\\b"
+   ],
+   "priority": 31
+  },
+  {
+   "id": "transformers",
+   "label": "Transformers",
+   "group": "gear",
+   "keywords": [
+    "^transformers\\b",
+    "\\btransformers?\\b(?!\\s*(?:wire|cable|lugs?|ground|stud|clamp))",
+    "\\bxfmrs?\\b",
+    "\\bx-?formers?\\b",
+    "\\b\\d{1,4}(?:\\.\\d)?\\s*kva\\b",
+    "\\bkva\\b",
+    "\\bbuck\\s*-?\\s*boost\\b",
+    "\\bdry\\s*-?\\s*type\\b",
+    "\\bencapsulated\\b",
+    "\\bk-?\\s*(?:4|13|20|30)\\b",
+    "\\bk-?rated\\b",
+    "\\b(?:208|240|480|600)\\s*(?:v|volt|vac)?\\s*(?:to|-|/|x)\\s*(?:120|208|240|480)(?:/\\d{3})?\\s*(?:v|volt|vac)?\\b(?=.*(?:kva|xfmr|transformer|primary|secondary|delta|wye|3\\s*ph))",
+    "\\b(?:primary|secondary)\\b(?=.*(?:secondary|primary|kva|volt|v\\b|delta|wye))(?!.*(?:block|lug|pdb))",
+    "\\bstep\\s*-?\\s*(?:up|down)\\b",
+    "\\b(?:isolation|auto|drive\\s*isolation|lighting|signal|bell|doorbell|class\\s*2|low\\s*voltage)\\s*(?:transformer|xfmr)s?\\b",
+    "\\bautotransformer\\b",
+    "\\b(?:hammond\\s*power|hps|acme|jefferson|mgm|sola|federal\\s*pacific)\\b(?=.*(?:kva|xfmr|transformer|volt|\\bv\\b))",
+    "\\b(?:copper|aluminum)\\s*wound\\b",
+    "\\bpad\\s*-?\\s*mount(?:ed)?\\b",
+    "\\bpadmount\\b",
+    "\\bpole\\s*-?\\s*mount(?:ed)?\\s*(?:transformer|xfmr)\\b",
+    "\\bnon-?\\s*linear\\b"
+   ],
+   "negative": [
+    "\\b(?:lug|lugs|block|pdb|clamp|strap|isolator|isolators)\\b",
+    "\\b(?:lug|lugs|block|pdb|clamp|strap|isolator|isolators)\\b|\\bbreakers?\\b|\\bstab-?lok\\b"
+   ],
+   "priority": 30
+  },
+  {
+   "id": "panelboards_loadcenters",
+   "label": "Panelboards, loadcenters, busway, SPD",
+   "group": "gear",
+   "keywords": [
+    "\\bpanel\\s*-?\\s*boards?\\b(?!\\s*lugs?)",
+    "\\bload\\s*-?\\s*cent(?:er|re)s?\\b(?!.*(?:lug|bar|strap|collar|kit))",
+    "\\bnq(?:od)?\\b(?=.*(?:panel|interior|can|trim|cover|kit|\\d+\\s*a\\b|space|ckt|mlo|mcb))",
+    "\\bnf\\b(?=.*(?:panel|interior|can|trim|cover|\\d+\\s*a\\b|space|ckt|mlo|mcb))",
+    "\\b(?:i-?line|iline|hcm|hcp|hcn|hcw|hcr|p[1-5]\\b|ehb|pro-?stock|prl[1-4]?a?|pow-?r-?line|powerline|bab|aq|aqf|aqu)\\b(?=.*(?:panel|interior|can|trim|breaker|amp|\\d+\\s*a\\b|circuit|space|mlo|mcb|main))",
+    "\\bmlo\\b",
+    "\\bmcb\\s*(?:panel|loadcenter|load\\s*center)\\b",
+    "\\bmain\\s*lugs?\\b",
+    "\\bmain\\s*breaker\\s*(?:panel|loadcenter|load\\s*center|lc|kit)\\b",
+    "\\b\\d{2,4}\\s*a\\s*(?:mlo|mcb)\\b",
+    "\\bpanels?\\b(?=.*(?:\\d{1,3}\\s*(?:ckt|circuit|space|sp)s?\\b|\\d{2,4}\\s*a\\b|amp|mlo|mcb|main|interior|trim|cover|can|tub|3r|surface|flush|square\\s*d|siemens|eaton|\\bge\\b|breaker|phase|bus|copper|aluminum|nema\\s*1))(?!.*(?:led|light|fixture|troffer|2x4|2x2|back\\s*panel|control\\s*panel|solar|pv|touch))",
+    "\\bpanel\\s*(?:interiors?|trims?|covers?|cans?|tubs?|doors?|fronts?|fillers?)\\b",
+    "\\b\\d{1,3}\\s*(?:ckt|circuit|space|sp|cct)s?\\b(?=.*(?:panel|mlo|mcb|main|\\d+\\s*a\\b|amp|loadcenter|nema|3r|interior|surface|flush|qo|hom|br|ch|nq|nf))",
+    "\\b(?:flush|surface)\\s*(?:trim|cover)\\b(?=.*(?:panel|nq|nf|loadcenter|interior))",
+    "\\bsub\\s*-?\\s*panels?\\b",
+    "\\bsplitters?\\b(?!.*(?:coax|way|cable|video))",
+    "\\bbus\\s*(?:ways?|plugs?|ducts?)\\b",
+    "\\bbusway\\b",
+    "\\bdistribution\\s*(?:panel|board)s?\\b",
+    "\\bmeter\\s*(?:center|stack|pack)s?\\b",
+    "\\b(?:qo|hom|homeline)\\s*(?:panel|loadcenter|load\\s*center|lc)\\b",
+    "\\b(?:qo|hom)\\d{2,3}[ml]\\d{2,3}[a-z]*\\b",
+    "\\bnqod\\b",
+    "\\b(?:br|ch)\\d{2,4}[a-z]{0,2}\\d{3}[a-z]*\\b",
+    "\\b[gp]\\d{2,4}[a-z]{0,3}\\d{3}[a-z]*\\b(?=.*(?:siemens|panel|loadcenter|load\\s*center))",
+    "\\bstab-?lok\\b(?=.*(?:panel|loadcenter))"
+   ],
+   "negative": [
+    "\\b(?:lug|lugs|collar|coax|keystone|keystones|port|rj\\d+|led|light|fixture|troffer)\\b"
+   ],
+   "priority": 29
+  },
+  {
+   "id": "circuit_breakers",
+   "label": "Circuit breakers",
+   "group": "gear",
+   "keywords": [
+    "\\bbreakers?\\b(?!\\s*(?:panel|box|lock|hammer))",
+    "\\bcircuit\\s*breakers?\\b",
+    "\\b(?:qo|hom|bq|bqd|bl|br|ch|chf|thql|thqb|thqc|thqp|thhqb|tql|qob|qbl|edb|egb|fal|hgl|hjl|hll|jdl|jgl|lal|ljl|hqp|bab|qp|q[pdg]?)\\d{3,4}[a-z]{0,4}\\b(?!.*(?:panel|loadcenter|load\\s*center|interior|mlo))",
+    "\\b(?:qo|hom|bq|br|ch|thql|thqb|bab|qp|fdc|hfd|jdc|lgg)\\s*-?\\s*\\d{1,3}\\s*(?:a\\b|amp)",
+    "\\bshunt\\s*trip\\b",
+    "\\bbolt\\s*-?\\s*on\\b",
+    "\\bplug\\s*-?\\s*(?:on|in)\\s*(?:breaker|cb)\\b",
+    "^(?!.*(?:disc\\b|disconnect|safety|switch|fused|panel|mlo|mcb|fuse|contactor|starter|rcpt|recep|plug|lkg|decor|toggle|meter|xfmr|transformer|kva)).*\\b\\d{1,4}\\s*a(?:mp)?\\s*(?:[123]\\s*-?p(?:ole)?|[123]p)\\b",
+    "^(?!.*(?:disconnect|disc\\b|switch|contactor|relay|starter|fused|panel|rcpt|recep|plug|lkg|decor|toggle|meter|xfmr|transformer|kva)).*\\b(?:[123])\\s*-?\\s*pole\\b(?=.*(?:breaker|cb|\\d+\\s*a\\b|amp))",
+    "\\bmccb\\b",
+    "\\bmolded\\s*case\\b",
+    "\\b(?:gfci|gfep|afci|caf|cafi|dual\\s*function|arc\\s*fault|ground\\s*fault)\\s*(?:circuit\\s*)?breakers?\\b",
+    "\\bmain\\s*breaker\\b(?!.*(?:panel|loadcenter|load\\s*center|lc\\b|kit))",
+    "\\bcb\\b\\s*\\d",
+    "\\bhacr\\b",
+    "\\bpowerpact\\b",
+    "\\bhandle\\s*(?:ties?|locks?|padlocks?)\\b",
+    "\\bbreaker\\s*(?:locks?|fillers?|blanks?)\\b",
+    "\\bfiller\\s*plates?\\b",
+    "\\b(?:tandem|quad|twin)\\s*(?:breaker)?\\b(?=.*(?:breaker|\\d+\\s*a|amp))",
+    "\\btrip\\s*units?\\b",
+    "\\b(?:square\\s*d|siemens|eaton|ge|cutler)\\b(?=.*(?:\\d{1,4}\\s*a\\b|breaker|amp|pole|\\d[p]\\b))(?!.*(?:panel|loadcenter|disc|switch|xfmr|transformer|starter|contactor))",
+    "\\b(?:zinsco|federal\\s*pacific|fpe|stab-?lok|pushmatic|bulldog|challenger|murray|crouse-?hinds\\s*(?:mp|breaker))\\b(?=.*(?:breaker|\\d+\\s*a\\b|amp|pole|\\dp\\b|replacement))",
+    "\\bcutler\\s*-?\\s*hammer\\b(?=.*(?:\\d+\\s*a\\b|breaker|amp|pole|\\dp\\b))",
+    "\\bcutler\\s*-?\\s*hammer\\b"
+   ],
+   "negative": [
+    "\\b(?:rcpt|recep|receptacle|lkg|decor|decora|toggle)\\b|(?<!cutler )(?<!cutler-)(?<!cutler)\\bhammers?\\b|\\bplug\\b(?!\\s*-?\\s*(?:in|on))"
+   ],
+   "priority": 28
+  },
+  {
+   "id": "fuses",
+   "label": "Fuses & fuse holders",
+   "group": "gear",
+   "keywords": [
+    "\\bfuses?\\b",
+    "\\bfuse\\s*-?\\s*(?:holders?|blocks?|clips?|pullers?|reducers?|covers?|kits?|links?|cutouts?)\\b",
+    "\\bfuseholders?\\b",
+    "\\b(?:frn|frs|lpn|lps|lpj|lp-?cc|flnr|flsr|fnq|fnm|fna|ktk|klk|kln|ktn|kts|jjs|jjn|jks|klu|kru|krp|ecnr|ecsr|edcc|trs|trn|tcf|fcf|agc|mda|mdl|gma|gmc|gda|gdc|ftq|fla|flm|flq|fnw|atmr|atqr|atdr|hclr|glr|gmf|gmq)\\s*-?\\s*r?\\s*-?\\s*\\d+(?:/\\d+)?\\s*(?:a\\b|amp)?\\b(?!.*(?:rod|thhn|awg))",
+    "\\b(?:bussmann|buss|littelfuse|mersen|ferraz|gould\\s*shawmut|edison\\s*fuse)\\b",
+    "\\bclass\\s*(?:j|rk1|rk5|cc|t|l|g|h|k5)\\b",
+    "\\btime\\s*-?\\s*delay\\b",
+    "\\bdual\\s*-?\\s*element\\b",
+    "\\bfast\\s*-?\\s*acting\\b",
+    "\\b(?:cartridge|glass|ceramic|midget|plug|edison\\s*base|type\\s*s|knife\\s*blade|one\\s*-?time)\\s*fuses?\\b",
+    "\\bferrules?\\b(?!.*(?:wire|awg|crimp|insulated))",
+    "\\b(?:frn|frs|lpn|lps)-?\\s*rk?\\b",
+    "\\b(?:ktk|klk|fnq|lp-?cc)-?r\\b",
+    "\\bjj[ns]\\b",
+    "\\brk[15]\\b",
+    "\\blcl-?\\d",
+    "\\ba6d\\d",
+    "\\ba4b[qy]",
+    "\\bhclr\\d?",
+    "\\blicd\\d",
+    "\\bmax-?k\\b",
+    "\\b(?:a6t|a4j|a3t|a2d|a2k|a6k|ajt|atm|atq|otm|hsj|hsr|ecn|ecs|frn-?r|frs-?r|lpn-?rk|lps-?rk|jjn|jjs|kfg|tr|trm)\\s*-?\\s*\\d+\\b(?!.*(?:rod|thhn|awg|xhhw))",
+    "\\bedison\\b(?=.*(?:fuse|hclr|lcl|ecnr|ecsr|edcc|tcf|class))",
+    "\\bclass\\s*[jlt]\\s*fuses?\\b"
+   ],
+   "negative": [],
+   "priority": 27
+  },
+  {
+   "id": "grounding",
+   "label": "Grounding & bonding",
+   "group": "connectors_grounding",
+   "keywords": [
+    "^grounding\\b",
+    "\\bground\\s*-?\\s*rods?\\b",
+    "\\bground(?:ing)?\\s*(?:rods?|clamps?|electrodes?|plates?|straps?|braids?|kits?|systems?|bushings?|wells?)\\b",
+    "\\bgnd\\s*(?:rod|clamp|wire|conductor|bar|lug)s?\\b",
+    "\\b(?:grd|gnd|gr|ground(?:ing)?)\\.?\\s*bush(?:ing)?s?\\b",
+    "\\bgrd\\.?\\s*clamps?\\b",
+    "\\bcopper\\s*-?\\s*clad\\b",
+    "\\bacorns?\\b(?!\\s*(?:nut|nuts|head|cap))(?!.*\\banchor)",
+    "\\brod\\s*clamps?\\b",
+    "\\b(?:water\\s*)?pipe\\s*(?:ground(?:ing)?|bonding)\\s*clamps?\\b",
+    "\\bbonding\\s*(?:jumpers?|straps?|bushings?|wedges?|clamps?|screws?|conductors?|kits?)\\b",
+    "\\bbonding\\b",
+    "\\bjumpers?\\b(?=.*(?:ground|bond|braid|copper|flex|strap))",
+    "\\bbraid(?:ed)?\\b(?=.*(?:strap|jumper|bond|ground|copper))",
+    "\\b(?:cadweld|exothermic|thermoweld)\\b",
+    "\\bufer\\b",
+    "\\bground\\s*ring\\b",
+    "\\bgrounding\\s*electrode\\b",
+    "\\b(?:gec|egc)\\b",
+    "\\bequipment\\s*ground(?:ing)?\\b",
+    "\\bground\\s*(?:screws?|pigtails?|tails?)\\b",
+    "\\bpig\\s*-?\\s*tails?\\b",
+    "\\bmigbs?\\b",
+    "\\bcu\\s*ground\\b",
+    "\\bgreenies?\\b",
+    "\\blightning\\s*(?:protection|arrest(?:er|or)|rods?|air\\s*terminals?)\\b",
+    "\\bair\\s*terminals?\\b",
+    "\\b(?:harger|erico|nvent\\s*erico|galvan)\\b",
+    "\\b(?:telecom\\s*)?ground(?:ing)?\\s*(?:bus)?bars?\\b",
+    "\\b(?:tmgb|tgb|ibt)\\b",
+    "\\bintersystem\\s*bonding\\b",
+    "\\bbare\\s*(?:copper|cu)\\b(?=.*(?:ground|gnd|grounding|bond))",
+    "\\bground\\s*(?:test|inspection)\\s*wells?\\b",
+    "\\bearth\\s*(?:rods?|ground)\\b",
+    "\\bmigs?'?s?\\b",
+    "\\bmig\\s*bush",
+    "\\bmi\\s*ss\\s*grd\\b",
+    "\\bcs\\d{2}s\\b",
+    "\\bn\\d{3}s\\b",
+    "\\bblw\\d",
+    "\\bharger\\s*\\d{4}",
+    "\\bground\\s*(?:bars?|bus)\\b(?!.*(?:kit|panel|square\\s*d|siemens|eaton|\\bge\\b))",
+    "\\bgar\\d{4}",
+    "\\bbibs\\b",
+    "\\bsubmersible\\s*splice\\s*kits?\\b",
+    "\\bground(?:ing)?\\s*(?:clamp|conn)\\b",
+    "\\b(?:pipe|rod|rebar|beam)\\s*(?:ground\\s*)?clamps?\\b(?=.*(?:burndy|ground|gnd|bronze|cu\\b))",
+    "\\bbronze\\s*clamps?\\b",
+    "\\bcable\\s*to\\s*(?:lug|cable|rod|flat|pipe)\\b"
+   ],
+   "negative": [
+    "(?<![a-z])(?:thhn|xhhw|rhw|rhh|use-2|mcm|kcmil)\\b(?!.*\\b(?:rod|clamp|bushing|bar|jumper|braid)s?\\b)",
+    "\\b(?:bar|ground|grounding)\\s*kit\\b(?=.*(?:square\\s*d|sqd|siemens|eaton|\\bge\\b|panel|loadcenter|breaker|circuit))",
+    "\\bacorn\\s*nut\\b|\\bsleeve\\s*anchor\\b|\\bwedge\\s*anchor\\b"
+   ],
+   "priority": 26
+  },
+  {
+   "id": "terminals_lugs_connectors",
+   "label": "Lugs, terminals, splices, wire connectors, ties & markers",
+   "group": "connectors_grounding",
+   "keywords": [
+    "^wire\\s*terminals\\b|^mechanical\\s*connectors\\b|^insulated\\s*connectors\\b|^compression\\s*connectors\\b|^wire\\s*connectors\\b",
+    "\\blugs?\\b",
+    "\\bterminals?\\b(?!\\s*(?:box|adapter|strip\\s*light|block\\s*enclosure))",
+    "\\b(?:insulated|mechanical)\\s*connectors?\\b",
+    "\\bcompression\\s*connectors?\\b(?=.*(?:awg|mcm|kcmil|lug|splice))",
+    "\\bawg\\b(?=.*(?:lug|conn|splice|tap|plug|terminal|ring|spade))",
+    "\\bterminal\\s*(?:block|strip)s?\\b",
+    "\\bsplit\\s*-?\\s*bolts?\\b",
+    "\\b(?:compression|mechanical|crimp)\\s*(?:lugs?|splices?|sleeves?|connectors?|terminals?|barrels?)\\b",
+    "\\bcrimps?\\b",
+    "\\b(?:butt|ring|fork|spade|bullet|disconnect)\\s*(?:splices?|terminals?|tongues?|connectors?)\\b",
+    "\\bwire\\s*-?\\s*nuts?\\b",
+    "\\bwing\\s*-?\\s*nuts?\\b(?=.*(?:wire|ideal|3m|conn|orange|yellow|red|blue))",
+    "\\bwire\\s*conn(?:ectors?)?\\.?\\b",
+    "\\b(?:wiregard|alumiconn|wing-?gard|twister|b-?caps?)\\b",
+    "^(?!compression\\s*tools)(?!.*(?:crimping\\s*die|die\\s*set|hydraulic\\s*tool))(?=.*(?:u\\s*-?\\s*style|u-?type|crimp|burndy|ilsco|hydraulic|mcm|awg|kcmil)).*\\bdies?\\b",
+    "\\bpush\\s*-?\\s*in\\s*(?:connectors?|wire)\\b",
+    "\\bwago\\b",
+    "\\blever\\s*(?:nuts?|connectors?)\\b",
+    "\\bpolaris\\b",
+    "\\b(?:insulated\\s*)?multi-?\\s*taps?\\b",
+    "\\btap\\s*(?:connectors?|blocks?)\\b",
+    "\\b(?:power\\s*)?distribution\\s*blocks?\\b",
+    "\\bpdb\\b",
+    "\\b(?:ilsco|burndy|penn-?union|blackburn|nsi(?!\\s*(?:tape|ww)))\\b",
+    "\\b(?:h|c)\\s*-?\\s*taps?\\b",
+    "\\bhy-?\\s*(?:lug|link|tap|crimp|dent|ground)s?\\b",
+    "\\b(?:kup-?l-?tap|servit|piggy\\s*-?back)\\b",
+    "\\bsplices?\\b",
+    "\\bsplice\\s*(?:kits?|caps?|sleeves?)\\b",
+    "\\b(?:heat|cold)\\s*shrinks?\\b",
+    "\\bshrink\\s*(?:tube|tubing|sleeve|kit)s?\\b",
+    "\\bscotch\\s*-?(?:cast|lok)\\b",
+    "\\b(?:1|2|4)\\s*-?\\s*hole\\s*(?:lugs?|terminals?|pads?)\\b",
+    "\\bal(?:/|-|9)cu\\b",
+    "\\bdual\\s*rated\\b",
+    "\\bpin\\s*(?:adapters?|terminals?)\\b",
+    "\\bsta-?kon\\b",
+    "\\bdryconn\\b",
+    "\\bdirect\\s*bury\\b(?=.*(?:conn|splice|king|nut))",
+    "\\bwing\\s*conn(?:ector)?s?\\b",
+    "\\b(?:wire|cable)\\s*(?:markers?|labels?)\\b",
+    "\\bmarker\\s*(?:book|cards?|strips?)\\b",
+    "\\bnumber\\s*books?\\b",
+    "\\bbus\\s*bars?\\b(?=.*(?:copper|ground|neutral|kit|lug|tap))",
+    "\\b(?:neutral|ground(?:ing)?)\\s*(?:bars?|kits?)\\b(?=.*(?:kit|panel|lug|breaker|loadcenter|square\\s*d|siemens|eaton))",
+    "\\bmac\\s*adapters?\\b",
+    "\\b\\d/0\\s*to\\s*#?\\s*\\d\\b",
+    "\\bik-?\\d",
+    "\\bik\\d{2,3}\\b",
+    "\\byrb\\d",
+    "\\bya\\d{1,3}-",
+    "\\bcompression\\s*splice\\s*reducers?\\b",
+    "\\bsplice\\s*reducers?\\b",
+    "\\bpk\\d{2}gta\\w*\\b",
+    "\\bground\\s*bar\\s*kit\\b(?=.*(?:square\\s*d|pk\\d|terminal))",
+    "\\b(?:2|4)\\s*hole\\s*(?:compression|comp|long\\s*barrel)\\b",
+    "\\bpedestal\\s*(?:lug|terminal)s?\\b",
+    "\\bmarker\\s*books?\\b(?=.*(?:wire|cable|1-45|0-9|number))"
+   ],
+   "negative": [
+    "\\b(?:crimp(?:ing)?|compression|u-?type)\\s*dies?\\b|\\bdie\\s*sets?\\b"
+   ],
+   "priority": 25
+  },
+  {
+   "id": "flexible_cord",
+   "label": "Flexible cord & cord sets",
+   "group": "wire_cable",
+   "keywords": [
+    "^molded\\s*connectors\\s*and\\s*cordsets\\b",
+    "\\b(?:soow|sjoow|seoow|sjeoow|sow|sjow|stow|sjtow|stoow|sjtoow)\\b",
+    "\\b(?:sjt|sjtw|stw|sjtow|svt|spt-?\\d?)\\b",
+    "\\bsjo\\b",
+    "\\bso\\s*cord\\b",
+    "\\bso\\s*\\d{1,2}/\\d\\b",
+    "\\bportable\\s*cord\\b",
+    "\\bpower\\s*cords?\\b",
+    "\\bcord\\s*sets?\\b",
+    "\\bcordsets?\\b",
+    "\\bextension\\s*cords?\\b",
+    "\\bflexible\\s*cord\\b",
+    "\\btype\\s*w\\b",
+    "\\bg-?gc\\b",
+    "\\bbus\\s*drop\\b",
+    "\\bwelding\\s*(?:cable|lead)s?\\b",
+    "\\b\\d{1,2}/\\d\\s*(?:soow|sjoow|sjtw|sow|sjo)\\b",
+    "\\bcords?\\b(?!\\s*(?:grip|connector|cap|end|plug|body|reel))",
+    "(?<![a-z])s?j?e?oo?w\\d{1,2}/\\d\\b",
+    "\\b(?:soow|sjoow|seoow|sjeoow|sow|sjow|stow|sjtow|stoow|sjtoow|sjt|sjtw|stw|svt)\\s*-?\\s*\\d{1,2}/\\d\\b",
+    "\\b\\d{1,2}/\\d\\s*(?:soow|sjoow|seoow|sow|sjo|sjt|sjtw|stw|svt|sjow)\\b",
+    "\\bm(?:8|12)\\s*(?:connectors?|cordsets?|cables?)\\b",
+    "\\b(?:male|female)\\s*connector\\b(?=.*(?:m8|m12|cordset|\\d-?pin))",
+    "\\bmini\\s*(?:a|change)\\s*(?:size\\s*)?(?:cordset|connector)",
+    "\\bwoods\\b(?=.*(?:cord|reel|light))",
+    "\\bm(?:8|12)\\b(?=.*(?:connector|\\d-?pin|cordset|cable))"
+   ],
+   "negative": [],
+   "priority": 24
+  },
+  {
+   "id": "cable_tray",
+   "label": "Cable tray, wire basket & ladder tray",
+   "group": "raceway",
+   "keywords": [
+    "\\bcable\\s*(?:tray|trays|management)\\b",
+    "\\btray\\s*(?:fittings?|sections?|covers?|splices?|connectors?|hangers?|supports?|elbows?|tees?|reducers?|risers?|crosses)\\b",
+    "\\bwire\\s*(?:basket|mesh)\\s*(?:tray)?\\b(?!.*grip)",
+    "\\bladder\\s*(?:tray|rack)s?\\b",
+    "\\btray\\s*(?:&|and)\\s*basket\\b",
+    "\\b(?:basket|ladder|ventilated|solid\\s*bottom|trough|channel|fiberglass|aluminum|steel)\\s*tray\\b",
+    "\\bcablofil\\b",
+    "\\bflextray\\b",
+    "\\bcope\\b(?=.*(?:tray|cover|va\\d|wd\\d|cp\\d|splice|ecf))",
+    "\\baickinstrut\\b",
+    "\\bft\\d+x\\d+x\\d+\\b",
+    "\\bft(?:acrs|gs|c|sc|s)-\\w+\\b",
+    "\\bva\\d{2}w\\d{3}",
+    "\\bwd\\d{2}w\\d{3}",
+    "\\bwd\\d{3}-",
+    "\\bcp\\d{2}-f\\d{2}",
+    "\\bbc\\d{2}a\\d{3}[a-z]{2}\\b",
+    "\\bcf\\d{2,3}/\\d{3}",
+    "\\bsplice\\s*plates?\\b(?=.*tray)",
+    "\\b(?:tray|basket)\\s*(?:hold\\s*-?\\s*downs?|clamps?|washers?|bonding)\\b",
+    "\\bdrop\\s*-?\\s*outs?\\b(?=.*(?:tray|cable))",
+    "\\bwaterfall\\b",
+    "\\b(?:horizontal|vertical)\\s*(?:bend|elbow|tee|cross)s?\\b(?=.*(?:tray|basket|ladder))"
+   ],
+   "negative": [
+    "\\bmagnetic\\s*tray\\b|\\bparts\\s*trays?\\b|\\bsmall\\s*trays?\\b"
+   ],
+   "priority": 23
+  },
+  {
+   "id": "wireway_gutters_troughs",
+   "label": "Wireway, gutters & troughs",
+   "group": "boxes_enclosures",
+   "keywords": [
+    "\\btroughs?\\b",
+    "\\bwire\\s*-?\\s*ways?\\b",
+    "\\bwireways?\\b",
+    "\\bgutters?\\b",
+    "\\bgttr\\b",
+    "\\bwrwy\\b",
+    "\\bauxiliary\\s*gutter\\b",
+    "\\bt\\d{3,5}(?:nk|hc|sc)?\\b(?=.*(?:trough|nema|\\d+x\\d+x\\d+|nk\\b|sc\\b))",
+    "\\b\\d{1,2}\\s*x\\s*\\d{1,2}\\s*(?:x\\s*\\d{1,3})?\\s*(?:ft|')?\\s*(?:trough|wireway|gutter)\\b",
+    "\\bwireway\\s*(?:end|cover|elbow|tee|nipple|closure|connector|hanger|flange)s?\\b",
+    "\\b(?:lay-?in|hinge[d]?\\s*cover|screw\\s*cover)\\s*(?:wireway|gutter|trough)\\b",
+    "\\bmilb(?:ank)?\\b(?=.*(?:gttr|wrwy|gutter|wireway|trough))",
+    "\\b(?:4x4|6x6|8x8|12x12)\\s*(?:wireway|gutter|trough)\\b"
+   ],
+   "negative": [],
+   "priority": 22
+  },
+  {
+   "id": "surface_raceway_floor_boxes",
+   "label": "Surface raceway, poke-thrus & floor boxes (Wiremold / FSR)",
+   "group": "devices",
+   "keywords": [
+    "\\b(?:wire\\s*mold|wiremold|plugmold)\\b",
+    "\\b(?:surface\\s*)?raceways?\\b(?!.*(?:cable\\s*tray|ladder))",
+    "\\bpoke\\s*-?\\s*thr(?:u|ough)s?\\b",
+    "\\bfloor\\s*box(?:es)?\\b",
+    "\\bfl-?\\s*500\\w*\\b",
+    "\\bfl-?\\s*\\d{3}[a-z]",
+    "\\bfsr\\b",
+    "\\bevolution\\s*(?:box|series|poke)",
+    "\\b(?:500|700|2000|2400|3000|4000|5400)\\s*series\\b(?=.*(?:wiremold|wire\\s*mold|raceway|ivory|white|cover|base|elbow|fitting|ft|feet|'))",
+    "\\b(?:v|g)\\s*-?\\s*(?:500|700|2000|2400|3000|4000|5400)\\s*(?:base|cover|raceway|elbow|fitting|coupling|box|plate|bushing|entrance|extension|ell|tee)\\b",
+    "\\b(?:v|g)?(?:700|2000|2400|3000|4000|5400)(?:b|c|bc|-?\\w{1,4})?\\b(?=.*(?:wiremold|raceway|ivory|10\\s*ft|10'))",
+    "\\b\\d?atc\\d?p?\\w*\\b(?=.*(?:poke|thru|wiremold|legrand|floor|\\d+\\s*ea))",
+    "\\b6atc\\w*\\b",
+    "\\b4atc\\w*\\b",
+    "\\brc\\d(?:atc|trac)\\w*\\b",
+    "\\b\\d?trac\\b",
+    "\\b\\d?blh\\b",
+    "\\b1125cha\\b",
+    "\\brfb\\d\\w*\\b",
+    "\\bafb\\d?\\w*\\b(?=.*(?:floor|box|wiremold))",
+    "\\b880(?:s|m|w|cs)?\\d?\\b(?=.*(?:floor|box|wiremold|cover|carpet|tile))",
+    "\\bconnectrac\\b",
+    "\\bfixture\\s*raceway\\b",
+    "\\bmulti-?outlet\\s*(?:strip|system|assembly|raceway)s?\\b",
+    "\\b(?:al|steel|metal|non-?metallic|pvc|plastic)\\s*raceway\\b",
+    "\\braceway\\s*(?:cover|base|elbow|fitting|coupling|box|plate|bushing|adapter|extension|tee|entrance|end\\s*cap)s?\\b",
+    "\\bpancake\\s*raceway\\b",
+    "\\bcordmate\\b",
+    "\\bwallmate\\b",
+    "\\blatching\\s*duct\\b",
+    "\\bcarpet\\s*flanges?\\b",
+    "\\btile\\s*flanges?\\b",
+    "\\bfloor\\s*(?:box\\s*)?(?:cover|plate|flange|insert)s?\\b",
+    "\\bpedestal\\s*(?:box|outlet)s?\\b(?=.*(?:floor|wiremold|hubbell|fsr))",
+    "\\b(?:panduit|legrand|hubbell)\\s*raceway\\b",
+    "\\bld\\d{1,2}\\b(?=.*(?:raceway|panduit))"
+   ],
+   "negative": [
+    "\\bcable\\s*tray\\b|\\bladder\\b|\\bbasket\\b"
+   ],
+   "priority": 21
+  },
+  {
+   "id": "hdpe_innerduct",
+   "label": "HDPE duct, innerduct & fiberglass (FRE) conduit",
+   "group": "raceway",
+   "keywords": [
+    "\\bhdpe\\b",
+    "\\binner\\s*-?\\s*ducts?\\b",
+    "\\bmicro\\s*-?\\s*ducts?\\b",
+    "\\bsmooth\\s*-?\\s*wall\\b(?=.*(?:duct|hdpe|reel|ft|'))",
+    "\\bcorrugated\\s*(?:duct|innerduct|conduit)\\b",
+    "\\bsdr\\s*-?\\s*(?:9|11|13\\.5)\\b",
+    "\\bdura-?\\s*line\\b",
+    "\\bendot\\b",
+    "\\bpolyethylene\\s*(?:conduit|duct|pipe)\\b",
+    "\\bpe\\s*(?:conduit|duct)\\b",
+    "\\b(?:fre|frp)\\b(?=.*(?:conduit|fiberglass|champion|ips|es\\b|sw\\b|elbow|90|45|coupling|adapter|bell|box\\s*conn|triseal|\\d\\\"|\\d+'|ft\\b))",
+    "\\bfiberglass\\s*(?:conduit|elbow|coupling|adapter|sweep|90|45|duct)s?\\b",
+    "\\bchampion\\b(?=.*(?:fre|fiberglass|conduit|elbow|fitting|coupling|bell|ips|duct|spacer|\\d\\\"))",
+    "\\b\\d{2}c-mw-\\d{2}\\b",
+    "\\btriseal\\b",
+    "\\bduct\\s*(?:plugs?|couplings?|elbows?|sweeps?)\\b(?=.*(?:hdpe|innerduct|fiberglass|fre))",
+    "\\b(?:90|45|22\\.5|11\\.25)\\s*(?:deg(?:ree)?|\u00b0)?\\s*(?:elbows?|sweeps?|bends?)\\b(?=.*(?:hdpe|innerduct|fre|fiberglass))",
+    "\\bhdpe\\s*(?:bushings?|couplings?|elbows?|sweeps?|plugs?|caps?|adapters?)\\b",
+    "\\bpull\\s*tape\\b(?=.*(?:hdpe|innerduct|duct))",
+    "\\bfabric\\s*innerduct\\b",
+    "\\bmaxcell\\b",
+    "\\bconduit\\s*(?:plugs?|caps?)\\b(?=.*(?:hdpe|innerduct|duct\\b))"
+   ],
+   "negative": [
+    "\\bpo\\s*#|\\bp/o\\b|\\bdirect\\s*shipment\\b"
+   ],
+   "priority": 20
+  },
+  {
+   "id": "fittings_flex",
+   "label": "Flex / MC / cable fittings",
+   "group": "fittings",
+   "keywords": [
+    "^cord\\s*grip\\s*connectors\\b|^liquidtight\\s*conduit\\s*fittings\\b|^flexible\\s*metal\\s*conduit\\s*fittings\\b|^non-?metallic\\s*cable\\s*fittings\\b|^ac/mc\\s*cable\\s*fittings\\b",
+    "\\b(?:liquid\\s*-?\\s*ti(?:gh)?te?|lt|ltfc|lfmc|lfnc|seal\\s*-?\\s*ti(?:gh)?te?|sealtight|sealtite|greenfield|flex|fmc|carflex|lqdt|liq\\.?)\\s*(?:metallic\\s*|metal\\s*|non-?metallic\\s*)?(?:conn(?:ector)?s?|couplings?|cplg|fittings?|straight|str|90|45|elbows?|adapters?)\\b",
+    "\\bflex\\s*conn",
+    "\\bflex\\b.*\\bconn(?:ector)?s?\\b",
+    "\\bsqz\\s*conn",
+    "\\bsnap\\s*conn",
+    "\\bflex\\s*coupl\\w*",
+    "\\b(?:se|seu|ser)\\s*conn(?:ector)?s?\\b",
+    "\\bliquid\\s*-?tight\\s*conduit\\s*fittings?\\b",
+    "\\bflex(?:ible)?\\s*metal\\s*conduit\\s*fittings?\\b",
+    "\\bliqua-?seal\\b",
+    "\\bnmlts?\\b",
+    "\\blqdt\\.?\\s*conn",
+    "\\bnmlt\\d",
+    "\\bac/mci?\\b",
+    "\\bsqueeze\\s*conn",
+    "\\bscrew-?in\\s*conn",
+    "\\bwhip\\s*conn",
+    "\\b(?:ltmc|ltnc)\\b",
+    "\\bglands?\\b",
+    "\\bcord\\s*grips?\\b",
+    "\\bstrain\\s*reliefs?\\b(?!.*rj-?45)",
+    "\\bmc\\s*(?:cable\\s*)?(?:conn(?:ector)?s?|fittings?|snap)\\b",
+    "\\bsnap\\s*-?(?:in|2it|tite|tight)\\b",
+    "\\b(?:bx|ac|mc|nm|romex|cable)\\s*(?:conn(?:ector)?s?|clamps?)\\b",
+    "\\bduplex\\s*(?:conn|mc)\\b",
+    "\\banti-?shorts?\\b",
+    "\\barlington\\b",
+    "\\bswivel\\s*conn",
+    "\\b\\d/[48]\\\"?\\s*(?:lt|liquid\\s*-?tight|flex|greenfield|mc|bx)\\s*(?:str|straight|90|45)?\\s*conn",
+    "\\bseal\\s*-?\\s*ti(?:gh)?te?\\s*(?:str(?:aight)?|90|45)?\\s*(?:conn(?:ector)?s?|couplings?|fittings?)\\b",
+    "\\btake\\s*-?\\s*all\\b",
+    "\\bta\\d{2,3}\\b(?=.*(?:conn|mc|ac|nm|se|take))",
+    "\\b(?:mc|ac|nm|se|bx)\\s*,\\s*(?:mc|ac|nm|se|bx)\\b.*\\bconn",
+    "\\bcordgrips?\\b",
+    "\\bmesh\\s*grips?\\b(?=.*(?:cord|npt|strain))",
+    "\\bwire\\s*mesh\\s*grips?\\b(?=.*(?:cord|npt|connector|strain))",
+    "\\bpvc\\s*-?\\s*coated\\s*(?:str(?:aight)?|90|45)?\\s*(?:seal\\s*-?\\s*ti(?:gh)?te?|sealtight|liquid\\s*-?tight|lt)\\s*(?:conn(?:ector)?s?|couplings?)\\b"
+   ],
+   "negative": [
+    "\\bent\\b(?!.*(?:cap|service))|\\bsmurf\\b|\\bcps\\d{2}\\b|\\bconcrete\\s*pipe\\s*sleeve\\b|\\bsleeves?\\b(?=.*(?:cps|concrete|arlington))"
+   ],
+   "priority": 19
+  },
+  {
+   "id": "fittings_rigid",
+   "label": "Rigid / IMC fittings",
+   "group": "fittings",
+   "keywords": [
+    "^rigid\\s*conduit\\s*fittings\\b|^service\\s*entrance\\b|^watertight\\s*service\\s*entrance\\b|^mogul\\s*conduit\\s*bodies\\b",
+    "\\b(?:rigid|imc|grc|rgs|galv|threaded|thd)\\s*(?:conduit\\s*)?(?:conn(?:ector)?s?|couplings?|cplg|fittings?|hubs?|locknuts?|bushings?|adapters?)\\b",
+    "\\b(?:service\\s*entr?(?:ance)?\\.?\\s*(?:cable\\s*)?(?:caps?|heads?|straps?)|weather\\s*-?heads?|mast\\s*(?:kits?|heads?|clamps?|knobs?)|ent\\.?\\s*cap)\\b",
+    "\\bgua[a-z]{1,2}\\b",
+    "\\bgalv?(?:anized)?\\s*(?:couplings?|cplg)\\b",
+    "\\b3-?\\s*piece\\s*coup",
+    "\\bred\\.?\\s*bush(?:ing)?s?\\b",
+    "\\bbub\\b",
+    "\\bdonuts?\\b",
+    "\\bthreadless\\s*(?:couplings?|cplg)\\b",
+    "\\bthreaded\\s*reducers?\\b",
+    "\\b3-\\s*couplings?\\b",
+    "\\bmall(?:eable)?\\s*iron\\s*cover",
+    "\\bcond(?:uit)?\\s*covers?\\b",
+    "\\bmark\\s*9\\b",
+    "\\bko\\s*bush(?:ing)?s?\\b",
+    "\\breducing\\s*(?:couplings?|cplg)\\b",
+    "\\bprrec\\d",
+    "\\bunf\\d{3}\\b",
+    "\\block\\s*-?\\s*nuts?\\b",
+    "\\bbushings?\\b",
+    "\\b(?:myers|watertight|w/?t|bonding)\\s*hubs?\\b",
+    "\\bhubs?\\b(?!\\s*(?:city|bell))",
+    "\\b(?:chase|close)\\s*nipples?\\b",
+    "\\bthreaded\\s*(?:couplings?|cplg|conn|hubs?|adapters?)\\b",
+    "\\b(?:3-?piece|3pc|three\\s*piece)\\s*couplings?\\b",
+    "\\berickson\\b",
+    "\\bsealing\\s*(?:fittings?|locknuts?)\\b",
+    "\\b(?:eys|eyd)\\b",
+    "\\bseal\\s*-?offs?\\b",
+    "\\bconduit\\s*(?:caps?|plugs?)\\b",
+    "\\breducing\\s*(?:washers?|bushings?)\\b",
+    "\\b(?:knock\\s*-?out|ko)\\s*(?:seals?|plugs?)\\b",
+    "\\b(?:crouse|appleton|killark)\\b",
+    "\\bsplit\\s*(?:couplings?|cplg)\\b",
+    "\\bmalleable\\b",
+    "\\b\\d\\\"?\\s*(?:galv|steel)\\s*(?:couplings?|cplg)\\b",
+    "\\bexplosion\\s*-?\\s*proof\\b(?=.*(?:seal|fitting|union|coupling|hub|conn|plug|drain|breather|eys|eyd))",
+    "\\bconcentric\\b(?=.*(?:bush|reduc|washer))",
+    "\\b(?:rgd|rgs|grc|imc)\\s*(?:al|alum|steel|galv|gal)?\\s*(?:cplg|coup|conn|hub|nip|locknut|bush|adapt)",
+    "\\bcplg\\b(?!.*(?:emt|pvc|ss\\b|set\\s*screw|comp))",
+    "\\b3\\s*-?\\s*pc\\b",
+    "\\bec\\d{2,3}a\\b",
+    "\\bpvc\\s*-?\\s*coated\\s*(?:gal\\w*\\s*|steel\\s*|rigid\\s*)?(?:conn(?:ector)?s?|couplings?|cplg|erickson?s?|caps?|end\\s*caps?|hubs?|locknuts?|bushings?|straps?|clamps?|unions?|nipple\\s*fittings?|adapters?|plugs?|condulet\\s*covers?|covers?)\\b",
+    "\\b(?:ocal|robroy|plasti-?bond|perma-?cote|calbond|korkap)\\b(?=.*(?:conn|coupling|cplg|erickson|cap|hub|locknut|bushing|union|cover|gasket|strap\\b|clamp))",
+    "\\bscc-?\\d{3}\\b",
+    "\\binch\\s*(?:and\\s*a\\s*(?:half|quarter))?\\s*couplings?\\b",
+    "\\bgalv(?:anized)?\\s*(?:inch|one|two|three|four)\\b.*couplings?",
+    "\\bconduit\\s*(?:tapered\\s*)?(?:poly\\s*)?plugs?\\b",
+    "\\btapered\\s*(?:poly\\s*)?plugs?\\b",
+    "\\butp\\d{2}\\b",
+    "\\bmeter\\s*hubs?\\b",
+    "\\bedge\\s*guard\\b(?=.*gasket)",
+    "\\bkoc?\\s*seals?\\b",
+    "\\bmyers\\b",
+    "\\bo-?z\\s*/?\\s*gedney\\b",
+    "\\boz\\s*gedney\\b",
+    "\\bunions?\\b(?=.*(?:conduit|rigid|imc|galv|\\d\\\"|\\d/\\d))",
+    "\\bexpansion\\s*(?:fitting|joint)s?\\b(?!.*(?:pvc|coupling))",
+    "\\bax-?\\d{3}\\b",
+    "\\b(?:pipe|conduit)\\s*caps?\\b(?!.*(?:hdpe|innerduct))"
+   ],
+   "negative": [
+    "\\bbox(?:es)?\\b(?!\\s*(?:conn|adapter|hub|of\\s*\\d|cutter))|\\bko'?s\\b(?=.*box)|\\bhdpe\\b|\\bpvc\\s*conn|\\bpvc\\s*coupl|\\bconcrete\\s*octagon"
+   ],
+   "priority": 18
+  },
+  {
+   "id": "fittings_emt",
+   "label": "EMT fittings",
+   "group": "fittings",
+   "keywords": [
+    "^emt\\s*conduit\\s*fittings\\b",
+    "\\bemt\\s*(?:conn(?:ector)?s?|couplings?|cplg|fittings?|bushings?|adapters?|set\\s*screw|compression|ss|comp|die\\s*cast|to\\s*(?:rigid|flex|mc))\\b",
+    "\\bset\\s*-?\\s*screw\\b",
+    "\\bss\\s*(?:conn(?:ector)?s?|couplings?|cplg)\\b",
+    "\\bcomp(?:ression)?\\.?\\s*(?:conn(?:ector)?s?|couplings?|cplg|fittings?)\\b",
+    "\\binsulated\\s*throat\\b",
+    "\\bins\\.?\\s*th(?:roa)?t\\b",
+    "\\bcomp\\s*coup\\b",
+    "\\bcomb\\s*(?:couplings?|cplg)\\b",
+    "\\b(?:slip|flared)\\s*(?:couplers?|cplg|couplings?)\\b",
+    "\\bemt\\s*(?:flared|slip)\\b",
+    "\\bdie\\s*-?\\s*cast\\b",
+    "\\bsteel\\s*(?:conn(?:ector)?s?|couplings?|cplg|fittings?)\\b",
+    "\\brain\\s*-?tight\\b",
+    "\\bconnectors?\\b(?=.*\\bemt\\b)",
+    "\\bcouplings?\\b(?=.*\\bemt\\b)",
+    "\\bcombination\\s*couplings?\\b",
+    "\\bcombo\\s*(?:couplings?|conn)\\b",
+    "\\boffset\\s*(?:conn|nipple)s?\\b",
+    "\\bpull\\s*(?:elbows?|ells?)\\b",
+    "\\b(?:1/2|3/4|1|1-1/4|1-1/2|2|2-1/2|3|3-1/2|4)\\\"?\\s*(?:ss|comp|compression|set\\s*screw)\\s*(?:conn|coupling|cplg)",
+    "\\b\\d\\\"?\\s*(?:conn(?:ector)?s?|couplings?|cplg)\\b(?!.*(?:pvc|rigid|imc|flex|lt|liquid|mc|bx|lug|crimp|compression\\s*lug))",
+    "\\bin\\s*insl\\s*pls\\s*bshg\\b",
+    "\\bpls\\s*bshg\\b",
+    "\\binsl\\s*(?:bshg|bushing)s?\\b",
+    "\\bemt\\s*(?:one|two|1|2)\\s*hole\\b"
+   ],
+   "negative": [
+    "\\bpvc\\s*-?\\s*coated\\b|\\bhdpe\\b|\\bcompression\\s*lugs?\\b"
+   ],
+   "priority": 17
+  },
+  {
+   "id": "fittings_pvc",
+   "label": "PVC / nonmetallic fittings",
+   "group": "fittings",
+   "keywords": [
+    "\\bcouplings?\\b(?=.*\\[[^\\]]*(?:pvc|cantex|carlon|kraloy)[^\\]]*\\])",
+    "\\bpvc\\s*(?:female|male|fa|ma|ta|adapters?|couplings?|cplg|conn(?:ector)?s?|box\\s*adapters?|fittings?|caps?|plugs?|expansion|reducers?|bushings?|straps?|hangers?|clamps?|glue|cement|primer|solvent|lb|ll|lr|tee|cross|body|bodies|spacers?)\\b",
+    "\\b(?:female|male|terminal)\\s*adapters?\\b",
+    "\\b(?:fa|ma|ta)\\b(?=.*\\bpvc\\b)",
+    "\\b(?:cement|glue|primer)\\b(?=.*(?:pvc|conduit|qt|quart|gal|pint|can))",
+    "\\bcarlon\\s*(?:fittings?|adapters?|couplings?|conn|covers?)\\b",
+    "\\bexpansion\\s*couplings?\\b",
+    "\\bpvc\\s*to\\s*(?:rigid|emt|flex)\\b",
+    "\\bkraloy\\b",
+    "\\bcouplings?\\b(?=.*(?:pvc|sch\\s*\\d0|cantex|carlon))",
+    "\\b(?:pvc|sch\\s*\\d0)\\b.*\\b(?:couplings?|cplg|coups?|adapters?|caps?|adpt)\\b",
+    "\\bterm\\.?\\s*-?\\s*(?:adpt|adap)\\b",
+    "\\bexp\\.?\\s*(?:cplg|couplings?)\\b",
+    "\\bcplg\\s*cc\\b",
+    "\\bpvc-\\w*-?(?:adpt|cplg|coup)",
+    "\\b(?:fre|champion|fiberglass)\\s*(?:couplings?|conn(?:ector)?s?|fittings?|adapters?|elbows?|90|45|bells?)\\b",
+    "\\b\\d(?:-\\d/\\d)?\\\"?\\s*(?:couplings?|adapters?|caps?|plugs?)\\b(?=.*(?:pvc|sch|cantex|carlon|db|eb))",
+    "\\bbell\\s*ends?\\b(?=.*(?:fitting|adapter))",
+    "\\bent\\s*(?:conn(?:ector)?s?|couplings?|cplg|adapters?|fittings?|90s?|stub\\s*downs?|change\\s*over|transition|term\\.?\\s*adap|terminal\\s*adapters?|box\\s*adapters?)\\b",
+    "\\bent\\s*(?:to|-)\\s*emt\\b",
+    "\\bbox\\s*adapters?\\b(?!.*(?:mc|ac|bx|flex|liquid|arlington))",
+    "\\b5133\\d{3}\\b(?=.*adapt)",
+    "\\b(?:poly|duct|pvc|ipex)\\s*plugs?\\b",
+    "\\bipex\\b",
+    "\\b(?:fre|champion|fiberglass)\\s*(?:couplings?|conn(?:ector)?s?|fittings?|adapters?|elbows?|90|45|bells?|box\\s*conn)\\b",
+    "\\bend\\s*bells?\\b",
+    "\\bbell\\s*ends?\\b",
+    "\\bcps\\d{2}\\b",
+    "\\bconcrete\\s*pipe\\s*sleeves?\\b",
+    "\\bpipe\\s*sleeves?\\b(?=.*(?:cps|arlington|concrete|pvc))",
+    "\\bsleeves?\\b(?=.*(?:cps\\d|arlington|concrete))",
+    "\\bpvc\\s*(?:lock\\s*nuts?|locknuts?)\\b",
+    "\\bpvc\\s*conn(?:ector)?s?\\b.*\\block\\s*nuts?\\b",
+    "\\bpvc\\s*(?:expansion|exp)\\s*(?:fitting|coupling|joint)s?\\b",
+    "\\bpvc\\s*(?:junction|j)\\s*box\\s*adapters?\\b",
+    "\\bpvc\\s*box\\s*connectors?\\b"
+   ],
+   "negative": [
+    "\\bpvc\\s*-?\\s*coated\\b|\\bhdpe\\b|\\bfd\\s*box\\b|\\bcondulet\\b"
+   ],
+   "priority": 16
+  },
+  {
+   "id": "strut_channel_hardware",
+   "label": "Strut, channel, cable tray & supports",
+   "group": "raceway",
+   "keywords": [
+    "\\bstruts?\\b",
+    "\\b(?:unistrut|kindorf|superstrut|b-?line|cooper\\s*b-?line)\\b",
+    "\\bchannels?\\b(?=.*(?:strut|slotted|p1000|p3000|a1200|b22|b52|galv|hdg|\\bpg\\b|\\beg\\b|1-5/8|13/16|12\\s*ga|14\\s*ga|10\\s*ft|20\\s*ft))",
+    "\\bp[- ]?(?:1000|1001|1100|3000|3300|4000|5000|5500)[a-z]*\\b",
+    "\\bb-?(?:22|52|54|56|11|12)[a-z]*\\b",
+    "\\ba-?1200\\b",
+    "\\bstrut\\s*(?:nuts?|clamps?|straps?|brackets?|fittings?|caps?|angles?|hardware)\\b",
+    "\\b(?:spring|channel)\\s*nuts?\\b",
+    "\\bbeam\\s*clamps?\\b",
+    "\\bconduit\\s*clamps?\\b(?=.*(?:strut|channel|unistrut|kindorf|p2558|p1109))",
+    "\\bp-?(?:2558|1109|1111|2554|2550|1114|1116|2050|2051|2052|1068|1026)[a-z]*\\b",
+    "\\bpost\\s*bases?\\b",
+    "\\btrapeze\\b",
+    "\\bpipe\\s*clamps?\\b",
+    "\\bcush-?a-?clamp\\b",
+    "\\b(?:90|45)\\s*(?:deg)?\\s*(?:angle|bracket)\\s*(?:fitting)?\\b",
+    "\\b[zu]\\s*-?\\s*fittings?\\b",
+    "\\bhanger\\s*rods?\\b",
+    "\\bthreaded\\s*rods?\\b",
+    "\\ball\\s*-?\\s*threads?\\b",
+    "\\bw\\d{3}e[a-z]{1,4}\\d{0,2}\\b",
+    "\\bw\\d{3}\\b(?=.*(?:1-?5/8|13/16|strut|channel|ss\\b|hdg|slotted|wesanco))",
+    "\\bvf-?\\d{4}(?:-\\w+)*\\b",
+    "\\bplh\\b",
+    "\\bslotted\\b(?=.*(?:1-?5/8|13/16|3-?1/4|1\\s*1/2|ss\\b|316|304|10\\s*ft|10'|lengths?|bundle|channel|strut))",
+    "\\belong(?:ated)?\\.?\\s*holes?\\b",
+    "\\b(?:316|304)\\s*ss\\b(?=.*(?:slotted|plh|channel|strut|10'|10\\s*ft|bundle|strap|nuts?|washers?|assembled|holes))",
+    "\\bst304\\b",
+    "\\b(?:1-?5/8|13/16|1\\s*5/8)\\\"?\\s*x\\s*10'?\\b",
+    "\\bbundle\\b(?=.*(?:1-?5/8|13/16|slotted|316|304|strut|channel))",
+    "\\bkindorfs?\\b",
+    "\\bsuperstrut\\b",
+    "\\b(?:strut|channel|kindorf|unistrut)\\s*(?:straps?|clamps?|nuts?)\\b",
+    "\\b(?:ss|stainless|316|304)\\s*(?:straps?)\\b(?=.*(?:strut|channel|versabar|wesanco|316|304))",
+    "\\bversabar\\b",
+    "\\bwesanco\\b",
+    "\\bzsi\\b",
+    "\\b(?:cush|cushion)\\s*-?\\s*(?:a-?)?clamps?\\b",
+    "\\bvibration\\s*(?:pads?|isolators?|mounts?)\\b",
+    "\\bnd-[a-z]-\\w+\\b",
+    "\\bneoprene\\s*pads?\\b",
+    "\\bb-?line\\s*b\\d{3,4}\\b",
+    "\\bb\\d{4}\\b(?=.*(?:b-?line|strut|channel|fitting))",
+    "\\bp\\d{4}\\b(?=.*(?:unistrut|strut|channel|fitting|nut))",
+    "\\bj-?hooks?\\b",
+    "\\bcat\\s*hp\\b",
+    "\\bcat\\d{2}hp\\w*\\b",
+    "\\bbox\\s*/?\\s*conduit\\s*platform\\b",
+    "\\bbcsp\\d"
+   ],
+   "negative": [
+    "\\bcable\\s*tray\\b|\\bladder\\s*tray\\b|\\bwire\\s*basket\\b"
+   ],
+   "priority": 15
+  },
+  {
+   "id": "mc_cable",
+   "label": "MC / AC armored cable",
+   "group": "wire_cable",
+   "keywords": [
+    "(?<![a-z])mc(?![a-z])(?!\\s*-?\\s*(?:cable\\s*)?(?:conn|fitting|strap|clip|snap|support|,\\s*ac|/ac|,ac))(?!.*\\btake\\s*all\\b)",
+    "\\bmc\\s*-?\\s*(?:cable|hcf|ap|pcs|lite|hv|hospital|luminary|super)",
+    "\\bhcf\\b",
+    "\\bac\\s*cable\\b",
+    "\\bbx\\b(?!\\s*\\d)",
+    "\\barmou?red\\s*cable",
+    "\\bmci-?a\\b",
+    "\\bhospital\\s*grade\\s*(?:mc|cable)",
+    "\\bhealth\\s*care\\s*(?:mc|cable)",
+    "\\bteck\\b",
+    "\\bmetal\\s*-?clad\\b",
+    "\\b\\d{1,2}/\\d(?:/\\d)?\\s*(?:mc|bx)\\b",
+    "\\b\\d/0\\s*/?\\s*\\d\\s*mc\\b",
+    "\\bmc\\s*(?:cu|copper|alum|aluminum)\\b",
+    "\\bwire,?\\s*ac\\b",
+    "\\b\\d{2,3}aac\\b",
+    "\\bluminari?e\\b(?=.*(?:cable|\\d/\\d|mc))",
+    "\\bm/c\\b",
+    "\\b\\d{1,2}/\\d\\b.*\\bluminaire\\b",
+    "\\b\\d{1,2}-[234]\\s*coil\\b",
+    "\\b\\d{1,2}/\\d(?:/\\d)?\\s*(?:hv|lv|luminary|boy|b/g|pcs|hcf)\\b",
+    "\\bac-?90\\b",
+    "\\bmc-?hl\\b",
+    "\\bhcf-?90\\b",
+    "\\b\\d{1,2}/\\d(?:/\\d)?\\b.*\\b(?:hospital\\s*grade|hospital|luminaire|luminary|lite|hcf|boy|b/g)\\b",
+    "\\bhospital\\s*grade\\b(?=.*(?:\\d{1,2}/\\d|\\d+\\s*'|\\d+\\s*ft|cable))",
+    "\\b(?:coils?|reels?)\\b.*\\bluminaire\\b",
+    "\\bbx\\b(?!\\s*(?:conn|fitting|clamp|\\d))",
+    "\\b\\d{1,2}/\\d\\s*(?:w/\\s*g(?:round)?|with\\s*ground)\\b(?=.*(?:mc|luminaire|luminary|led|0-10))"
+   ],
+   "negative": [
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|support|supports|bracket|caddy|flange|conn|connector|connectors|fitting|fittings|snap|take\\s*all|box|boxes)\\b",
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|support|supports|bracket|caddy|flange|conn|connector|connectors|fitting|fittings|snap|take\\s*all|box|boxes|anchor|anchors|wdge|wedge)\\b"
+   ],
+   "priority": 14
+  },
+  {
+   "id": "low_voltage_cable",
+   "label": "Low-voltage / datacom / control cable",
+   "group": "wire_cable",
+   "keywords": [
+    "\\bcat\\s*-?(?:5e?|6a?|3)\\b",
+    "\\bt(?:hermo)?-?stat\\s*(?:wire|cable)\\b",
+    "\\bfire\\s*alarm\\s*(?:wire|cable)\\b",
+    "\\bfpl[rp]?\\b",
+    "\\bcoax(?:ial)?\\b",
+    "\\brg-?(?:6|59|11)\\b",
+    "\\bfiber\\b(?=.*(?:cable|optic|strand|mode|om[1-4]|os[12]))",
+    "\\b(?:single|multi)\\s*-?mode\\b",
+    "\\bplenum\\b",
+    "\\bcm[pr]\\b",
+    "\\briser\\s*(?:cable|rated)\\b",
+    "\\bspeaker\\s*(?:wire|cable)\\b",
+    "\\bshielded\\b",
+    "\\b(?:control|instrument(?:ation)?|security|data|comm(?:unication)?|sound|bell|alarm|access\\s*control|intercom|nurse\\s*call|bms|hvac)\\s*cable\\b(?!.*(?:xhhw|thhn|1,?000\\s*v|600\\s*v|tc-?er))",
+    "\\b(?:18|16|14|22)/\\d{1,2}\\s*(?:str|stranded|sol|solid|sh|shielded|plenum|riser|fplr|fplp|cmp|cmr|cl2|cl3)\\b",
+    "\\bcl[23][pr]?\\b",
+    "\\bbelden\\b",
+    "\\bwest\\s*penn\\b",
+    "\\bremee\\b",
+    "\\b1[468]/\\d{1,2}\\s*(?:conductor|cond|c)\\b",
+    "\\bt\\s*-?\\s*stat\\b",
+    "\\bf/a\\b",
+    "\\bn/s\\b(?=.*\\d/\\d)",
+    "\\brs-?(?:485|232)\\b",
+    "\\bpatch\\s*(?:cable|cord)s?\\b(?=.*(?:\\d{3,}\\s*(?:ft|')|reel|box|1000))",
+    "\\bfire\\s*alarm\\b(?=.*(?:\\d{1,2}/\\d|\\bft\\b|awg|shield|unshield|plenum|riser|'|fplr|fplp|ll\\d))",
+    "\\b(?:ll|fpl)\\d\\b",
+    "\\b\\d{1,2}/\\d{1,2}c\\b",
+    "\\bcat\\s*-?(?:5e?|6a?)\\s*(?:cable|plenum|riser|cmp|cmr|utp|stp|\\d{3,}|box|reel)\\b",
+    "\\bfiber\\s*(?:optic\\s*)?(?:cable|strands?)\\b",
+    "\\b\\d{1,3}\\s*(?:strand|fiber)\\b",
+    "\\bloose\\s*tube\\b",
+    "\\btight\\s*buffer(?:ed)?\\b",
+    "\\barmored\\s*fiber\\b",
+    "\\b(?:high\\s*temp(?:erature)?|sf-?2|srml|tggt|mg\\b)\\s*(?:wire|cable|lead)s?\\b",
+    "\\blutron\\s*(?:cable|wire)\\b",
+    "\\b0-10\\s*v\\s*(?:cable|wire)\\b",
+    "\\bthermostat\\b(?=.*(?:\\d{2}/\\d|wire|cable))",
+    "\\bdoor\\s*bell\\s*wire\\b"
+   ],
+   "negative": [
+    "^\\d{5}[a-z]?\\s+\\d{1,2}g\\b",
+    "^\\d{5}[a-z]?\\s+\\d{1,2}g\\b|\\bxhhw|\\bthhn\\b|\\bkeystone\\b|\\bj-?hooks?\\b|\\bpatch\\s*panel|\\bconnectors?\\b(?!.*(?:fiber\\s*cable|\\d{3,}\\s*(?:ft|')))|\\bsplitter|\\bjacks?\\b|\\bkv\\b|\\bmv\\b"
+   ],
+   "priority": 13
+  },
+  {
+   "id": "building_wire",
+   "label": "Building wire (THHN/XHHW/NM/SER/URD)",
+   "group": "wire_cable",
+   "keywords": [
+    "\\bbare\\s*(?:copper|cu)\\b(?=.*(?<![a-z])(?:mcm|kcmil|awg)\\b)",
+    "(?<![a-z])\\d{3}\\s*mcm\\b(?=.*\\bbare\\b)",
+    "\\bthhn\\b",
+    "\\btf?fn\\b",
+    "\\bthwn(?:-2)?\\b",
+    "\\bxhhw(?:-2)?\\b",
+    "\\b(?:thw|rhw|rhh|xhh|tffn|mtw|sis)\\b",
+    "\\bnm-?b\\b",
+    "\\bromex\\b",
+    "\\buf-?b\\b",
+    "\\bse[ru]\\b(?!.*(?:staple|stpl|strap|cap|conn|cbl|clamp|hanger))",
+    "\\bxlp\\b",
+    "\\btw\\b(?=.*(?:solid|str\\b|cu\\b|copper|awg))",
+    "\\bxlpe\\b",
+    "\\buse-?2\\b",
+    "\\burd\\b",
+    "\\bkcmil\\b",
+    "\\bmcm\\b",
+    "\\bbuilding\\s*wire\\b",
+    "\\bbare\\b(?=.*(?:\\bstr\\b|\\bsol\\b|\\bcu\\b|copper|\\d))",
+    "\\b(?:250|300|350|400|500|600|750)\\s*(?:cu|copper|al\\b|alum)",
+    "\\bbare\\s*(?:copper|cu)\\b",
+    "\\b(?:stranded|solid)\\s*(?:copper|cu)\\b",
+    "(?<![a-z0-9])(?:#|no\\.?\\s?)\\d{1,2}\\s*(?:awg\\s*)?(?:cu|copper|al|alum|black|red|blue|white|green|yellow|brown|orange|purple|gray|grey|stranded|solid|thhn|xhhw)\\b",
+    "\\b\\d/0\\b(?!.*(?:adapter|lug|conn|splice|die|terminal|reducer))",
+    "\\b(?:250|300|350|400|500|600|750)\\s*(?:mcm|kcmil)\\b",
+    "\\bpv\\s*wire\\b",
+    "\\b\\d{1,2}/[234]\\s*(?:nm|romex|uf|w/?g|wg|ground)\\b",
+    "\\bfeeder\\s*(?:wire|cable|conductor)s?\\b",
+    "\\btray\\s*cable\\b",
+    "\\btc-?er\\b",
+    "\\bvntc\\b",
+    "(?<![a-z0-9])(?:#|no\\.?\\s?)\\d{1,2}\\s*(?:awg\\s*)?(?:str(?:anded)?|sol(?:id)?)\\b",
+    "(?<![a-z0-9])#\\d{1,2}\\s*(?:black|red|blue|white|green|yellow|orange|brown|gray|grey|purple|pink|wht|blk|grn|blu)\\b",
+    "(?<![a-z0-9])#\\s?\\d{1,2}\\s*awg\\b",
+    "\\b\\d{1,3},?\\d{3}'\\s*-?\\s*#\\d",
+    "\\b\\d{1,2}/\\d{1,2}\\s*wire\\s*(?:stranded|solid)\\b",
+    "\\b(?:vitalink|lifeline|vita-?link|mi\\s*cable|mineral\\s*insulated|circuit\\s*integrity|ci\\s*cable|2\\s*-?\\s*hr\\s*fire\\s*rated|2\\s*hour\\s*(?:fire\\s*)?rated)\\b",
+    "\\bhigh\\s*temp(?:erature)?\\s*(?:multi-?conductor\\s*)?(?:cable|wire)s?\\b",
+    "\\b(?:sf-?2|srml|tggt|silicone\\s*rubber)\\s*(?:wire|lead)?\\b",
+    "\\b\\d{3}\\s*(?:al|cu)\\s*(?:xlp|xhhw|thhn|use)\\b",
+    "\\b\\d{1,2}/\\d{1,2}\\s*(?:c|cond)\\b(?=.*(?:xhhw|thhn|tray|tc\\b|600\\s*v|1,?000\\s*v))",
+    "\\b(?:yellow|blue|red|black|white|green|gray|grey|orange|purple|brown)\\s*(?:slate\\s*)?\\d?\\s*-?\\s*(?:#|\\d{3}\\s*mcm)"
+   ],
+   "negative": [
+    "\\bmac\\s*adapter|\\bstrap\\b|\\bstraps\\b|\\bcap\\b|\\bkv\\b(?!.*(?:600|1,?000\\s*v))|\\bepr\\b|\\bmv\\b",
+    "\\b(?:crimp(?:ing)?|compression|u-?type)\\s*dies?\\b|\\bdie\\s*sets?\\b"
+   ],
+   "priority": 12
+  },
+  {
+   "id": "flex_conduit",
+   "label": "Flexible conduit (FMC / LFMC / LFNC / ENT)",
+   "group": "raceway",
+   "keywords": [
+    "\\bliquid\\s*-?\\s*ti(?:gh)?te?\\b(?!.*(?:conn|coupling|cplg|fitting|str\\b|90|45))",
+    "\\b(?:lfmc|lfnc)\\b(?!.*(?:conn|coupling|cplg|fitting))",
+    "\\bseal\\s*-?tite\\b",
+    "\\bcarflex\\b",
+    "\\bgreenfield\\b",
+    "\\bfmc\\b",
+    "\\bflex(?:ible)?\\s*(?:metal|metallic|steel|alum|aluminum|conduit|non-?metallic|pvc|tubing)\\b",
+    "\\b(?:steel|alum|aluminum|metal)\\s*flex\\b",
+    "(?<!service )(?<!red )\\bent\\b(?!\\s*(?:\\.|hub|conn|coupling|adapter|bell|cap|term))",
+    "\\bgf\\s*reels?\\b",
+    "\\blt\\s*conduit\\b",
+    "\\bliquid\\s*tai",
+    "\\b(?:ulgf|gfnfld|gful)\\b",
+    "\\bgf\\b(?=.*(?:reel|coil|ft|\\'))",
+    "\\bsmurf\\s*tube\\b",
+    "(?<!dril-)(?<!dril )\\bflex\\b(?!\\s*(?:conn|coupling|fitting|strap|clip|cord|duct|lug|terminal|screw))",
+    "\\bultratite\\b",
+    "\\bfixture\\s*whips?\\b",
+    "\\bwhips?\\b",
+    "\\b\\d/[48]\\\"?\\s*(?:flex|greenfield|lt|liquid)",
+    "\\bseal\\s*-?\\s*ti(?:gh)?te?\\b(?!.*(?:conn|coupling|cplg|fitting|str\\b|straight|90|45))",
+    "\\bsealtight\\b(?!.*(?:conn|coupling|cplg|fitting|str\\b|90|45))",
+    "\\bprlfmc\\w*\\b",
+    "\\bliquid\\s*-?\\s*tight\\s*flex",
+    "\\bul\\s*greenfield\\b",
+    "\\bsmurf\\b(?!.*(?:conn|coupling|adapter|fitting))"
+   ],
+   "negative": [
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|support|supports|bracket|caddy|flange|term|adap|adapter|conn|connector|connectors|coupling|coupl|cplg|fitting|fittings)\\b",
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|support|supports|bracket|caddy|flange|term|adap|adapter|conn|connector|connectors|coupling|coupl|cplg|fitting|fittings|change\\s*over|stub\\s*down)\\b"
+   ],
+   "priority": 11
+  },
+  {
+   "id": "conduit_pvc",
+   "label": "PVC / nonmetallic conduit",
+   "group": "raceway",
+   "keywords": [
+    "\\bpvc\\s*(?:conduit|pipe|sch|schedule)\\b",
+    "\\bsch(?:edule)?\\s*(?:40|80)\\b",
+    "\\bpvc\\s*(?:40|80)\\b",
+    "\\bdb-?(?:60|100|120)\\b",
+    "\\beb-?(?:20|35)\\b",
+    "\\bduct\\s*(?:bank|spacer)s?\\b",
+    "\\bpvc\\s*(?:elbow|sweep|90|45|bend|ell)s?\\b",
+    "\\b(?:end\\s*bells?|bell\\s*ends?)\\b",
+    "\\bcantex\\b",
+    "\\bpvc-40\\b",
+    "-pvc-",
+    "\\bpvc\\s*\\d+\\\"",
+    "\\b\\d(?:-\\d/\\d)?\\\"\\s*pvc\\b(?!\\s*(?:box|fa|ma|adapter|coupling|conn|fitting|cover|glue|cement|coated))",
+    "\\b\\d+(?:-1/2)?\\s*deg\\.?\\s*-?\\s*(?:p\\.?e\\.?|b\\.?e\\.?)\\b",
+    "\\b\\d+\\s*bnd\\s*std\\b",
+    "\\bstub\\s*downs?\\b",
+    "\\bul80\\b",
+    "\\bduct\\b(?=.*(?:wall|pvc|gry|gray|grey))",
+    "\\bpvc\\b(?=.*(?:\\b\\d{2}\\s*(?:ft|foot|')|\\bconduit\\b|\\bpipe\\b|20fter|\\bsweep))",
+    "\\b\\d\\\"?\\s*pvc\\b(?!\\s*(?:box|fa|ma|adapter|coupling|conn|fitting|cover|glue|cement))",
+    "\\b(?:sch|shc)\\.?\\s*#?\\s*(?:40|80)\\s*(?:90|45|22|11)'?s?\\b",
+    "\\b(?:sch|shc)\\s*#?\\s*(?:40|80)\\b",
+    "\\b51\\d{5}\\b(?=.*(?:deg|rad|elbow|sweep|90|45|pvc|bell|conduit))",
+    "\\b\\d+(?:-1/2)?\\s*deg\\.?\\s*(?:\\d+\\s*\\\"?\\s*rad)(?=.*(?:cantex|pvc|51\\d{5}|sch))",
+    "\\batkore\\s*pvc\\b",
+    "\\bpvc\\b(?=.*(?:\\d{2,}\\s*ft|\\d{2,},?\\d{3}'|\\d+'|\\d+\\s*ft\\b))(?!.*(?:coated|box|fa\\b|ma\\b|adapter|coupling|conn|fitting|cover|glue|cement|jacket|insulation|strap|clamp))",
+    "\\b(?:gray|grey|gry)\\s*pvc\\b",
+    "\\bpvc\\s*(?:20|10)\\s*(?:ft|foot|')",
+    "\\b(?:utility|electrical)\\s*duct\\b",
+    "\\bpvc\\s*sweeps?\\b",
+    "\\b(?:pvc|db|eb)\\s*(?:90|45|22\\.5|11\\.25)s?\\b"
+   ],
+   "negative": [
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|backstraps?|stp|support|supports|bracket|caddy|spacer|spacers)\\b",
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|backstraps?|stp|support|supports|bracket|caddy|spacer|spacers)\\b|\\bpvc\\s*-?\\s*coated\\b|\\bocal\\b|\\bhdpe\\b|\\binnerduct\\b|\\bfre\\b|\\bfiberglass\\b|\\bchampion\\b|\\bpo#|\\bp/o\\b"
+   ],
+   "priority": 10
+  },
+  {
+   "id": "conduit_rigid_imc",
+   "label": "Rigid / IMC conduit, elbows, nipples, conduit bodies",
+   "group": "raceway",
+   "keywords": [
+    "^type\\s*(?:lb|ll|lr|t|c|x)\\b.*(?:body|bdy)",
+    "\\bimc\\b(?!\\s*(?:conn|coupling|fitting|strap))",
+    "\\b(?:rmc|grc|rgs|rgc)\\b",
+    "\\brigid\\s*(?:conduit|pipe|galv|steel|alum|aluminum|elbow|90|45|sweep|nipple|threaded)\\b(?!\\s*(?:stp|strap|clamp|hanger|fitting|support|clip))",
+    "\\brigid\\b(?!\\s*(?:conn|coupling|fitting|strap|stp|hanger|hub|locknut|bushing|clamp|pipe\\s*strap|conduit\\s*(?:stp|strap|clamp|fitting)))",
+    "\\bgalv(?:anized)?\\s*(?:conduit|pipe|rigid|elbow|90|45|sweep|nipple)s?\\b",
+    "\\b(?:30|36|48|60|72|90)\\s*\\\"?\\s*(?:rad|radius)\\b(?!.*(?:pvc|cantex|carlon|sch|hdpe|51\\d{5}|fre|fiberglass))(?<!51\\d{5}\\s)",
+    "\\bfactory\\s*(?:elbow|90|45|bend|sweep)s?\\b",
+    "\\b(?:90|45)\\s*(?:deg(?:ree)?|\u00b0)?\\s*(?:elbows?|ells?|sweeps?|bends?)\\b(?!.*(?:hdpe|innerduct|pvc|fre|fiberglass|emt|sch\\s*\\d0|cantex|carlon))",
+    "\\bnipples?\\b(?!\\s*chuck)(?!.*(?:pvc\\b(?!\\s*-?\\s*coated)|hdpe|emt\\s*nipple|offset\\s*nipple|wireway))",
+    "\\bthreaded\\s*(?:rigid|galv|pipe|conduit|elbow)\\b",
+    "\\baluminum\\s*(?:rigid|conduit|pipe)\\b",
+    "\\bconduit\\s*(?:body|bodies)\\b",
+    "\\b(?:lb|ll|lr|t|c)\\s*(?:body|bodies|condulet|w/\\s*cov)\\b",
+    "\\bcondulets?\\b",
+    "\\bform\\s*[78]\\b",
+    "\\bexpansion\\s*(?:fitting|joint)s?\\b",
+    "(?<![a-z0-9-])\\d\\\"?\\s*(?:lb|ll|lr)s?\\b(?=.*(?:cov|gasket|alum|galv|steel|form|conduit|rig))(?!.*(?:tray|cope|va\\d|wd\\d))",
+    "\\bgalv?(?:anized)?\\s*(?:conduit|pipe)\\b(?!\\s*(?:strap|stp|clamp|hanger|cap))",
+    "\\bgal\\b(?=.*(?:conduit|in-gal))",
+    "\\b\\d(?:-\\d/\\d)?\\\"?\\s*gal\\b",
+    "\\b(?:steel|al|alum(?:inum)?)\\s*conduit\\b",
+    "\\bmogul\\b",
+    "\\bin-gal\\b",
+    "\\b90\\s*x\\s*\\d+\\s*gal\\b",
+    "\\b\\d+(?:-1/2)?\\s*deg\\.?\\s*(?:elbows?|ells?|bends?|sweeps?|\\d+\\s*\\\"?\\s*rad)(?!.*(?:pvc|cantex|carlon|sch|hdpe|51\\d{5}))",
+    "\\b(?:90|45)[sd]?\\b\\s*(?:deg|degree|\u00b0)?\\s*(?:x\\s*\\d+\\\"?\\s*rad|elbows?|ells?|alum|al\\b|gal)",
+    "\\b(?:alum|al|gal|galv|rigid|rgs|grc|steel)\\s*(?:90|45)[sd]?\\b",
+    "\\b(?:lg|large|long)\\s*radius\\s*elbows?\\b",
+    "\\belbows?\\b(?!.*(?:pvc|emt|wiremold|internal|external|flat|pull|raceway|hoffman|tray|hdpe|innerduct|fre|fiberglass|sch\\s*\\d0|cantex|carlon))",
+    "\\bcond(?:uit)?\\.?\\s*bd?(?:y|ies)\\b",
+    "\\bbod(?:y|ies)\\s*w/\\s*(?:cov|cover)",
+    "(?<![a-z0-9-])(?:lb|ll|lr)s?\\b(?=.*(?:cov|gask|cvr|body|bdy|w/|form|conduit|rig|emt|alum|mal|set\\s*screw))(?!.*(?:tray|cope|va\\d{2}w|wd\\d{2}w|cp\\d{2}-))",
+    "\\bemt\\s*(?:lb|ll|lr|t|c)\\b",
+    "\\bpvc\\s*-?\\s*coated\\b(?!\\s*(?:strap|backstrap|clamp|hanger|conn|coupling|cplg|erickson|cap|hub|locknut|bushing|union|cover|plug|seal|adapter))(?!.*(?:sealtight|seal\\s*tight|liquid))",
+    "\\b(?:ocal|robroy|plasti-?bond|perma-?cote|calbond|korkap)\\b(?!.*(?:conn|coupling|cplg|erickson|cap\\b|caps\\b|hub|locknut|bushing|union|cover|gasket|paint|strap|clamp|box|fd\\d|fs\\d))",
+    "\\bocal\\s*(?:cond|conduit|gal|pipe|\\d)",
+    "\\bpvc\\s*-?\\s*coated\\s*(?:gal\\w*\\s*|steel\\s*|rigid\\s*|rgs\\s*|grc\\s*)?(?:conduit|pipe|nipples?|elbows?|90s?|45s?|sweeps?|condulets?|lb|ll|lr|t\\b|c\\b|x\\b|bodies|body)\\b",
+    "\\bpv\\d{4}el\\d{2}\\b",
+    "\\b[tlxc]\\d{2}-g\\b(?=.*(?:condulet|pvc\\s*coated|ocal))",
+    "\\bintermediate\\s*metal(?:lic)?\\s*conduit\\b",
+    "\\balum(?:inum)?\\b(?=.*(?:rigid|conduit|\\d+\\s*ft\\b|\\d+'|10'|quality))(?!.*(?:lug|conn|coupling|cplg|tray|strut|fitting|box|cover|wire|cable|mcm|awg|thhn|xhhw|xlp|500|750|600|350|250|\\bal\\b\\s*\\d))",
+    "\\bcalpipe\\b",
+    "\\bstainless\\s*(?:steel\\s*)?(?:rigid\\s*)?conduit\\b",
+    "\\bss\\s*conduit\\b",
+    "\\b(?:rigid|imc|grc|rgs)\\s*(?:alum(?:inum)?|al|galv|steel|ss)\\b"
+   ],
+   "negative": [
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|stp|support|supports|bracket|caddy|flange|hook|hooks)\\b",
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|stp|support|supports|bracket|caddy|flange|hook|hooks)\\b|\\bhdpe\\b|\\binnerduct\\b|\\btray\\b|\\bva\\d{2}w|\\bwd\\d{2}w|\\bcp\\d{2}-|\\bmeter\\s*hub|\\bcondulet\\s*covers?\\b|\\bpaint\\b|\\bfd\\d-g\\b|\\bdeadend\\s*box\\b"
+   ],
+   "priority": 9
+  },
+  {
+   "id": "conduit_emt",
+   "label": "EMT conduit",
+   "group": "raceway",
+   "keywords": [
+    "\\bemt\\b(?!\\s*(?:conn|coupling|cplg|fitting|strap|clip|hanger|bushing|adapter|set\\s*screw|compression|ss\\b|comp|slip|split|\\d-hole|one\\s*hole|two\\s*hole|strut|clamp|to\\s*))",
+    "\\bemt\\s*(?:conduit|pipe|tubing)\\b",
+    "\\bemt\\s*(?:90|45|elbow|sweep|bend)s?\\b",
+    "\\bthin\\s*-?wall\\b",
+    "\\b\\d[\\\"\u201d']?\\s*-?\\s*10\\s*-?\\s*emt\\b",
+    "\\btubing\\b(?=.*(?:emt|metallic|conduit))",
+    "\\b(?:blue|red|colored?)\\s*emt\\b",
+    "\\bpipe\\b(?=.*\\bemt\\b)",
+    "\\bemt\\s*(?:galv|steel|alum|stainless)\\b",
+    "\\b\\d-?(?:1/2|3/4|1/4)?\\\"?\\s*emt\\b",
+    "\\bconduit\\b(?!.*(?:body|bodies|bdy|clamp|strap|hanger|fitting|conn|coupling|cplg|nipple|cover|plug|cap|platform|sleeve|seal|intermediate|rigid|imc|pvc|hdpe|fiberglass|fre|flex|liquid|seal|tray|clip|support|bracket|hook|bender|cutter|reamer))(?<!metal conduit)(?<!metallic conduit)"
+   ],
+   "negative": [
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|stp|support|supports|bracket|caddy|flange|hook|hooks|coupler|couplers)\\b",
+    "\\b(?:clip|clips|hanger|hangers|clamp|clamps|strap|straps|stp|support|supports|bracket|caddy|flange|hook|hooks|coupler|couplers|plug|plugs|platform|sleeve|sleeves)\\b|\\bintermediate\\b|\\bpvc\\b|\\bhdpe\\b"
+   ],
+   "priority": 8
+  },
+  {
+   "id": "boxes_pvc_nonmetallic",
+   "label": "PVC / nonmetallic boxes",
+   "group": "boxes_enclosures",
+   "keywords": [
+    "\\bpvc\\s*(?:box(?:es)?|junction|jb|j-?box|covers?|rings?|ext)\\b",
+    "\\bnon-?\\s*metallic\\s*(?:box(?:es)?|junction)\\b",
+    "\\bnm\\s*box(?:es)?\\b",
+    "\\b(?:plastic|fiberglass|polycarbonate)\\s*box(?:es)?\\b",
+    "\\b(?:new|old)\\s*work\\s*(?:pvc|plastic|nail-?on)\\b",
+    "\\bnail\\s*-?\\s*on\\s*box(?:es)?\\b",
+    "\\bcarlon\\s*(?:box(?:es)?|rings?|covers?)\\b",
+    "\\bhard\\s*shell\\b",
+    "\\bsuper\\s*blue\\b",
+    "\\bsmart\\s*box\\b",
+    "\\b(?:pvc|nonmetallic|non-metallic)\\s*(?:lb|ll|lr|c|t)\\s*box\\b",
+    "\\bb\\d{3}[a-z]?-?(?:r|upc|ru)?\\b(?=.*box)",
+    "\\bwp\\s*pvc\\b",
+    "\\b\\d+\\s*cu\\s*in\\b(?=.*(?:pvc|plastic|nail|carlon|blue))",
+    "\\bquazite\\b",
+    "\\bpolymer\\s*concrete\\b",
+    "\\bpc\\d{4}[a-z]{0,3}\\b(?=.*(?:box|cover|quazite))",
+    "\\b(?:adjustable|adj\\.?)\\s*box(?:es)?\\b(?=.*(?:plastic|carlon|pvc|nail))",
+    "\\bbox(?:es)?\\b(?=.*(?:plastic|carlon|pvc|polycarbonate|fiberglass|non-?metallic|nail-?on))(?!.*(?:steel|galv|metal|cast|iron))",
+    "\\bb\\d{3}adj\\b",
+    "\\bb\\d{3}[a-z]{0,3}-?(?:r|upc|ru)?\\b(?=.*(?:carlon|plastic|pvc|box))",
+    "\\b(?:pool|spa)\\s*(?:light\\s*)?(?:junction|j)\\s*box\\b",
+    "\\bpjb\\d{4}\\b",
+    "\\bweatherproof\\s*(?:light\\s*)?junction\\s*box\\b(?=.*(?:intermatic|pool|spa|pvc|plastic))",
+    "\\bpvc\\s*(?:pull|j|junction)\\s*box\\b",
+    "\\b(?:handhole|hand\\s*hole)s?\\b",
+    "\\bpull\\s*box\\b(?=.*(?:pvc|plastic|fiberglass|polymer|quazite|underground))"
+   ],
+   "negative": [
+    "\\bsteel\\b|\\bgalv\\b|\\bmetal\\b|\\bcast\\b|\\bmalleable\\b|\\biron\\b"
+   ],
+   "priority": 7
+  },
+  {
+   "id": "enclosures_nema",
+   "label": "NEMA enclosures, wireway, gutters",
+   "group": "boxes_enclosures",
+   "keywords": [
+    "\\benclosures?\\b",
+    "\\bnema\\s*(?:1|3r|3rx|4|4x|12|13)\\b(?!.*(?:disc|switch|panel|breaker|xfmr|transformer|fixture|contactor|starter|fused|fusible|pole|\\dp\\b|amp|trough|wireway|gutter))",
+    "\\b(?:hoffman|wiegmann|hammond|saginaw|nvent\\s*hoffman)\\b",
+    "\\bjic\\s*box(?:es)?\\b",
+    "\\bhinged?\\s*(?:covers?|doors?|enclosures?|box(?:es)?)\\b",
+    "\\bscrew\\s*cover\\s*(?:nema|enclosure)\\b",
+    "\\bback\\s*-?\\s*panels?\\b",
+    "\\bsub\\s*-?\\s*panel\\b(?=.*(?:enclosure|steel|hoffman|back))",
+    "\\bstainless\\s*(?:steel\\s*)?(?:enclosure|box)\\b",
+    "\\bpull\\s*box\\b(?=.*(?:nema|\\d+\\s*x\\s*\\d+\\s*x\\s*\\d+))",
+    "\\bterminal\\s*box(?:es)?\\b",
+    "\\bpushbutton\\s*(?:enclosure|station|box)\\b",
+    "\\bcabinets?\\b(?!\\s*(?:light|fixture))",
+    "\\b\\d{1,2}\\\"?\\s*x\\s*\\d{1,2}\\\"?\\s*x\\s*\\d{1,2}\\b(?=.*(?:nema|enclosure|trough|jb|nk\\b|sc\\b|screw\\s*cover|hinge|weatherproof|wp|n1\\b|box(?!\\s*of)))",
+    "^\\(?\\d{1,2}\\\"?\\s*x\\s*\\d{1,2}\\\"?\\s*x\\s*\\d{1,2}\\\"?(?:ft)?\\)?\\s*(?:-|$)",
+    "\\b(?:wpsc|sc|t)\\d{4,7}(?:nk)?\\b(?=.*\\d+x\\d+x\\d+)",
+    "\\bpolycarbonate\\s*enclosures?\\b",
+    "\\bfiberglass\\s*enclosures?\\b",
+    "\\bsc\\s*nk\\b",
+    "\\bnk\\s*sc\\b",
+    "\\b(?:n1|n3r|n4x?|n12)\\s*(?:box(?:es)?|enclosures?|sc\\b)",
+    "\\bsc\\s*box(?:es)?\\b",
+    "\\bscrew\\s*cover\\b(?!.*(?:trough|wireway|gutter))",
+    "\\bnk\\s*box(?:es)?\\b",
+    "\\b\\d{1,2}x\\d{1,2}x\\d{1,2}\\s*(?:sc|nk|n1|hc|jic|nema)\\b",
+    "\\b(?:sc|nk|n1|hc|jic|nema)\\s*\\d{1,2}x\\d{1,2}x\\d{1,2}\\b",
+    "\\bexplosion\\s*-?\\s*proof\\s*(?:box(?:es)?|enclosures?|junction|jb|cabinet)\\b",
+    "\\b(?:xp|ex|hazardous\\s*location)\\s*(?:box|enclosure|jb)\\b",
+    "\\b(?:milb(?:ank)?|hammond|hoffman|wiegmann)\\s*\\d{3,6}",
+    "\\b\\d{5,6}-sc\\d-nk\\b",
+    "\\bjunc\\s*box\\b(?=.*(?:sc|nk|n1|nema|\\d+x\\d+x\\d+))",
+    "\\b\\d{2}x\\d{2}x\\d{1,2}\\b(?=.*(?:box|enclosure|stock|nema|sc\\b|nk\\b))",
+    "\\bcontrol\\s*(?:cabinet|enclosure|panel\\s*enclosure)s?\\b",
+    "\\bracoman\\b",
+    "\\bconsole\\b(?=.*(?:enclosure|cabinet|control))",
+    "\\bmilbank\\b(?=.*(?:junc|j-?box|sc\\b|nk\\b|n1\\b|\\d+x\\d+x\\d+))"
+   ],
+   "negative": [
+    "\\bnon\\s*-?\\s*fus|\\bfusible\\b|\\bfused\\b|\\btrough\\b|\\bwireway\\b|\\bgutter\\b|\\bgttr\\b|\\bwrwy\\b|\\bquazite\\b|\\bpolymer\\b|\\bdisconnect\\b|\\bsafety\\s*switch\\b"
+   ],
+   "priority": 6
+  },
+  {
+   "id": "boxes_metal",
+   "label": "Metal outlet / junction / pull boxes",
+   "group": "boxes_enclosures",
+   "keywords": [
+    "\\b4\\s*(?:\\\"|\u201d|in(?:ch)?)?\\s*(?:sq(?:uare)?|s\\b|octagon|oct|round)\\b",
+    "\\b4-?11/16\\b",
+    "\\b1900\\b",
+    "\\b(?:4s|4sq|4o|2g|1g|3g|4g|5g|6g)\\s*(?:box(?:es)?|covers?|rings?|ext(?:ension)?s?|blank|raised|mud|plaster|brackets?|deep|d\\b)",
+    "\\b(?:mud|plaster)\\s*rings?\\b",
+    "\\badapter\\s*plates?\\b",
+    "\\bwater\\s*-?proof\\s*box(?:es)?\\b",
+    "\\b(?:raised|device)\\s*(?:covers?|rings?)\\b",
+    "\\bgang\\s*(?:box(?:es)?|covers?|rings?|ext(?:ension)?s?|masonry)\\b",
+    "\\bmasonry\\s*box(?:es)?\\b",
+    "\\b(?:switch|sw|handy|utility|pancake|fan|ceiling|old\\s*work|pull|floor|junction|j|bell|weatherproof|wp|cast)\\s*-?\\s*box(?:es)?\\b(?!\\s*(?:cover|kit)\\b)",
+    "\\boctagon\\b",
+    "\\boct\\s*(?:box|cover|ring)s?\\b",
+    "\\bbox\\s*(?:covers?|extensions?|ext|rings?|supports?|brackets?|hangers?|bar\\s*hangers?)\\b",
+    "\\bblank\\s*covers?\\b",
+    "\\bbar\\s*hangers?\\b",
+    "\\b(?:raco|steel\\s*city|bowers|orbit)\\b",
+    "\\b(?:fs|fd|fsc|fdc)\\s*-?\\s*[12]?\\s*(?:box|cover|ext|gang|deep|hub)?\\b(?=.*(?:box|cover|gang|hub|cast|\\d/\\d))",
+    "\\bscrew\\s*cover\\s*(?:box|jb|pull)\\b",
+    "\\bbox(?:es)?\\b(?=.*(?:steel|galv|metal|ko|knockout|bracket|deep|welded|drawn|\\d+\\s*cu\\s*in))",
+    "(?<!/)(?<!tool )(?<!job )(?<!jobsite )(?<!breaker )(?<!panel )(?<!meter )(?<!fuse )(?<!gang )(?<!storage )(?<!lb )(?<!floor )(?<!recept. )(?<!recept )(?<!receptacle )\\bbox(?:es)?\\b(?!\\s*(?:of|lot|qty|/|per|adapter|conn|fill|min|store|cutter|\\d|-|\u2013|hanger|bracket|support|platform|clip))",
+    "\\bko'?s\\b(?=.*(?:box|gang|deep|octag|4\\s*\\\"|4-?11/16|1900))",
+    "\\beccentric\\s*ko'?s?\\b",
+    "\\b(?:fan|fixture|fan\\s*/\\s*fixture)\\s*(?:vapor\\s*)?box(?:es)?\\b",
+    "\\bfbr\\d{3}\\w*\\b",
+    "\\bcam\\s*light\\s*box\\b",
+    "\\bfl\\d{3}\\b(?=.*box)",
+    "\\b(?:fd|fs|fdc|fsc)\\s*-?\\s*[12]?\\s*-?\\s*g\\b(?=.*(?:box|hub|deadend|deep|\\d/\\d))",
+    "\\b(?:fd|fs)\\d?-?g\\b",
+    "\\bdeadend\\s*box\\b",
+    "\\b(?:malleable|maluable|mal\\.?)\\s*(?:iron\\s*)?(?:fd|fs)?\\s*box(?:es)?\\b",
+    "\\bconcrete\\s*(?:octagon(?:al)?|ring|box)\\b",
+    "\\boctagon(?:al)?\\s*(?:box|cover|ring)s?\\b",
+    "\\b(?:sq|square)\\s*(?:box|cvr|cover|blank)\\b",
+    "\\bsq\\s*flat\\s*blank\\s*cvr\\b",
+    "\\bblank\\s*cvrs?\\b",
+    "\\b(?:4s|4sq|4-?11/16|1900)\\s*(?:blank|flat|raised|industrial)\\s*(?:cvr|cover)s?\\b",
+    "\\b(?:tsgb|tsgldr|tb\\d{2}pk|tbgb|mbs|rbs)\\d*\\w*\\b(?=.*(?:box|bracket|screw\\s*gun|mounting))",
+    "\\b(?:red\\s*dot|bell)\\s*(?:box|cover|wp)\\b",
+    "\\bwp\\s*(?:box|cover)\\b(?=.*(?:\\d/\\d|hub|hole|gang|die\\s*cast|alum))",
+    "\\b(?:handy|utility)\\s*box\\s*covers?\\b",
+    "\\bbox\\s*extensions?\\b",
+    "\\bgang\\s*ext\\b",
+    "\\b\\d\\s*-?\\s*gang\\b(?=.*(?:\\bdeep\\b|ko'?s\\b))",
+    "\\b(?:deep|octag\\w*|1900|4-?11/16)\\b.*\\bko'?s\\b"
+   ],
+   "negative": [
+    "\\d+\\s*/\\s*(?:box|bx|ctn|carton)\\b|\\bbox(?:es)?\\s*of\\s*\\d|^\\s*\\(?\\d+\\)?\\s*box(?:es)?\\s*[-\u2013:]|\\b\\d+\\s*box(?:es)?\\s*[-\u2013]\\s|\\bbox(?:es)?\\s*[-\u2013]\\s*\\d|\\bplastic\\b|\\bcarlon\\b|\\bpvc\\b(?!\\s*-?\\s*coated)|\\bquazite\\b|\\bpolymer\\b|\\bfloor\\s*box|\\brecept(?:acle)?\\.?\\s*box|\\bin-?use\\b|\\bcable\\s*tray|\\bcope\\b|\\bwd\\d{3}|\\bpanel\\s*box|\\bjunction\\s*box\\b(?=.*(?:pool|spa|intermatic|pvc|plastic))|\\bexplosion|\\bx\\s*\\d{1,2}\\s*x\\s*\\d{1,2}\\b(?=.*(?:nema|sc\\b|nk\\b|n1\\b|enclosure))|\\bblank\\s*covers?\\b(?=.*(?:gang|white|ivory|almond|nylon|plate))"
+   ],
+   "priority": 5
+  },
+  {
+   "id": "wiring_devices",
+   "label": "Wiring devices & plates",
+   "group": "devices",
+   "keywords": [
+    "^\\d{5}[a-z]?\\s+\\d{1,2}g\\b",
+    "\\brecep(?:tacle)?s?\\b",
+    "\\brcpt\\b",
+    "\\bduplex\\b(?!\\s*(?:conn|mc|nm))",
+    "\\boutlets?\\b(?!\\s*(?:box|boxes|in\\s*handle))(?!.*(?:work\\s*light|power\\s*strip|surge\\s*strip|multi-?outlet))",
+    "\\bgf(?:c)?i\\b(?!.*(?:breaker|\\d+\\s*a\\s*[12]p|\\bqo\\b|\\bhom\\b))",
+    "\\busb\\s*(?:receptacle|outlet|charger|combo)\\b",
+    "\\bdecora(?:tor)?\\b",
+    "\\bswitch(?:es)?\\b(?!\\s*(?:gear|board|box|boxes|fuse|disconnect|safety|leg|-?rated))(?!.*(?:disconnect|safety|nema|fused|\\d{3}\\s*a|motor|transfer))",
+    "\\b(?:single|double|3|4|three|four)\\s*-?\\s*(?:pole|way)\\s*(?:switch|sw|toggle)\\b",
+    "\\btoggles?\\b(?!\\s*(?:bolt|anchor|wing))",
+    "\\b(?:wall|cover|face|switch|blank|jumbo)\\s*-?\\s*plates?\\b",
+    "\\bplates?\\b(?=.*(?:\\dg|gang|ss|stainless|nylon|white|ivory|almond|brown|chrome|toggle|duplex|decora|blank|tele|cable))",
+    "\\btwist\\s*-?\\s*locks?\\b",
+    "\\bl\\d{1,2}-\\d{2}[pr]?\\b",
+    "\\b(?:5-15|5-20|6-20|6-30|6-50|14-30|14-50|10-30|10-50)\\s*[pr]\\b",
+    "\\bplugs?\\b(?!\\s*(?:ko|knockout|conduit|seal|hole|-?in\\s*led|fuse|-?in\\s*relay|-?in\\s*breaker))(?!.*(?:poly|duct|ipex|tapered|hdpe|pvc|rigid|fuse|breaker|relay))",
+    "\\bpin\\s*(?:&|and)\\s*sleeve\\b",
+    "\\b(?:leviton|pass\\s*&\\s*seymour|p&s|hubbell\\s*wiring|bryant|cooper\\s*wiring)\\b",
+    "\\bhospital\\s*grade\\b(?!.*(?:mc\\b|m/c|cable|luminaire|\\d{1,2}/\\d|\\d+\\s*'|\\d+\\s*ft))",
+    "\\b(?:isolated\\s*ground|ig)\\s*(?:recep|outlet|duplex)\\b",
+    "\\b(?:weather\\s*-?(?:resistant|proof)|wp|in-?use|bubble)\\s*covers?\\b",
+    "\\b(?:range|dryer)\\s*(?:recep|outlet|plug|cord)\\b",
+    "\\b(?:flanged\\s*)?inlets?\\b",
+    "\\bcord\\s*(?:caps?|ends?|bod(?:y|ies))\\b",
+    "\\bconnector\\s*bod(?:y|ies)\\b",
+    "\\bwiring\\s*devices?\\b",
+    "\\bpilot\\s*light\\s*switch\\b",
+    "\\b\\d{1,2}g\\b(?=.*(?:blank|dplx|duplex|tele|dryer|louver|dev\\.|rcpt|recpt|\\bsw\\b|sgl|block|jumbo|toggle|decora|302ss|430ss|brs|chrome|ivory|wht|almond|prl|pshbttn|int\\.))",
+    "\\bgfr\\b",
+    "\\b(?:tr|wr)\\s*(?:gfci|gfr|duplex|recep|outlet)\\b",
+    "\\bmulberry\\b",
+    "\\blv/?plates?\\b",
+    "\\btwist\\s*90\\b",
+    "\\b(?:\\d-?\\s*gang|screwless|decor(?:a|ator)?)\\b.*\\bplates?\\b",
+    "\\brecept\\b",
+    "\\bdplx\\b",
+    "\\brcp\\b",
+    "\\bdplx\\s*rcp\\b",
+    "\\b(?:sp|dp|3w|4w|sgl|dbl)\\s*-?\\s*(?:tgl|toggle)\\s*(?:sw|switch)\\b",
+    "\\btgl\\s*sw\\b",
+    "\\btgl\\b(?=.*(?:sw\\b|switch|\\d+\\s*a\\b|\\d+\\s*v\\b))",
+    "\\bhubw\\b",
+    "\\b(?:gfwt|gfnt|gfrst|gfnl|gfwr)\\d?\\w*\\b",
+    "\\btbr\\d{2}-?\\w*\\b",
+    "\\b5[23]\\d{2}-?[a-z]{0,4}\\b(?=.*(?:hubbell|leviton|recep|duplex|\\d+\\s*a\\b|white|ivory|gray|brown|sgw|wht))",
+    "\\big\\d{2}\\w*\\b(?=.*(?:recep|duplex|orange|ivory|white|isolated))",
+    "\\b1634\\d\\w*\\b",
+    "\\bsl\\d{2,3}\\b(?=.*(?:leviton|switch|slide|dimmer|white|ivory))",
+    "\\bcs\\d{3}[a-z]{0,3}\\b(?=.*(?:switch|sw\\b|hubbell|\\d+\\s*v\\b|tgl|spec))",
+    "\\bdr\\d{2}[a-z]{2,4}\\b(?=.*(?:hubbell|recep|dplx|duplex|rcp|\\d+\\s*a\\b))",
+    "\\bhbl\\d{3,5}\\w*\\b(?!.*(?:disc|switch\\s*wdk|3p\\s*disc))",
+    "\\b(?:single|duplex|1|2)\\s*(?:outlet|receptacle|gang)\\s*covers?\\b(?!.*(?:box|metal|steel|galv))",
+    "\\bblank\\s*covers?\\b(?=.*(?:gang|white|ivory|almond|nylon|plate|brown|gray))(?!.*(?:box|steel|metal|galv|4s|4sq|4-?11/16|1900|octagon|sq\\b))",
+    "\\b(?:tr|wr|trwr)\\s*(?:duplex|decora|gfci|receptacle|outlet|rcpt)?\\b(?=.*(?:\\d+\\s*a\\b|amp|white|ivory|gray|brown|almond|black))",
+    "\\bo/d\\s*recept\\b",
+    "\\bin\\s*-?\\s*use\\s*(?:cover|receptacle\\s*cover|box)s?\\b",
+    "\\bdbvm\\d",
+    "\\b(?:power|extra\\s*duty)\\s*(?:while|in)\\s*-?\\s*use\\b",
+    "\\bpower\\s*outlet\\s*strips?\\b",
+    "\\bsquare\\s*d\\s*switch\\b(?=.*(?:decora|toggle|x\\s*series))"
+   ],
+   "negative": [
+    "\\b(?:disconnect|safety\\s*switch|transfer\\s*switch|switchgear|switchboard)\\b",
+    "\\b(?:disconnect|safety\\s*switch|transfer\\s*switch|switchgear|switchboard)\\b|\\bwork\\s*light\\b|\\bpoly\\s*plugs?\\b|\\bduct\\s*plugs?\\b|\\bipex\\b|\\bwiremold\\b|\\bwire\\s*mold\\b|\\bpoke\\s*-?\\s*thru\\b|\\bfloor\\s*box|\\bpush\\s*-?\\s*buttons?\\b(?=.*(?:station|nema|22\\s*mm|30\\s*mm|ta\\d{3}|pilot|contact\\s*block))"
+   ],
+   "priority": 4
+  },
+  {
+   "id": "fasteners_anchors",
+   "label": "Fasteners, anchors, straps, hangers & supports",
+   "group": "hardware_misc",
+   "keywords": [
+    "^fasteners\\b|^hangers,?\\s*straps,?\\s*and\\s*clamps\\b|^clamp\\s*straps\\s*and\\s*backs\\b|^conduit\\s*clamps\\b",
+    "\\banchors?\\b",
+    "\\b(?:wedge|sleeve|drop-?\\s*in|concrete|masonry|plastic|nylon|conical|hollow\\s*wall|toggle|expansion|adhesive|chemical|lead|zamac|nail-?in|hammer\\s*-?drive|screw|machine\\s*bolt)\\s*anchors?\\b",
+    "\\bdrop-?\\s*ins?\\b",
+    "\\b(?:double|single)\\s*expansions?\\b",
+    "\\bkwik\\s*(?:bolt|con|hus)\\b",
+    "\\bkb-?\\s*(?:tz|3|tz2)\\b",
+    "\\bhus-?\\s*(?:ez|h)\\b",
+    "\\bhilti\\b(?=.*(?:anchor|kwik|kb|hit-?hy|hit-?re|hus|hlc|hdi|hst|hsl|hkd|hy\\s*\\d|re\\s*\\d|screw|nail|pin|cartridge|x-?u|x-?bt|x-?dni|x-?eni|x-?gn|x-?c|x-?m|x-?cr))",
+    "\\btap-?cons?\\b",
+    "\\b(?:concrete|masonry)\\s*screws?\\b",
+    "\\bself-?\\s*(?:tapping|drilling|tapper|driller)\\b",
+    "\\btek\\s*screws?\\b",
+    "\\btek\\b",
+    "\\b(?:sheet\\s*metal|machine|wood|drywall|deck|lag|pan\\s*head|flat\\s*head|hex\\s*head|cap|carriage|hex|eye|u|j|toggle)\\s*-?\\s*(?:screws?|bolts?)\\b",
+    "\\bsms\\b",
+    "\\blags?\\b(?=.*(?:bolt|screw|shield|\\d/\\d+|x\\s*\\d))",
+    "\\bscrews?\\b(?!\\s*(?:cover|terminal|-?in\\s*conn))",
+    "\\bbolts?\\b(?!\\s*(?:-?on|hole\\s*lug|cutter))",
+    "\\btoggles?\\b(?=.*(?:bolt|anchor|wing|snap|hollow|drywall|\\d/\\d+|x\\s*\\d))",
+    "\\bsnap\\s*toggles?\\b",
+    "\\bmoll(?:y|ys|ies)\\b",
+    "\\bzip-?\\s*its?\\b",
+    "\\be-?z\\s*anchors?\\b",
+    "\\bnuts?\\b(?!\\s*(?:driver|drivers|setter|setters|lock|locknut|wire|wing|spring|channel|strut))",
+    "\\bhex\\s*nuts?\\b",
+    "\\bnyloc?k\\b",
+    "\\b(?:lock|flat|fender|split)\\s*washers?\\b",
+    "\\bwashers?\\b(?!\\s*(?:pressure|power|reducing))",
+    "\\batr\\b",
+    "\\brod\\s*(?:couplings?|couplers?|hangers?|stiffeners?|nuts?)\\b",
+    "\\bcoupling\\s*nuts?\\b",
+    "\\b(?:tie|hanger)\\s*wire\\b",
+    "\\bcaddy\\b",
+    "\\bcaddy\\s*(?:clips?|fasteners?|hangers?|brackets?|straps?|rods?|pins?)\\b",
+    "\\bbat\\s*-?\\s*wings?\\b",
+    "\\bmc\\s*(?:clips?|supports?|hangers?|straps?)\\b",
+    "\\bconduit\\s*(?:straps?|clips?|hangers?|supports?|clamps?|stp)\\b",
+    "\\bsupports?\\b(?=.*(?:rod|wire|fixture|cable|caddy|bracket|clip))",
+    "\\bhgr\\b",
+    "\\briser\\s*clamps?\\b",
+    "\\b\\d+\\s*lb\\s*rated\\b",
+    "\\bgripple\\b",
+    "\\bduct\\s*locks?\\b",
+    "\\brestraints?\\b",
+    "\\bswivel\\s*fixture\\b",
+    "\\brod\\b(?=.*(?:zinc|3/8|1/4|1/2|galv|bundle))",
+    "\\bbrackets?\\b",
+    "hgr\\b",
+    "\\bend-?\\s*fittings?\\b",
+    "\\bshot-?\\s*fire\\b",
+    "\\btye\\s*wire\\b",
+    "\\badhesive\\b",
+    "\\b(?:one|two|1|2)\\s*-?\\s*hole\\s*(?:straps?|clamps?)\\b",
+    "\\bstraps?\\b(?!\\s*(?:wrench|ground|grounding|bond|bonding))",
+    "\\bback\\s*-?\\s*straps?\\b",
+    "\\bclamps?\\b",
+    "\\bminerallacs?\\b",
+    "\\bminnies?\\b",
+    "\\bclips?\\b(?!\\s*(?:lead|test|alligator))",
+    "\\b(?:clevis|ring|loop|pipe|split\\s*ring)\\s*hangers?\\b",
+    "\\bhangers?\\b(?!\\s*(?:bar|rod))",
+    "\\b(?:bridle|drive)\\s*rings?\\b",
+    "\\bsaddles?\\b",
+    "\\bbeam\\s*(?:clamps?|clips?|fasteners?|hangers?)\\b",
+    "\\b(?:flange|purlin|acoustical|ceiling)\\s*(?:clips?|clamps?|fasteners?)\\b",
+    "\\bt-?\\s*(?:bar|grid)\\s*(?:clips?|hangers?|fasteners?|box|support)\\b",
+    "\\bcable\\s*(?:supports?|hangers?|rings?|hooks?|slings?)\\b",
+    "\\b(?:cable|romex|wire|insulated)?\\s*staples?\\b",
+    "\\bnails?\\b",
+    "\\b(?:drive\\s*)?pins?\\b(?=.*(?:powder|drive|ramset|hilti|powers|concrete|steel|\\d+\\s*mm|x-?u|x-?c|x-?dni|x-?eni|x-?gn|x-?m|x-?bt|x-?cr|dx|gx))",
+    "\\bpowder\\s*(?:loads?|shots?|charges?|pins?|fasteners?|actuated\\s*fasteners?)\\b",
+    "\\b(?:\\.22|\\.25|\\.27)\\s*(?:cal(?:iber)?|loads?|shots?|charges?)\\b",
+    "\\bloads?\\b(?=.*(?:powder|ramset|hilti|powers|\\.22|\\.25|\\.27|cal|caliber|strip|yellow|red|green|brown|purple))",
+    "\\bfuel\\s*cells?\\b",
+    "\\btrak-?\\s*fast\\b",
+    "\\bpaslode\\b",
+    "\\bepoxy\\b",
+    "\\bhit-?\\s*(?:hy|re|ic|v|z)\\b",
+    "\\b(?:re\\s*500|hy\\s*200|hy\\s*270|set-?\\s*xp)\\b",
+    "\\b(?:simpson|strong-?\\s*tie|strong-?\\s*bolt|titan\\s*hd|wedge-?\\s*all)\\b",
+    "\\b(?:powers|dewalt)\\s*(?:fasteners?|anchors?|wedge|power-?stud|power-?bolt|snake|lok-?bolt|zamac|nailin|wall-?dog|tappers?|drop-?in|smart\\s*di|vertigo|hangermate|hanger\\s*mate|pe1000|ac100|ac200|bam|wood-?knocker|screw-?bolt|ultracon|ultra-?con|crete-?flex)\\b",
+    "\\b(?:hangermate|hanger\\s*mate|vertigo|sammys?|side-?\\s*winder|sidewinder|wood-?\\s*knocker|bang-?\\s*it|wall-?\\s*dog|walldog|snake\\+|power-?\\s*stud|power-?\\s*bolt|lok-?\\s*bolt|screw-?\\s*bolt|ultracon|crete-?\\s*flex)\\b",
+    "\\b(?:deck|concrete|cast-?\\s*in(?:\\s*place)?)\\s*inserts?\\b",
+    "\\bexpansion\\s*(?:bolts?|shields?)\\b",
+    "\\bshields?\\b(?=.*(?:lag|lead|expansion|anchor|masonry|concrete|\\d/\\d+))",
+    "\\b(?:double|single)\\s*expansion\\b",
+    "\\bcalk-?\\s*in\\b",
+    "\\bmushroom\\s*head\\b",
+    "\\bsplit\\s*drive\\b",
+    "\\bblue\\s*screws?\\b",
+    "\\bfasteners?\\b",
+    "\\bhardware\\b(?!\\s*(?:kit|assortment|cloth))",
+    "\\bnuts?\\s*(?:&|and)\\s*bolts?\\b",
+    "\\bgrade\\s*(?:2|5|8)\\b(?=.*(?:bolt|screw|nut|hex|cap))",
+    "\\b(?:stainless(?:\\s*steel)?|ss|zinc(?:\\s*plated)?|galv(?:anized)?|hdg)\\s*(?:bolts?|screws?|nuts?|washers?|anchors?|hardware|fasteners?|lags?)\\b",
+    "\\b\\d+/\\d+\\s*-\\s*\\d+\\s*x\\s*\\d",
+    "\\b\\d+/\\d+\\\"?\\s*x\\s*\\d+(?:-\\d+/\\d+)?\\\"?\\s*(?:hex|lag|carriage|machine|wedge|sleeve|drop|tapcon|bolt|screw|anchor|nut|washer|atr|rod|threaded)",
+    "\\b#?\\d{1,2}\\s*x\\s*\\d+(?:-\\d+/\\d+)?\\\"?\\s*(?:hex|lag|wood|drywall|deck|sheet\\s*metal|sms|tek|self|machine|pan|flat|oval|round|truss|phillips|square|torx|screws?)",
+    "\\b(?:pan|flat|oval|round|truss|button|fillister|hex\\s*washer|washer)\\s*head\\b",
+    "\\b(?:6|8|10|12)-?32\\b(?!\\s*(?:v|volt|vac|vdc))",
+    "\\b(?:1/4|5/16|3/8|1/2|5/8|3/4)-?(?:20|18|16|13|11|10)\\b",
+    "\\bm(?:3|4|5|6|8|10|12|16)\\s*x\\s*\\d+\\b",
+    "\\b(?:green\\s*ground|ground(?:ing)?|device|cover|plate|box|fixture)\\s*screws?\\b",
+    "\\bmounting\\s*(?:screws?|hardware|bolts?|brackets?|kits?|straps?|clips?|plates?)\\b",
+    "\\bfender\\s*washers?\\b",
+    "\\bfender\\b(?=.*(?:\\d/\\d|x\\s*\\d|washer|mutual|zinc|ss\\b))",
+    "\\bwdge\\s*anch\\w*\\b",
+    "\\bwedge\\s*anch\\w*\\b",
+    "\\bpower\\s*stud\\b",
+    "\\bsd\\d\\b(?=.*(?:anchor|wedge|316|ss\\b))",
+    "\\b\\d/\\d+\\\"?\\s*x\\s*\\d+\\\"?\\s*(?:hot\\s*dipped|hdg|galv|zinc|ss|stainless|316|304)\\s*(?:rod|atr|all\\s*thread)s?\\b",
+    "\\b(?:hot\\s*dipped|hdg)\\s*(?:rods?|bolts?|nuts?|washers?|all\\s*threads?)\\b",
+    "\\brods?\\b(?=.*(?:3/8|1/2|1/4|5/8|x\\s*\\d+\\s*['\\\"]|hot\\s*dipped|hdg|zinc|galv|ss\\b|316|threaded))(?!.*(?:ground|gnd|fish|glow|earth|copper|cu\\b|push|pull|lightning))",
+    "\\bacorn\\s*nuts?\\b",
+    "\\bnut\\s*sleeve\\s*anchors?\\b",
+    "\\bdfd\\d{6}\\b",
+    "\\bdcn\\d{6}\\b",
+    "\\b(?:dfd|dcn|dfm|pfm)\\d{5,6}\\b",
+    "\\bmutual\\b(?=.*(?:\\d/\\d|x\\s*\\d|washer|bolt|nut|screw|fender|wf\\b))",
+    "\\b\\d{3,4}wf\\b",
+    "\\bfixture\\s*(?:nuts?|eyelets?|suspension\\s*bars?|hangers?|clips?|clamps?|supports?|studs?|bars?|rails?|chains?)\\b",
+    "\\b(?:517[ab]|sllc\\d{3}|tb\\d{3}\\w*)\\b(?=.*(?:fixture|luminaire|t-?grid|rail|eyelet|suspension))",
+    "\\bsuspension\\s*bars?\\b",
+    "\\b(?:svc|service)\\s*ent\\.?\\s*straps?\\b",
+    "\\bgse-?\\d{3}\\b",
+    "\\b(?:ser|seu|se)\\s*(?:cable\\s*)?straps?\\b",
+    "\\b(?:one|two|1|2)\\s*-?\\s*hole\\s*(?:emt|rigid|pvc|conduit)?\\s*straps?\\b",
+    "\\bhl\\s*(?:emt|rigid|pvc)?\\s*straps?\\b",
+    "\\b(?:emt|rigid|pvc|imc)\\s*(?:straps?|clamps?|hangers?|stp)\\b",
+    "\\bstrut\\s*(?:straps?|clamps?)\\b(?=.*(?:emt|rigid|pvc|conduit|\\d/\\d\\\"|\\d\\\"))",
+    "\\bhorseshoe\\s*shims?\\b",
+    "\\bshims?\\b",
+    "\\bbox\\s*(?:hangers?|brackets?|supports?|lock\\s*clips?)\\b",
+    "\\b(?:bar|adjustable\\s*bar)\\s*hangers?\\b",
+    "\\b(?:tsgb|tsgldr|tb\\d{2}pk|tbgb|bha\\d|bctz|bc\\d{3}[a-z]{0,2})\\d*\\w*\\b(?=.*(?:box|bracket|hanger|screw\\s*gun|mounting|clip|\\d+pk|pk\\b))",
+    "\\bscrew\\s*gun\\s*(?:box\\s*)?brackets?\\b",
+    "\\bt-?grid\\s*(?:box\\s*)?(?:hanger|clip|bracket|support)s?\\b",
+    "\\bmac\\d{3}\\w*\\b(?=.*(?:clip|mount|flange))",
+    "\\bpats\\b",
+    "\\b\\d{1,2}pats\\b",
+    "\\bsfclt\\b",
+    "\\bseismic\\s*(?:lighting\\s*)?(?:fixture\\s*)?clamps?\\b",
+    "\\bhanger\\s*mate\\b",
+    "\\bsilicon\\s*bronze\\b(?=.*(?:bolt|nut|washer|screw|grade))",
+    "\\bgrade\\s*8\\b",
+    "\\bround\\s*head\\s*combo\\b",
+    "\\b\\d/\\d+\\\"?\\s*x\\s*\\d+\\\"?\\s*(?:round|flat|pan|hex|carriage|combo)\\b"
+   ],
+   "negative": [
+    "\\bground\\s*rods?\\b|\\bgnd\\s*rods?\\b|\\bcu\\s*ground\\b|\\bm(?:8|12)\\s*(?:nut\\s*)?\\d?-?pin\\b|\\bwiremold\\b|\\bcable\\s*tray\\b|\\bbronze\\s*clamps?\\b(?=.*(?:ground|gnd|burndy|cu\\b))|\\bpipe\\s*ground|\\bwater\\s*pipe\\b"
+   ],
+   "priority": 3
+  },
+  {
+   "id": "tools",
+   "label": "Tools & jobsite equipment",
+   "group": "hardware_misc",
+   "keywords": [
+    "^compression\\s*tools\\s*and\\s*dies\\b|^hand\\s*tools\\s*and\\s*accessories\\b|^cable\\s*testers\\b",
+    "\\btools?\\b",
+    "\\bdrills?\\b",
+    "\\b(?:drill|sds|carbide|masonry|step|spade|paddle|auger|hole|driver|impact|phillips|torx|hex|magnetic)\\s*bits?\\b",
+    "\\bsds\\s*(?:max|plus)?\\b",
+    "\\b(?:hammer|rotary|mag(?:netic)?|core)\\s*drills?\\b",
+    "\\bimpact\\s*(?:driver|drill|wrench|gun|kit|combo)s?\\b",
+    "\\b(?:recip(?:rocating)?|circular|band|hole|cut-?off|chop|table|miter|jig)\\s*saws?\\b",
+    "\\bsawzall\\b",
+    "\\bholesaws?\\b",
+    "\\bport-?a-?band\\b",
+    "\\bblades?\\b(?=.*(?:saw|sawzall|recip|band|circular|carbide|bi-?metal|metal|wood|demo|dewalt|milwaukee|makita|lenox|diablo|irwin|bosch))",
+    "\\bgrinders?\\b",
+    "\\b(?:grinding|cut\\s*-?\\s*off|cutting|flap|wire|sanding|diamond)\\s*(?:wheels?|discs?|disks?)\\b",
+    "\\binsert\\s*bits?\\b",
+    "\\bbits?\\b(?=.*(?:torx|phillips|insert|impact|hex|nut\\s*setter))",
+    "\\b(?:multi|oscillating)\\s*-?\\s*tools?\\b",
+    "\\b(?:knock\\s*-?out|ko)\\s*(?:sets?|kits?|punch(?:es)?|dies?|cutters?|tools?|drivers?)\\b",
+    "\\bslug\\s*-?\\s*busters?\\b",
+    "\\b(?:greenlee|klein|milwaukee|dewalt|makita|bosch|metabo|ridgid|fein|knipex|wera|wiha|channellock|fluke|lenox|diablo|irwin|southwire\\s*tools)\\b(?!.*(?:anchor|firestop|kwik|hus|kb-?tz|marker|inkzall|\\bmark\\b|tape\\b|glove|glasses|vest|helmet|hard\\s*hat|knee|packout\\s*(?:organizer|bin|crate)))",
+    "\\bideal\\b(?=.*(?:tool|tester|stripper|crimper|pliers|cutter|fish|puller|kit|meter|plier))",
+    "\\bhilti\\b(?=.*(?:te\\s*\\d|sf\\s*\\d|sid|siw|ag\\s*\\d|wsr|wsc|dx\\s*\\d|gx\\s*\\d|bx\\s*\\d|cordless|drill|driver|saw|grinder|tool|battery|charger|b\\s*\\d{2}))",
+    "\\bpliers?\\b",
+    "\\b(?:cable|bolt|diagonal|side|ratchet(?:ing)?)\\s*cutters?\\b",
+    "\\bcutters?\\b(?!\\s*(?:box|die|blade))",
+    "\\bdikes?\\b",
+    "\\blinemans?\\b",
+    "\\bneedle\\s*nose\\b",
+    "\\b(?:wire\\s*)?strippers?\\b",
+    "\\bcrimpers?\\b",
+    "\\bcrimping\\s*tools?\\b",
+    "\\b(?:screw|nut)\\s*-?\\s*drivers?\\b",
+    "\\bwrench(?:es)?\\b",
+    "\\bsockets?\\s*(?:sets?|wrench|ratchet|kits?)\\b",
+    "\\bratchets?\\b",
+    "\\b(?:hex|allen)\\s*(?:keys?|wrench(?:es)?|sets?)\\b",
+    "(?<!cutler )(?<!cutler-)(?<!cutler)\\bhammers?\\b(?!\\s*(?:drill|lock))",
+    "\\bchisels?\\b",
+    "\\b(?:pry|crow|wrecking)\\s*bars?\\b",
+    "\\btorpedo\\b",
+    "\\blaser\\s*(?:level|measure|distance)s?\\b",
+    "\\btape\\s*measures?\\b",
+    "\\bmeasuring\\s*(?:tape|wheel)s?\\b",
+    "\\bmulti-?\\s*meters?\\b",
+    "\\bvolt(?:age)?\\s*(?:meter|tester|detector|pen|tick|stick)s?\\b",
+    "\\bclamp\\s*(?:-?on\\s*)?(?:meter|ammeter)s?\\b",
+    "\\bmegg?er\\b",
+    "\\bmegohm(?:meter)?\\b",
+    "\\binsulation\\s*tester\\b",
+    "\\btesters?\\b",
+    "\\b(?:circuit|cable|wire)\\s*(?:tracer|finder|analyzer|locator|tester)s?\\b",
+    "\\btone\\s*(?:generator|probe|tester)s?\\b",
+    "\\btoner\\b",
+    "\\bthermal\\s*(?:camera|imager|imaging)\\b",
+    "\\bir\\s*thermometer\\b",
+    "\\b(?:conduit|hand|chicago|hydraulic|electric|site-?rite)\\s*benders?\\b",
+    "\\bbenders?\\b",
+    "\\bbending\\s*(?:shoe|table|kit)s?\\b",
+    "\\bthreaders?\\b",
+    "\\bthreading\\s*(?:machine|die|head|tool|oil)s?\\b",
+    "\\bdie\\s*heads?\\b",
+    "\\bpipe\\s*(?:threader|cutter|reamer|wrench|vise|stand)s?\\b",
+    "\\breamers?\\b",
+    "\\bdeburr(?:ing)?\\b",
+    "\\bvises?\\b",
+    "\\btripods?\\b",
+    "\\b(?:reel|spool|wire|cable)\\s*(?:stands?|jacks?|carts?|doll(?:y|ies)|holders?|cadd(?:y|ies)|rollers?|payoffs?|carriers?|dispensers?)\\b",
+    "\\b(?:cable\\s*)?(?:pullers?|tuggers?|winch(?:es)?)\\b",
+    "\\bcome-?\\s*alongs?\\b",
+    "\\bchain\\s*(?:hoist|fall|block)s?\\b",
+    "\\bhoists?\\b",
+    "\\bcapstan\\b",
+    "\\bsheaves?\\b",
+    "\\b(?:shop|wet/?dry)\\s*vacs?\\b",
+    "\\bvacuums?\\b",
+    "\\bdust\\s*(?:extractor|collector|shroud|extraction)s?\\b",
+    "\\b(?:flash|work|head|string|temp(?:orary)?)\\s*-?\\s*(?:lights?|lamps?|lighting)\\b",
+    "\\bflashlights?\\b",
+    "\\bheadlamps?\\b",
+    "\\b(?:portable\\s*)?generators?\\b(?=.*(?:portable|inverter|honda|watt|kw\\b|gas|dewalt|milwaukee|generac\\s*gp))",
+    "\\b(?:air\\s*)?compressors?\\b",
+    "\\b(?:nail|staple|caulk|grease|heat)\\s*guns?\\b",
+    "\\bnailers?\\b",
+    "\\bstaplers?\\b",
+    "\\bpowder\\s*-?\\s*actuated\\s*tools?\\b",
+    "\\b(?:ramset|powers)\\s*(?:tool|gun)s?\\b",
+    "\\bcordless\\b",
+    "\\bbrushless\\b",
+    "\\bbattery\\s*(?:packs?|kits?|chargers?|combos?|powered|tools?|drills?|drivers?|saws?|grinders?|platform)\\b",
+    "\\bchargers?\\b(?!\\s*(?:usb|receptacle|outlet|ev|vehicle|car|station))(?!.*(?:\\bev\\b|evse|vehicle|level\\s*2|charge\\s*point|juicebox|wallbox))",
+    "\\b(?:m12|m18|mx\\s*fuel|20v\\s*max|18v|60v|flexvolt|xr|fuel|lxt|xgt|one\\+|packout|tstak|tough\\s*system)\\b",
+    "\\btool\\s*-?\\s*(?:box(?:es)?|bags?|belts?|pouch(?:es)?|kits?|sets?|chests?|carts?|storage|organizers?|holders?|lanyards?)\\b",
+    "\\bpouch(?:es)?\\b",
+    "\\b(?:utility\\s*)?kni(?:fe|ves)\\b",
+    "\\bbox\\s*cutters?\\b",
+    "\\bcable\\s*(?:knife|skinner|skiving)\\b",
+    "\\bhawk\\s*-?\\s*bill\\b",
+    "\\b(?:tin|aviation)?\\s*snips?\\b",
+    "\\bscissors\\b",
+    "\\bshears?\\b",
+    "\\bpunch\\s*-?\\s*down\\b",
+    "\\bfiber\\s*(?:tool|cleaver|stripper|kit|tester|otdr|scope|cleaner)s?\\b",
+    "\\botdr\\b",
+    "\\bvfl\\b",
+    "\\bstud\\s*finders?\\b",
+    "\\bmagnetic\\s*(?:pickup|pick-?up|sweeper|tray|dish|bowl|wristband|bit\\s*holder|nut\\s*setter)s?\\b",
+    "\\bnut\\s*-?\\s*setters?\\b",
+    "\\bbit\\s*holders?\\b",
+    "\\b(?:step|self\\s*-?feed|auger|spade|paddle|masonry|unibit)\\s*(?:bits?|drills?)\\b",
+    "\\bunibit\\b",
+    "\\bhole\\s*(?:saws?|cutters?|punch(?:es)?)\\b",
+    "\\bannular\\s*cutters?\\b",
+    "\\bcore\\s*(?:bits?|bore|boring)\\b",
+    "\\bdiamond\\s*(?:blades?|bits?|core|cutting|hole\\s*saws?)\\b",
+    "\\bdemolition\\s*(?:hammers?|tools?|saws?|blades?|breakers?)\\b",
+    "\\b(?:breaker|jack)\\s*-?\\s*hammers?\\b",
+    "\\bjackhammers?\\b",
+    "\\bchipping\\s*(?:hammer|gun|chisel)s?\\b",
+    "\\bcord\\s*reels?\\b",
+    "\\bretractable\\b",
+    "\\bfish\\s*(?:tapes?|sticks?|rods?|poles?)\\b",
+    "\\bglow\\s*rods?\\b",
+    "\\bwire\\s*grabber\\b",
+    "\\bcable\\s*gripper\\b",
+    "\\b(?:magnetic|mag)\\s*(?:hex|nut)\\s*(?:driver|setter)s?\\b",
+    "\\b(?:hex|nut)\\s*drivers?\\b",
+    "\\bc-?rhex\\b",
+    "\\bcrimping\\s*dies?\\b",
+    "\\bdie\\s*sets?\\b",
+    "\\bhydraulic\\s*(?:crimper|tool|pump|cutter|head|bender)s?\\b",
+    "\\bbattery\\s*(?:crimper|cutter)s?\\b",
+    "\\bjob\\s*-?\\s*(?:site\\s*)?(?:box(?:es)?|chests?|radios?|fans?|lights?)\\b",
+    "\\bknaack\\b",
+    "\\bpackout\\b",
+    "\\bwork\\s*lights?\\b",
+    "\\b(?:eye\\s*)?lag\\s*driver\\b",
+    "\\binstallation\\s*tools?\\b",
+    "\\bu-?type\\s*dies?\\b",
+    "\\bdies?\\b(?=.*(?:crimp|compression|hydraulic|kcmil|mcm|awg))"
+   ],
+   "negative": [
+    "\\bcutler\\s*-?\\s*hammer\\b|\\bev\\s*charger|\\bevse\\b|\\bmarkers?\\b|\\binkzall\\b|\\bladders?\\b|\\bscaffold|\\bgloves?\\b|\\bhelmets?\\b|\\bhard\\s*hats?\\b|\\bsafety\\s*(?:glasses|vest)|\\bbucket\\b(?!\\s*truck)|\\bpaint\\b|\\bwork\\s*light\\s*(?:fixture|junction)",
+    "\\b(?:black|blue|red|white|yellow)\\s*mark\\b|\\bextra\\s*large\\b(?=.*mark)"
+   ],
+   "priority": 2
+  },
+  {
+   "id": "tape_misc_consumables",
+   "label": "Tape, sealants, lube, PPE & jobsite consumables",
+   "group": "hardware_misc",
+   "keywords": [
+    "^wire\\s*mesh\\s*grips\\b(?!.*(?:cord\\s*-?grip|cordgrip|npt|strain))|^wire\\s*pulling\\b|^electrical\\s*tape\\b|^specialty\\s*tape\\b|^labels,?\\s*signs\\b",
+    "\\btapes?\\b(?!\\s*measure)",
+    "\\b(?:super\\s*)?(?:33|35|88)\\+?\\b(?=.*(?:tape|3m|scotch))",
+    "\\bscotch\\s*(?:33|35|88|130c|23|2228|70)\\b",
+    "\\b(?:splicing|rubber|friction|filament|warning|caution|detectable|phase|electrical|vinyl|duct|masking|foam|teflon)\\s*tape\\b",
+    "\\bthread\\s*seal(?:ant)?\\b",
+    "\\bpipe\\s*dope\\b",
+    "\\bsealants?\\b",
+    "\\bsilicone\\b",
+    "\\bcaulk(?:ing)?\\b",
+    "\\b(?:spray|expanding)\\s*foam\\b",
+    "\\bgreat\\s*stuff\\b",
+    "\\b(?:wire|cable|pulling)\\s*(?:lube|lubricant|compound|soap|gel)\\b",
+    "\\blubricants?\\b",
+    "\\byellow\\s*77\\b",
+    "\\bpolywater\\b",
+    "\\bpull(?:ing)?\\s*(?:line|string|rope|tape|cord|mule)\\b",
+    "\\bmule\\s*tape\\b",
+    "\\b(?:jet|string)\\s*line\\b",
+    "\\bbatter(?:y|ies)\\b(?!.*(?:crimp|cutter|tool|drill|driver|charger|pack|backup|cabinet|bank|monitor|powered|m18|m12|20v|18v|kit))",
+    "\\b(?:aa|aaa|9v|cr2032)\\s*(?:batter(?:y|ies)|alkaline|lithium)\\b",
+    "\\b(?:duracell|energizer)\\b",
+    "\\bsharpie\\b",
+    "\\bpaint\\s*(?:marker|pen|stick)s?\\b",
+    "\\bspray\\s*paint\\b",
+    "\\bcold\\s*galv(?:anizing)?\\b",
+    "\\bzinc\\s*(?:spray|rich|coating|primer)\\b",
+    "\\brust-?oleum\\b",
+    "\\bwd-?\\s*40\\b",
+    "\\b(?:contact|electrical)\\s*cleaner\\b",
+    "\\bdegreaser\\b",
+    "\\brags?\\b",
+    "\\blabels?\\b(?!\\s*(?:maker|printer))",
+    "\\b(?:brother\\s*tze?|dymo|brady)\\b",
+    "\\bsigns?\\b(?!.*(?:exit))",
+    "\\b(?:arc\\s*flash|danger|warning)\\s*(?:labels?|signs?|stickers?|tags?)\\b",
+    "\\block\\s*-?\\s*out\\b",
+    "\\bloto\\b",
+    "\\bpadlocks?\\b",
+    "\\b(?:trash|garbage|contractor)\\s*bags?\\b",
+    "\\b(?:shrink|stretch)\\s*wrap\\b",
+    "\\b(?:plastic|poly)\\s*sheeting\\b",
+    "\\bvisqueen\\b",
+    "\\btarps?\\b",
+    "\\brope\\b(?!\\s*(?:light|caulk))",
+    "\\b(?:cable\\s*)?pulling\\s*(?:grips?|socks?|baskets?|eyes?|heads?)\\b",
+    "\\bkellems?\\s*(?:grip|pulling)\\b",
+    "\\bmesh\\s*grips?\\b",
+    "\\bmisc(?:ellaneous)?\\b",
+    "\\bconsumables?\\b",
+    "\\bsundries\\b",
+    "\\bpacking\\s*tape\\b",
+    "\\bpull\\s*rope\\b",
+    "\\bpull\\s*lube\\b",
+    "\\bmarking\\s*paint\\b",
+    "\\bpaint\\b",
+    "\\b(?:cable|zip|nylon|wire|tie)\\s*ties?\\b",
+    "\\bty-?w?raps?\\b",
+    "\\btie\\s*wraps?\\b",
+    "\\btie\\s*mounts?\\b",
+    "\\bcable\\s*tie\\s*(?:mounts?|bases?|anchors?)\\b",
+    "^cable\\s*ties\\s*and\\s*mounts\\b",
+    "\\bpanduit\\s*(?:plt|bt|pl|sst)\\d?\\w*\\b",
+    "\\b(?:plt|bt)\\d[a-z]{0,2}-?[a-z]?\\d?\\b(?=.*(?:tie|panduit|black|natural|uv))",
+    "\\bmarkers?\\b(?!\\s*(?:book|card|strip))(?!.*(?:wire\\s*marker|cable\\s*marker))",
+    "\\binkzall\\b",
+    "\\b(?:black|blue|red|white)\\s*mark\\b(?=.*(?:milwaukee|marker|extra\\s*large|fine))",
+    "\\bmark\\s*milwaukee\\b",
+    "\\bmarker\\s*books?\\b",
+    "\\b(?:voltage|phase|panel|equipment)\\s*(?:labels?|markers?|tags?)\\b",
+    "\\b(?:orange|black|white)\\s*with\\s*(?:black|white)\\s*letters\\b",
+    "\\b\\d{3}/\\d{3}\\s*volts\\b(?=.*(?:label|letter|marker|orange|black|x\\s*\\d))",
+    "\\bocal\\s*(?:touch-?up\\s*)?paint\\b",
+    "\\btouch\\s*-?\\s*up\\s*(?:paint|aerosol)\\b",
+    "\\bjars?\\s*of\\b",
+    "\\b(?:5|five)\\s*gallon\\s*buckets?\\b",
+    "\\bbuckets?\\b(?!\\s*(?:mcc|truck|starter))",
+    "\\blids?\\b(?=.*bucket)",
+    "\\bknit\\s*rags\\b",
+    "\\bpaper\\s*towels?\\b",
+    "\\btrash\\s*(?:bags?|cans?)\\b",
+    "\\bputty\\b(?!\\s*pad)",
+    "\\bgasketing\\b",
+    "\\bedge\\s*guard\\b",
+    "\\bgrommet\\s*(?:edging|strip)s?\\b",
+    "\\bpull\\s*(?:line|string|rope)\\b",
+    "\\bpull(?:ing)?\\s*(?:grips?|socks?)\\b",
+    "\\bwire\\s*mesh\\s*grips?\\b(?!.*(?:cord|npt|connector|strain))"
+   ],
+   "negative": [
+    "\\bcord\\s*grip|\\bcordgrip|\\bnpt\\b|\\bstrain\\s*relief|\\bfire\\s*-?\\s*stop|\\bfirestop|\\blink\\s*seal|\\bgloves?\\b|\\bhelmet|\\bhard\\s*hat|\\bladder"
+   ],
+   "priority": 1
+  }
+ ],
+ "brands": {
+  "3g lighting": {
+   "manufacturer": "3G Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "3m": {
+   "manufacturer": "3M",
+   "categories": [
+    "tape_misc_consumables",
+    "terminals_lugs_connectors",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "abb": {
+   "manufacturer": "ABB",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches",
+    "transformers"
+   ]
+  },
+  "access lighting": {
+   "manufacturer": "Access Lighting Corporation",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "acclaim lighting": {
+   "manufacturer": "Acclaim Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "acme": {
+   "manufacturer": "Hubbell Acme",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "acolyte": {
+   "manufacturer": "Acolyte",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "acuity": {
+   "manufacturer": "Acuity",
+   "categories": [
+    "lighting_fixtures",
+    "lighting_controls"
+   ]
+  },
+  "advanced digital": {
+   "manufacturer": "Advanced Digital Cable, Inc.",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "afc": {
+   "manufacturer": "AFC Cable Systems",
+   "categories": [
+    "mc_cable",
+    "flex_conduit",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "afx": {
+   "manufacturer": "AFX, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "agilight": {
+   "manufacturer": "Agilight, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "airey": {
+   "manufacturer": "Airey Thompson & Sentinel Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "alcan": {
+   "manufacturer": "Alcan",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "alcon": {
+   "manufacturer": "Alcon Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "alflex": {
+   "manufacturer": "Alflex",
+   "categories": [
+    "flex_conduit",
+    "mc_cable"
+   ]
+  },
+  "alight": {
+   "manufacturer": "Alight",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "allfastener": {
+   "manufacturer": "Allfastener",
+   "categories": [
+    "fasteners_anchors",
+    "boxes_metal"
+   ]
+  },
+  "allied": {
+   "manufacturer": "Atkore Allied Tube",
+   "categories": [
+    "conduit_emt",
+    "conduit_rigid_imc"
+   ]
+  },
+  "allied moulded": {
+   "manufacturer": "Allied Moulded",
+   "categories": [
+    "boxes_pvc_nonmetallic",
+    "enclosures_nema"
+   ]
+  },
+  "aluz": {
+   "manufacturer": "Aluz Cali",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "alw": {
+   "manufacturer": "Architectural Lighting WKS ALW",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "american fittings": {
+   "manufacturer": "American Fittings",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "amerlux": {
+   "manufacturer": "Amerlux",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "amico": {
+   "manufacturer": "Amico Lights Corporation",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "anaconda": {
+   "manufacturer": "Anamet Electrical, Inc.",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "anamet": {
+   "manufacturer": "Anamet",
+   "categories": [
+    "flex_conduit",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "and betts": {
+   "manufacturer": "ABB Installation PRD",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "and seymour": {
+   "manufacturer": "Legrand Connectrac LLC",
+   "categories": [
+    "lighting_fixtures",
+    "wiring_devices",
+    "enclosures_nema"
+   ]
+  },
+  "apogee": {
+   "manufacturer": "Apogee Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "appleton": {
+   "manufacturer": "Emerson Appleton",
+   "categories": [
+    "fittings_rigid",
+    "conduit_rigid_imc",
+    "boxes_metal"
+   ]
+  },
+  "arlington": {
+   "manufacturer": "Arlington Industries",
+   "categories": [
+    "fittings_flex",
+    "fittings_emt",
+    "boxes_metal",
+    "boxes_pvc_nonmetallic",
+    "fittings_rigid"
+   ]
+  },
+  "asco": {
+   "manufacturer": "ASCO",
+   "categories": [
+    "disconnects_safety_switches",
+    "motor_control",
+    "lighting_controls"
+   ]
+  },
+  "asd lighting": {
+   "manufacturer": "ASD Lighting Corp",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "atkore": {
+   "manufacturer": "Atkore",
+   "categories": [
+    "conduit_emt",
+    "conduit_rigid_imc",
+    "strut_channel_hardware"
+   ]
+  },
+  "atlantic lighting": {
+   "manufacturer": "Atlantic Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "atlas lighting": {
+   "manufacturer": "Atlas Lighting Products",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "axis lighting": {
+   "manufacturer": "Axis Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "az wire": {
+   "manufacturer": "AZ Wire & Cable",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "b-k lighting": {
+   "manufacturer": "B-K Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "b-line": {
+   "manufacturer": "Eaton B-Line",
+   "categories": [
+    "strut_channel_hardware",
+    "cable_tray",
+    "enclosures_nema"
+   ]
+  },
+  "barron": {
+   "manufacturer": "Barron Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "bartco": {
+   "manufacturer": "Bartco Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "begaus": {
+   "manufacturer": "Begaus, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "belden": {
+   "manufacturer": "Belden",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "bell": {
+   "manufacturer": "Hubbell Bell",
+   "categories": [
+    "boxes_metal",
+    "wiring_devices"
+   ]
+  },
+  "berk-tek": {
+   "manufacturer": "Berk-Tek",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "beta calco": {
+   "manufacturer": "Beta Calco, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "blackburn": {
+   "manufacturer": "ABB Blackburn",
+   "categories": [
+    "terminals_lugs_connectors",
+    "grounding"
+   ]
+  },
+  "bline": {
+   "manufacturer": "Eaton B-Line",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "brady": {
+   "manufacturer": "Brady",
+   "categories": [
+    "tape_misc_consumables"
+   ]
+  },
+  "breaker brokers": {
+   "manufacturer": "Breaker Brokers, Inc.",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "bridgeport": {
+   "manufacturer": "Bridgeport Fittings",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex",
+    "fittings_rigid"
+   ]
+  },
+  "brk": {
+   "manufacturer": "BRK Brands / First Alert",
+   "categories": [
+    "fire_alarm_life_safety"
+   ]
+  },
+  "broan": {
+   "manufacturer": "Broan LLC",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "brownlee": {
+   "manufacturer": "Brownlee Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "bruck": {
+   "manufacturer": "Ledra Brands Bruck",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "brundy": {
+   "manufacturer": "Brundy LLC",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "bulbrite": {
+   "manufacturer": "Bulbrite",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "burndy": {
+   "manufacturer": "Hubbell Burndy",
+   "categories": [
+    "terminals_lugs_connectors",
+    "grounding",
+    "tools"
+   ]
+  },
+  "buss": {
+   "manufacturer": "Eaton Bussmann",
+   "categories": [
+    "fuses"
+   ]
+  },
+  "bussmann": {
+   "manufacturer": "Eaton Bussmann",
+   "categories": [
+    "fuses"
+   ]
+  },
+  "cablofil": {
+   "manufacturer": "Legrand Cablofil",
+   "categories": [
+    "cable_tray"
+   ]
+  },
+  "caddy": {
+   "manufacturer": "nVent CADDY",
+   "categories": [
+    "fasteners_anchors",
+    "strut_channel_hardware",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "cadweld": {
+   "manufacturer": "nVent ERICO Cadweld",
+   "categories": [
+    "grounding",
+    "strut_channel_hardware",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "calbond": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "calbrite": {
+   "manufacturer": "Calbrite",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "camman": {
+   "manufacturer": "Camman Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "cantex": {
+   "manufacturer": "Cantex",
+   "categories": [
+    "conduit_pvc",
+    "fittings_pvc",
+    "boxes_pvc_nonmetallic"
+   ]
+  },
+  "carlon": {
+   "manufacturer": "ABB Carlon",
+   "categories": [
+    "boxes_pvc_nonmetallic",
+    "fittings_pvc",
+    "conduit_pvc",
+    "flex_conduit"
+   ]
+  },
+  "carol": {
+   "manufacturer": "General Cable Carol",
+   "categories": [
+    "flexible_cord"
+   ]
+  },
+  "cerro": {
+   "manufacturer": "Cerro Wire",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "cerrowire": {
+   "manufacturer": "Cerro Wire",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "champion": {
+   "manufacturer": "Champion Fiberglass",
+   "categories": [
+    "hdpe_innerduct",
+    "fittings_pvc"
+   ]
+  },
+  "claro": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "wiring_devices",
+    "lighting_controls"
+   ]
+  },
+  "coleman": {
+   "manufacturer": "Coleman Cable",
+   "categories": [
+    "flexible_cord"
+   ]
+  },
+  "coleman cable": {
+   "manufacturer": "Coleman Cable",
+   "categories": [
+    "flexible_cord"
+   ]
+  },
+  "colonial": {
+   "manufacturer": "Colonial Wire & Cable Co.",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "columbia lighting": {
+   "manufacturer": "Hubbell Columbia",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "commscope": {
+   "manufacturer": "CommScope",
+   "categories": [
+    "datacom_connectivity",
+    "low_voltage_cable"
+   ]
+  },
+  "conduit pipe products": {
+   "manufacturer": "Conduit Pipe Products",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "contech": {
+   "manufacturer": "Contech Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "cooper": {
+   "manufacturer": "Cooper Lighting Solutions",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "cooper lighting": {
+   "manufacturer": "Cooper Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "cooper power": {
+   "manufacturer": "Cooper Power Systems Chicago",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "core power": {
+   "manufacturer": "Core Power and Environment",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "coronet": {
+   "manufacturer": "Coronet LED",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "cree": {
+   "manufacturer": "Cree Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "crestron": {
+   "manufacturer": "Crestron Electronics, Inc.",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "crouse": {
+   "manufacturer": "Eaton Crouse-Hinds",
+   "categories": [
+    "fittings_rigid",
+    "conduit_rigid_imc",
+    "boxes_metal"
+   ]
+  },
+  "crouse hinds": {
+   "manufacturer": "Eaton Crouse-Hinds",
+   "categories": [
+    "fittings_rigid",
+    "conduit_rigid_imc",
+    "boxes_metal"
+   ]
+  },
+  "crouse-hinds": {
+   "manufacturer": "Eaton Crouse-Hinds",
+   "categories": [
+    "fittings_rigid",
+    "conduit_rigid_imc",
+    "boxes_metal"
+   ]
+  },
+  "cummins": {
+   "manufacturer": "Cummins",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "current lighting": {
+   "manufacturer": "Current, Powered by GE",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "cutler hammer": {
+   "manufacturer": "Eaton",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches",
+    "motor_control"
+   ]
+  },
+  "cutler-hammer": {
+   "manufacturer": "Eaton",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches",
+    "motor_control"
+   ]
+  },
+  "day-brite": {
+   "manufacturer": "Signify Co. (Philip LG)",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "dewalt": {
+   "manufacturer": "DEWALT",
+   "categories": [
+    "tools",
+    "fasteners_anchors"
+   ]
+  },
+  "dialight": {
+   "manufacturer": "Dialight",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "diva": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "dottie": {
+   "manufacturer": "L.H. Dottie",
+   "categories": [
+    "fasteners_anchors",
+    "tools",
+    "tape_misc_consumables",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex",
+    "boxes_metal"
+   ]
+  },
+  "draca": {
+   "manufacturer": "Prysmian Draka",
+   "categories": [
+    "low_voltage_cable",
+    "building_wire"
+   ]
+  },
+  "draka": {
+   "manufacturer": "Prysmian Draka",
+   "categories": [
+    "low_voltage_cable",
+    "building_wire"
+   ]
+  },
+  "dura-line": {
+   "manufacturer": "Dura-Line",
+   "categories": [
+    "hdpe_innerduct"
+   ]
+  },
+  "duraline": {
+   "manufacturer": "Dura-Line",
+   "categories": [
+    "hdpe_innerduct"
+   ]
+  },
+  "e-box": {
+   "manufacturer": "E-Box Electrical Box Enclosures",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "east coast panel": {
+   "manufacturer": "East Coast Panelboard",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "eaton": {
+   "manufacturer": "Eaton",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches",
+    "switchgear_meter_sockets",
+    "wiring_devices"
+   ]
+  },
+  "ecosense": {
+   "manufacturer": "Ecosense Lumium Architectural Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "edwards": {
+   "manufacturer": "Edwards Signaling",
+   "categories": [
+    "fire_alarm_life_safety"
+   ]
+  },
+  "eiko": {
+   "manufacturer": "EiKO Certified Green",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "electri-flex": {
+   "manufacturer": "Electri-Flex Federal Pacific",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "elite fittings": {
+   "manufacturer": "Elite Fittings",
+   "categories": [
+    "fittings_emt"
+   ]
+  },
+  "elite lighting": {
+   "manufacturer": "Elite Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "elliptipar": {
+   "manufacturer": "Lighting Quotient Elliptipar",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "emerson": {
+   "manufacturer": "Emerson",
+   "categories": [
+    "fittings_rigid",
+    "boxes_metal"
+   ]
+  },
+  "emon": {
+   "manufacturer": "Honeywell Emon",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "encore": {
+   "manufacturer": "Encore Wire",
+   "categories": [
+    "building_wire",
+    "mc_cable"
+   ]
+  },
+  "encore lighting": {
+   "manufacturer": "Encore Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "energetic": {
+   "manufacturer": "Energetic Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "erco": {
+   "manufacturer": "ERCO Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "erico": {
+   "manufacturer": "nVent ERICO",
+   "categories": [
+    "grounding",
+    "fasteners_anchors",
+    "strut_channel_hardware",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "esl": {
+   "manufacturer": "ESL Power Systems",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "essex": {
+   "manufacturer": "LS Cable Superior Essex",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "eure": {
+   "manufacturer": "Eure Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "evenlite": {
+   "manufacturer": "Evenlite, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "evluma": {
+   "manufacturer": "Evluma",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "exitronix": {
+   "manufacturer": "Barron LGT Group Exitronix",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "federal pacific": {
+   "manufacturer": "Federal Pacific",
+   "categories": [
+    "circuit_breakers",
+    "transformers"
+   ]
+  },
+  "federal signal": {
+   "manufacturer": "Federal Signal Corporation",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "feit": {
+   "manufacturer": "Feit Electric",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "ferraz": {
+   "manufacturer": "Mersen Ferraz",
+   "categories": [
+    "fuses",
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "finelite": {
+   "manufacturer": "Finelite, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "firestop": {
+   "manufacturer": "STI Firestop",
+   "categories": [
+    "tape_misc_consumables"
+   ]
+  },
+  "first alert": {
+   "manufacturer": "BRK Brands / First Alert",
+   "categories": [
+    "fire_alarm_life_safety"
+   ]
+  },
+  "fluxwerx": {
+   "manufacturer": "Fluxwerx Illumination, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "fme": {
+   "manufacturer": "FME Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "focal point": {
+   "manufacturer": "Focal Point LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "francis": {
+   "manufacturer": "Francis Cable System",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "fsr": {
+   "manufacturer": "FSR Inc.",
+   "categories": [
+    "surface_raceway_floor_boxes"
+   ]
+  },
+  "g&w": {
+   "manufacturer": "G & W Electric Company",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "g-box": {
+   "manufacturer": "G-BOX",
+   "categories": [
+    "boxes_metal"
+   ]
+  },
+  "gardner bender": {
+   "manufacturer": "ECM Gardner Bender",
+   "categories": [
+    "tools",
+    "terminals_lugs_connectors",
+    "tape_misc_consumables"
+   ]
+  },
+  "garvin": {
+   "manufacturer": "Southwire Garvin",
+   "categories": [
+    "boxes_metal",
+    "fittings_emt",
+    "fasteners_anchors",
+    "fittings_rigid",
+    "fittings_flex",
+    "conduit_rigid_imc",
+    "conduit_emt",
+    "tools",
+    "tape_misc_consumables"
+   ]
+  },
+  "gb": {
+   "manufacturer": "ECM Gardner Bender",
+   "categories": [
+    "tools",
+    "terminals_lugs_connectors",
+    "tape_misc_consumables"
+   ]
+  },
+  "ge": {
+   "manufacturer": "GE / ABB",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters"
+   ]
+  },
+  "ge lighting": {
+   "manufacturer": "Current, Powered by GE",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "generac": {
+   "manufacturer": "Generac",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "general cable": {
+   "manufacturer": "Prysmian / General Cable",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "general electric": {
+   "manufacturer": "ABB, Inc. Power & Product",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "genesis": {
+   "manufacturer": "Honeywell Genesis",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "gibson": {
+   "manufacturer": "Gibson Stainless",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "global": {
+   "manufacturer": "Global Mfg",
+   "categories": [
+    "fittings_emt",
+    "conduit_rigid_imc",
+    "tools"
+   ]
+  },
+  "gm lighting": {
+   "manufacturer": "GM Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "gotham": {
+   "manufacturer": "Acuity Gotham",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "greaves": {
+   "manufacturer": "Greaves USA",
+   "categories": [
+    "terminals_lugs_connectors"
+   ]
+  },
+  "green creative": {
+   "manufacturer": "Green Creative",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "greenlee": {
+   "manufacturer": "Greenlee",
+   "categories": [
+    "tools"
+   ]
+  },
+  "h.e. williams": {
+   "manufacturer": "HE Williams, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "halex": {
+   "manufacturer": "Halex",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex"
+   ]
+  },
+  "halo": {
+   "manufacturer": "Cooper Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "hammond": {
+   "manufacturer": "Hammond Manufacturing",
+   "categories": [
+    "enclosures_nema",
+    "transformers"
+   ]
+  },
+  "harger": {
+   "manufacturer": "Harger Lightning & Grounding",
+   "categories": [
+    "grounding",
+    "terminals_lugs_connectors"
+   ]
+  },
+  "haydon": {
+   "manufacturer": "Haydon Corporation",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "helios": {
+   "manufacturer": "Helios Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "helukabel": {
+   "manufacturer": "Helukabel USA",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "high mast": {
+   "manufacturer": "American High Mast LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "hilti": {
+   "manufacturer": "Hilti",
+   "categories": [
+    "fasteners_anchors",
+    "tools"
+   ]
+  },
+  "hinkley": {
+   "manufacturer": "Hinkley Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "hitachi": {
+   "manufacturer": "ABB, Inc. Power & Product",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "hli": {
+   "manufacturer": "HLI Solutions",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "hoffman": {
+   "manufacturer": "nVent Hoffman",
+   "categories": [
+    "enclosures_nema",
+    "strut_channel_hardware",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "holophane": {
+   "manufacturer": "Acuity Brands",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "honeywell": {
+   "manufacturer": "Honeywell Genesis",
+   "categories": [
+    "low_voltage_cable",
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "houston wire": {
+   "manufacturer": "Houston Wire & Cable",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "hubbell": {
+   "manufacturer": "Hubbell",
+   "categories": [
+    "wiring_devices",
+    "terminals_lugs_connectors",
+    "grounding",
+    "boxes_metal",
+    "fittings_emt",
+    "fittings_flex",
+    "lighting_controls",
+    "disconnects_safety_switches"
+   ]
+  },
+  "hubbell power": {
+   "manufacturer": "Hubbell Power Systems",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "hubbell wiring": {
+   "manufacturer": "Hubbell Wiring Device-Kellems",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "hudson valley": {
+   "manufacturer": "Hudson Valley Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "hwc": {
+   "manufacturer": "Houston Wire & Cable",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "iberville": {
+   "manufacturer": "ABB Installation PRD",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "ideal": {
+   "manufacturer": "IDEAL Industries",
+   "categories": [
+    "terminals_lugs_connectors",
+    "tools",
+    "tape_misc_consumables",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "ideal tridon": {
+   "manufacturer": "Ideal Tridon",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "iguzzini": {
+   "manufacturer": "Iguzzini Lighting USA",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "illuminations": {
+   "manufacturer": "Illuminations (West Chester)",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ilp": {
+   "manufacturer": "Industrial Lighting Products",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ilsco": {
+   "manufacturer": "ILSCO",
+   "categories": [
+    "terminals_lugs_connectors",
+    "grounding"
+   ]
+  },
+  "industrial lighting": {
+   "manufacturer": "Industrial Lighting Products",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "inermatic": {
+   "manufacturer": "Inermatic",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "innovations lighting": {
+   "manufacturer": "Innovations Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "insight lighting": {
+   "manufacturer": "Insight Lighting",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "intense lighting": {
+   "manufacturer": "Leviton Intense Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "intermatic": {
+   "manufacturer": "Intermatic",
+   "categories": [
+    "lighting_controls",
+    "wiring_devices",
+    "boxes_pvc_nonmetallic"
+   ]
+  },
+  "ipex": {
+   "manufacturer": "IPEX",
+   "categories": [
+    "fittings_pvc",
+    "conduit_pvc"
+   ]
+  },
+  "isolite": {
+   "manufacturer": "Isolite Corporation",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "itm": {
+   "manufacturer": "ITM",
+   "categories": [
+    "tools",
+    "tape_misc_consumables"
+   ]
+  },
+  "jefferson": {
+   "manufacturer": "Jefferson Electric",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "jm eagle": {
+   "manufacturer": "JM Eagle",
+   "categories": [
+    "conduit_pvc"
+   ]
+  },
+  "juno": {
+   "manufacturer": "Acuity Juno",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "kaf-tech": {
+   "manufacturer": "Kaf-Tech",
+   "categories": [
+    "mc_cable"
+   ]
+  },
+  "kaftech": {
+   "manufacturer": "Kaf-Tech",
+   "categories": [
+    "mc_cable"
+   ]
+  },
+  "kalco": {
+   "manufacturer": "Kalco Lighting LTD",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "kenall": {
+   "manufacturer": "Kenall MFG. Co.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "keystone": {
+   "manufacturer": "Keystone Technologies",
+   "categories": [
+    "lamps_led",
+    "datacom_connectivity"
+   ]
+  },
+  "kichler": {
+   "manufacturer": "Kichler Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "kidde": {
+   "manufacturer": "Kidde",
+   "categories": [
+    "fire_alarm_life_safety"
+   ]
+  },
+  "killark": {
+   "manufacturer": "Hubbell Killark",
+   "categories": [
+    "fittings_rigid",
+    "boxes_metal",
+    "wiring_devices"
+   ]
+  },
+  "kindorf": {
+   "manufacturer": "ABB Kindorf",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "king wire": {
+   "manufacturer": "King Wire, Inc.",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "klein": {
+   "manufacturer": "Klein Tools",
+   "categories": [
+    "tools"
+   ]
+  },
+  "kohler": {
+   "manufacturer": "Kohler Power Systems",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "kraloy": {
+   "manufacturer": "Kraloy",
+   "categories": [
+    "fittings_pvc",
+    "conduit_pvc"
+   ]
+  },
+  "kristech": {
+   "manufacturer": "Kris-Tech Wire",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "kurtzon": {
+   "manufacturer": "Kurtzon Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "kuzco": {
+   "manufacturer": "Kuzco Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lake cable": {
+   "manufacturer": "Lake Cable",
+   "categories": [
+    "low_voltage_cable",
+    "building_wire"
+   ]
+  },
+  "lamar": {
+   "manufacturer": "Lamar LED Clear-VU Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lauren illumination": {
+   "manufacturer": "Lauren Illumination",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ledra": {
+   "manufacturer": "Ledra Brands Bruck",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ledvance": {
+   "manufacturer": "LEDVANCE",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "legrand": {
+   "manufacturer": "Legrand",
+   "categories": [
+    "surface_raceway_floor_boxes",
+    "wiring_devices",
+    "cable_tray"
+   ]
+  },
+  "leotek": {
+   "manufacturer": "Leotek Electronics USA LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "leviton": {
+   "manufacturer": "Leviton",
+   "categories": [
+    "wiring_devices",
+    "lighting_controls"
+   ]
+  },
+  "lf illumination": {
+   "manufacturer": "LF Illumination LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lifelink": {
+   "manufacturer": "PG Lifelink",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "light efficient": {
+   "manufacturer": "Light Efficient Design",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lightart": {
+   "manufacturer": "Lightart 3 Form Company",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ligman": {
+   "manufacturer": "Ligman Lighitng USA, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "litecontrol": {
+   "manufacturer": "Litecontrol Corporation",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "litelab": {
+   "manufacturer": "Litelab Corp.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lithonia": {
+   "manufacturer": "Acuity Lithonia",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "littelfuse": {
+   "manufacturer": "Littelfuse",
+   "categories": [
+    "fuses"
+   ]
+  },
+  "louis poulsen": {
+   "manufacturer": "Louis Poulsen USA",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ls cable": {
+   "manufacturer": "LS Cable Superior Essex",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "lsi": {
+   "manufacturer": "LSI Lighting Solutions",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lucifer": {
+   "manufacturer": "Lucifer Lighting Co.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lum-tech": {
+   "manufacturer": "Lum-Tech Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lumark": {
+   "manufacturer": "Cooper Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lumenpulse": {
+   "manufacturer": "Lumenpulse Group, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lumenwerx": {
+   "manufacturer": "Lumenwerx",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lumetta": {
+   "manufacturer": "Lumetta, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "luminii": {
+   "manufacturer": "Luminii Optic Arts",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "lutron": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "maddox": {
+   "manufacturer": "Maddox Transformer",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "madison": {
+   "manufacturer": "Madison Electric",
+   "categories": [
+    "fasteners_anchors",
+    "boxes_metal"
+   ]
+  },
+  "maestro": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "mason": {
+   "manufacturer": "Mason Industries",
+   "categories": [
+    "fasteners_anchors",
+    "strut_channel_hardware"
+   ]
+  },
+  "mason industries": {
+   "manufacturer": "Mason Industries",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "maxlite": {
+   "manufacturer": "MaxLite",
+   "categories": [
+    "lamps_led",
+    "lighting_fixtures"
+   ]
+  },
+  "meltric": {
+   "manufacturer": "Meltric",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "mercury lighting": {
+   "manufacturer": "Mercury Lighting Products Co.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "mersen": {
+   "manufacturer": "Mersen",
+   "categories": [
+    "fuses",
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "metalux": {
+   "manufacturer": "Cooper Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "mgm": {
+   "manufacturer": "MGM Transformer Co.",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "milbank": {
+   "manufacturer": "Milbank",
+   "categories": [
+    "switchgear_meter_sockets",
+    "enclosures_nema",
+    "wireway_gutters_troughs"
+   ]
+  },
+  "milwaukee": {
+   "manufacturer": "Milwaukee",
+   "categories": [
+    "tools"
+   ]
+  },
+  "minerallac": {
+   "manufacturer": "Minerallac",
+   "categories": [
+    "fasteners_anchors",
+    "strut_channel_hardware"
+   ]
+  },
+  "modern forms": {
+   "manufacturer": "Modern Forms",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "morris": {
+   "manufacturer": "Morris Products",
+   "categories": [
+    "terminals_lugs_connectors",
+    "wiring_devices",
+    "tape_misc_consumables"
+   ]
+  },
+  "mulberry": {
+   "manufacturer": "Mulberry Metal",
+   "categories": [
+    "wiring_devices",
+    "enclosures_nema"
+   ]
+  },
+  "multi fittings": {
+   "manufacturer": "Multi Fittings / Kraloy",
+   "categories": [
+    "conduit_pvc"
+   ]
+  },
+  "mutual screw": {
+   "manufacturer": "Mutual Screw & Supply",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "myers": {
+   "manufacturer": "Myers Emergency Power Systems",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "nabco": {
+   "manufacturer": "Nabco",
+   "categories": [
+    "fuses",
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "national pipe": {
+   "manufacturer": "National Pipe & Plastics, Inc.",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "nav-tech": {
+   "manufacturer": "Nav-Tech",
+   "categories": [
+    "enclosures_nema",
+    "boxes_metal"
+   ]
+  },
+  "nb enclosure": {
+   "manufacturer": "NB Electrical Enclosure, Inc.",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "nicor": {
+   "manufacturer": "Nicor, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "nls": {
+   "manufacturer": "NLS Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "nora": {
+   "manufacturer": "Nora Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "north american breaker": {
+   "manufacturer": "North American Breaker Co. LLC",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "northern cables": {
+   "manufacturer": "Northern Cables, Inc.",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "nova anchor": {
+   "manufacturer": "Nova Anchor",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "nsi": {
+   "manufacturer": "NSi Industries",
+   "categories": [
+    "terminals_lugs_connectors",
+    "lighting_controls",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "nucor": {
+   "manufacturer": "Nucor Tubular Products",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "nulite": {
+   "manufacturer": "Nulite",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "nutone": {
+   "manufacturer": "Broan LLC",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "nuvo": {
+   "manufacturer": "SATCO Products, Inc.",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "nvent": {
+   "manufacturer": "nVent",
+   "categories": [
+    "fasteners_anchors",
+    "strut_channel_hardware",
+    "grounding",
+    "enclosures_nema",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "ocal": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "ocl": {
+   "manufacturer": "OCL Architectural Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "ocs": {
+   "manufacturer": "OCS Lighting & Control, Inc.",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "okoguard": {
+   "manufacturer": "Okonite",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "okolon": {
+   "manufacturer": "Okonite",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "okonite": {
+   "manufacturer": "The Okonite Co.",
+   "categories": [
+    "building_wire",
+    "medium_voltage_cable"
+   ]
+  },
+  "olsun": {
+   "manufacturer": "Olsun Electronics Corp.",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "omni": {
+   "manufacturer": "Omni Cable Corp",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "omni cable": {
+   "manufacturer": "Omni Cable",
+   "categories": [
+    "low_voltage_cable",
+    "building_wire"
+   ]
+  },
+  "orbit": {
+   "manufacturer": "Orbit Industries",
+   "categories": [
+    "boxes_metal",
+    "fasteners_anchors",
+    "fittings_emt"
+   ]
+  },
+  "osram": {
+   "manufacturer": "Ledvance",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "p & s": {
+   "manufacturer": "Legrand Connectrac LLC",
+   "categories": [
+    "lighting_fixtures",
+    "wiring_devices",
+    "enclosures_nema"
+   ]
+  },
+  "p&s": {
+   "manufacturer": "Legrand Pass & Seymour",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "panasonic": {
+   "manufacturer": "Panasonic",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "panduit": {
+   "manufacturer": "Panduit",
+   "categories": [
+    "terminals_lugs_connectors",
+    "low_voltage_cable"
+   ]
+  },
+  "pass &": {
+   "manufacturer": "Legrand Connectrac LLC",
+   "categories": [
+    "lighting_fixtures",
+    "wiring_devices",
+    "enclosures_nema"
+   ]
+  },
+  "pass & seymour": {
+   "manufacturer": "Legrand Pass & Seymour",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "pass and seymour": {
+   "manufacturer": "Legrand Pass & Seymour",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "penn panel": {
+   "manufacturer": "Penn Panel & Box Co.",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "penn union": {
+   "manufacturer": "Penn-Union",
+   "categories": [
+    "terminals_lugs_connectors",
+    "grounding"
+   ]
+  },
+  "penn-union": {
+   "manufacturer": "Penn-Union",
+   "categories": [
+    "terminals_lugs_connectors",
+    "grounding"
+   ]
+  },
+  "perma-cote": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "philips": {
+   "manufacturer": "Signify / Philips",
+   "categories": [
+    "lamps_led",
+    "lighting_fixtures"
+   ]
+  },
+  "pico": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "picoma": {
+   "manufacturer": "Picoma",
+   "categories": [
+    "conduit_rigid_imc"
+   ]
+  },
+  "pioneer": {
+   "manufacturer": "Pioneer Power Group LLC",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "plasti-bond": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "pmc": {
+   "manufacturer": "PMC Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "polaris": {
+   "manufacturer": "NSi Polaris",
+   "categories": [
+    "terminals_lugs_connectors",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "power-strut": {
+   "manufacturer": "Atkore International",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "powers": {
+   "manufacturer": "DEWALT Powers",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "prime conduit": {
+   "manufacturer": "Prime Conduit, Inc.",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "priority wire": {
+   "manufacturer": "Priority Wire & Cable",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "progress lighting": {
+   "manufacturer": "Progress Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "prudential lighting": {
+   "manufacturer": "Prudential Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "prysmian": {
+   "manufacturer": "Prysmian / General Cable",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "pure edge": {
+   "manufacturer": "Pure Edge Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "q-tran": {
+   "manufacturer": "Q-Tran, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "quoizel": {
+   "manufacturer": "Quoizel",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "rab": {
+   "manufacturer": "RAB Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "rab lighting": {
+   "manufacturer": "RAB Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "raco": {
+   "manufacturer": "Hubbell RACO",
+   "categories": [
+    "boxes_metal",
+    "fittings_emt",
+    "fittings_rigid",
+    "wiring_devices"
+   ]
+  },
+  "radiax": {
+   "manufacturer": "Radix Wire",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "radiora": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "radix": {
+   "manufacturer": "Radix Wire & Cable",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "raychem": {
+   "manufacturer": "nVent Thermal Pentair Therma",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "red head": {
+   "manufacturer": "ITW Red Head",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "redhead": {
+   "manufacturer": "ITW Red Head",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "remee": {
+   "manufacturer": "Remee Wire",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "republic": {
+   "manufacturer": "Republic Wire",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "rob roy": {
+   "manufacturer": "Robroy",
+   "categories": [
+    "conduit_pvc",
+    "fittings_rigid"
+   ]
+  },
+  "robroy": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "russelectric": {
+   "manufacturer": "Russelectric",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "s&c": {
+   "manufacturer": "S&C Electric Co.",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "satco": {
+   "manufacturer": "Satco",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "schneider": {
+   "manufacturer": "Schneider Electric",
+   "categories": [
+    "circuit_breakers",
+    "motor_control",
+    "panelboards_loadcenters"
+   ]
+  },
+  "scotch": {
+   "manufacturer": "3M Scotch",
+   "categories": [
+    "tape_misc_consumables",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "selecta": {
+   "manufacturer": "Selecta Products",
+   "categories": [
+    "tape_misc_consumables",
+    "terminals_lugs_connectors"
+   ]
+  },
+  "selux": {
+   "manufacturer": "Selux",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "sensorworx": {
+   "manufacturer": "BLP Tech DBA Sensorworx",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "sentinel": {
+   "manufacturer": "Airey Thompson & Sentinel Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "sepco": {
+   "manufacturer": "SEPCO",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "service wire": {
+   "manufacturer": "Service Wire",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "sesco": {
+   "manufacturer": "SESCO Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "shamrock": {
+   "manufacturer": "Shamrock Steel",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "siemens": {
+   "manufacturer": "Siemens",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches",
+    "switchgear_meter_sockets"
+   ]
+  },
+  "sigma": {
+   "manufacturer": "Sigma Electric",
+   "categories": [
+    "boxes_metal",
+    "fittings_emt",
+    "wiring_devices"
+   ]
+  },
+  "signify": {
+   "manufacturer": "Signify",
+   "categories": [
+    "lamps_led",
+    "lighting_fixtures"
+   ]
+  },
+  "simpson": {
+   "manufacturer": "Simpson Strong-Tie",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "sola": {
+   "manufacturer": "Sola Hevi-Duty",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "sonneman": {
+   "manufacturer": "Sonneman - A Way of Light",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "south conduit": {
+   "manufacturer": "South Conduit",
+   "categories": [
+    "fittings_emt",
+    "conduit_rigid_imc"
+   ]
+  },
+  "southern pipe": {
+   "manufacturer": "Southern Pipe, Inc.",
+   "categories": [
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "southwire": {
+   "manufacturer": "Southwire",
+   "categories": [
+    "building_wire",
+    "mc_cable",
+    "flexible_cord",
+    "tools"
+   ]
+  },
+  "spectrum lighting": {
+   "manufacturer": "Spectrum Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "spring city": {
+   "manufacturer": "Spring City Electrical MFG Co.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "spring lighting": {
+   "manufacturer": "Spring Lighting Group, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "sq d": {
+   "manufacturer": "Schneider Electric / Square D",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches"
+   ]
+  },
+  "sqd": {
+   "manufacturer": "Schneider Electric / Square D",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches"
+   ]
+  },
+  "square d": {
+   "manufacturer": "Schneider Electric / Square D",
+   "categories": [
+    "circuit_breakers",
+    "panelboards_loadcenters",
+    "disconnects_safety_switches",
+    "switchgear_meter_sockets",
+    "transformers"
+   ]
+  },
+  "starfire": {
+   "manufacturer": "Starfire Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "steel city": {
+   "manufacturer": "ABB Steel City",
+   "categories": [
+    "boxes_metal",
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "steel electric": {
+   "manufacturer": "SEPCO",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid"
+   ]
+  },
+  "sternberg": {
+   "manufacturer": "Sternberg Lanterns, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "sti": {
+   "manufacturer": "Specified Technologies STI",
+   "categories": [
+    "firestop_sealing"
+   ]
+  },
+  "stranco": {
+   "manufacturer": "Stranco",
+   "categories": [
+    "tape_misc_consumables"
+   ]
+  },
+  "sunlite": {
+   "manufacturer": "Sunlite",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "super-strut": {
+   "manufacturer": "ABB Superstrut",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "superior essex": {
+   "manufacturer": "Superior Essex",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "superstrut": {
+   "manufacturer": "ABB Superstrut",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "sure-lites": {
+   "manufacturer": "Cooper Lighting Solutions",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "sylvania": {
+   "manufacturer": "LEDVANCE / Sylvania",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "syston": {
+   "manufacturer": "Syston Cable Tech KPA",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "t & b": {
+   "manufacturer": "ABB Thomas & Betts",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex",
+    "terminals_lugs_connectors",
+    "fittings_rigid"
+   ]
+  },
+  "t&b": {
+   "manufacturer": "ABB Thomas & Betts",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex",
+    "terminals_lugs_connectors",
+    "fittings_rigid"
+   ]
+  },
+  "taymac": {
+   "manufacturer": "Hubbell TayMac",
+   "categories": [
+    "wiring_devices",
+    "boxes_metal"
+   ]
+  },
+  "tcp": {
+   "manufacturer": "TCP",
+   "categories": [
+    "lamps_led"
+   ]
+  },
+  "te connectivity": {
+   "manufacturer": "TE Connect",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "tech lighting": {
+   "manufacturer": "Tech Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "teron": {
+   "manufacturer": "Teron Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "thomas &": {
+   "manufacturer": "ABB Installation PRD",
+   "categories": [
+    "fittings_emt",
+    "fittings_rigid",
+    "fittings_flex"
+   ]
+  },
+  "thomas & betts": {
+   "manufacturer": "ABB Thomas & Betts",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex",
+    "terminals_lugs_connectors",
+    "fittings_rigid"
+   ]
+  },
+  "tivoli": {
+   "manufacturer": "Tivoli LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "tli": {
+   "manufacturer": "TLI",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "topaz": {
+   "manufacturer": "Topaz Electric",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex",
+    "fittings_rigid",
+    "boxes_metal",
+    "conduit_rigid_imc",
+    "conduit_emt",
+    "tools",
+    "tape_misc_consumables"
+   ]
+  },
+  "tork": {
+   "manufacturer": "NSi Tork",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "total protection": {
+   "manufacturer": "Total Protection Solutions",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "tridon": {
+   "manufacturer": "Ideal Tridon",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "troy lighting": {
+   "manufacturer": "Troy - CSL Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "troy-csl": {
+   "manufacturer": "Troy - CSL Lighting, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "trystar": {
+   "manufacturer": "Trystar",
+   "categories": [
+    "panelboards_loadcenters",
+    "circuit_breakers"
+   ]
+  },
+  "tyco": {
+   "manufacturer": "nVent Thermal Pentair Therma",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "unistrut": {
+   "manufacturer": "Atkore Unistrut",
+   "categories": [
+    "strut_channel_hardware",
+    "conduit_rigid_imc",
+    "conduit_emt"
+   ]
+  },
+  "united copper": {
+   "manufacturer": "United Copper",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "us architectural": {
+   "manufacturer": "US Architectural Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "usa illumination": {
+   "manufacturer": "USA Illumination",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "usai": {
+   "manufacturer": "USAI Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "valmont": {
+   "manufacturer": "Valmont Composite Shakespeare",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "vantran": {
+   "manufacturer": "Vantran Transformers",
+   "categories": [
+    "transformers"
+   ]
+  },
+  "versabar": {
+   "manufacturer": "Versabar (Wesanco-ZSI)",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "visa lighting": {
+   "manufacturer": "VISA Lighting Co.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "visual comfort": {
+   "manufacturer": "Generation BRD VC Brands",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "vive": {
+   "manufacturer": "Lutron",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "vode": {
+   "manufacturer": "Vode Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "voigt": {
+   "manufacturer": "Voigt Lighting Industries",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "wac": {
+   "manufacturer": "WAC Lighting Co.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "wago": {
+   "manufacturer": "WAGO",
+   "categories": [
+    "terminals_lugs_connectors"
+   ]
+  },
+  "watt stopper": {
+   "manufacturer": "Watt Stopper",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "wattstopper": {
+   "manufacturer": "Legrand Wattstopper",
+   "categories": [
+    "lighting_controls"
+   ]
+  },
+  "wave lighting": {
+   "manufacturer": "Wave Lighting LLC",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "we-ef": {
+   "manufacturer": "WE-EF Lighting USA",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "wesanco": {
+   "manufacturer": "Wesanco / ZSI",
+   "categories": [
+    "strut_channel_hardware",
+    "fasteners_anchors"
+   ]
+  },
+  "west penn": {
+   "manufacturer": "West Penn Wire",
+   "categories": [
+    "low_voltage_cable"
+   ]
+  },
+  "western tube": {
+   "manufacturer": "Western Tube",
+   "categories": [
+    "conduit_emt",
+    "conduit_rigid_imc"
+   ]
+  },
+  "westinghouse": {
+   "manufacturer": "Westinghouse",
+   "categories": [
+    "lamps_led",
+    "circuit_breakers",
+    "lighting_fixtures"
+   ]
+  },
+  "wheatland": {
+   "manufacturer": "Wheatland Tube",
+   "categories": [
+    "conduit_emt",
+    "conduit_rigid_imc"
+   ]
+  },
+  "wiegmann": {
+   "manufacturer": "Hubbell Wiegmann",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "williams": {
+   "manufacturer": "HE Williams, Inc.",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "wire mold": {
+   "manufacturer": "Legrand Wiremold",
+   "categories": [
+    "wiring_devices",
+    "enclosures_nema"
+   ]
+  },
+  "wiremold": {
+   "manufacturer": "Legrand Wiremold",
+   "categories": [
+    "surface_raceway_floor_boxes",
+    "wiring_devices"
+   ]
+  },
+  "wirexpress": {
+   "manufacturer": "Wirexpress",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "woodhead": {
+   "manufacturer": "Molex Woodhead",
+   "categories": [
+    "flexible_cord",
+    "wiring_devices"
+   ]
+  },
+  "xal": {
+   "manufacturer": "XAL USA",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "xenon architectural": {
+   "manufacturer": "Xenon Architectural Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "zled": {
+   "manufacturer": "ZLED Lighting",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "system sensor": {
+   "manufacturer": "Honeywell System Sensor",
+   "categories": [
+    "fire_alarm_life_safety"
+   ]
+  },
+  "radix wire": {
+   "manufacturer": "Radix Wire & Cable",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "fpe": {
+   "manufacturer": "Federal Pacific",
+   "categories": [
+    "circuit_breakers"
+   ]
+  },
+  "zinsco": {
+   "manufacturer": "Zinsco",
+   "categories": [
+    "circuit_breakers"
+   ]
+  },
+  "stab-lok": {
+   "manufacturer": "Federal Pacific",
+   "categories": [
+    "circuit_breakers"
+   ]
+  },
+  "pushmatic": {
+   "manufacturer": "Pushmatic / Bulldog",
+   "categories": [
+    "circuit_breakers"
+   ]
+  },
+  "oz gedney": {
+   "manufacturer": "Emerson O-Z/Gedney",
+   "categories": [
+    "fittings_rigid",
+    "fittings_emt",
+    "grounding"
+   ]
+  },
+  "o-z gedney": {
+   "manufacturer": "Emerson O-Z/Gedney",
+   "categories": [
+    "fittings_rigid",
+    "fittings_emt",
+    "grounding"
+   ]
+  },
+  "o-z/gedney": {
+   "manufacturer": "Emerson O-Z/Gedney",
+   "categories": [
+    "fittings_rigid",
+    "fittings_emt",
+    "grounding"
+   ]
+  },
+  "oz/gedney": {
+   "manufacturer": "Emerson O-Z/Gedney",
+   "categories": [
+    "fittings_rigid",
+    "fittings_emt",
+    "grounding"
+   ]
+  },
+  "o.z. gedney": {
+   "manufacturer": "Emerson O-Z/Gedney",
+   "categories": [
+    "fittings_rigid",
+    "fittings_emt",
+    "grounding"
+   ]
+  },
+  "o-z": {
+   "manufacturer": "Emerson O-Z/Gedney",
+   "categories": [
+    "fittings_rigid",
+    "fittings_emt",
+    "grounding"
+   ]
+  },
+  "nexans": {
+   "manufacturer": "Nexans",
+   "categories": [
+    "building_wire",
+    "low_voltage_cable"
+   ]
+  },
+  "calpipe": {
+   "manufacturer": "Calpipe / Atkore",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "woods": {
+   "manufacturer": "Southwire Woods",
+   "categories": [
+    "flexible_cord"
+   ]
+  },
+  "durham": {
+   "manufacturer": "Durham / Landis+Gyr",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "landis": {
+   "manufacturer": "Durham / Landis+Gyr",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "lamson": {
+   "manufacturer": "Durham / Landis+Gyr",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "landis+gyr": {
+   "manufacturer": "Durham / Landis+Gyr",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "landis & gyr": {
+   "manufacturer": "Durham / Landis+Gyr",
+   "categories": [
+    "switchgear_meter_sockets"
+   ]
+  },
+  "red dot": {
+   "manufacturer": "Thomas & Betts Red Dot",
+   "categories": [
+    "boxes_metal",
+    "wiring_devices"
+   ]
+  },
+  "mutual": {
+   "manufacturer": "Mutual Screw & Supply",
+   "categories": [
+    "fasteners_anchors"
+   ]
+  },
+  "cope": {
+   "manufacturer": "Atkore Cope",
+   "categories": [
+    "cable_tray"
+   ]
+  },
+  "flextray": {
+   "manufacturer": "Eaton Flextray",
+   "categories": [
+    "cable_tray"
+   ]
+  },
+  "aickinstrut": {
+   "manufacturer": "Aickinstrut",
+   "categories": [
+    "cable_tray",
+    "strut_channel_hardware"
+   ]
+  },
+  "plugmold": {
+   "manufacturer": "Legrand Wiremold",
+   "categories": [
+    "surface_raceway_floor_boxes"
+   ]
+  },
+  "connectrac": {
+   "manufacturer": "Connectrac",
+   "categories": [
+    "surface_raceway_floor_boxes"
+   ]
+  },
+  "thomas and betts": {
+   "manufacturer": "ABB Thomas & Betts",
+   "categories": [
+    "fittings_emt",
+    "fittings_flex",
+    "terminals_lugs_connectors",
+    "fittings_rigid"
+   ]
+  },
+  "milb": {
+   "manufacturer": "Milbank",
+   "categories": [
+    "switchgear_meter_sockets",
+    "enclosures_nema",
+    "wireway_gutters_troughs"
+   ]
+  },
+  "rib": {
+   "manufacturer": "Functional Devices RIB",
+   "categories": [
+    "motor_control"
+   ]
+  },
+  "functional devices": {
+   "manufacturer": "Functional Devices RIB",
+   "categories": [
+    "motor_control"
+   ]
+  },
+  "allen bradley": {
+   "manufacturer": "Rockwell Allen-Bradley",
+   "categories": [
+    "motor_control"
+   ]
+  },
+  "allen-bradley": {
+   "manufacturer": "Rockwell Allen-Bradley",
+   "categories": [
+    "motor_control"
+   ]
+  },
+  "champion fiberglass": {
+   "manufacturer": "Champion Fiberglass",
+   "categories": [
+    "hdpe_innerduct",
+    "fittings_pvc"
+   ]
+  },
+  "fre": {
+   "manufacturer": "FRE Composites",
+   "categories": [
+    "hdpe_innerduct"
+   ]
+  },
+  "endot": {
+   "manufacturer": "Endot Industries",
+   "categories": [
+    "hdpe_innerduct"
+   ]
+  },
+  "maxcell": {
+   "manufacturer": "MaxCell",
+   "categories": [
+    "hdpe_innerduct"
+   ]
+  },
+  "plastibond": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "korkap": {
+   "manufacturer": "PVC-coated rigid (Ocal/Robroy/Calbond)",
+   "categories": [
+    "conduit_rigid_imc",
+    "fittings_rigid"
+   ]
+  },
+  "pip": {
+   "manufacturer": "PIP Protective Industrial Products",
+   "categories": [
+    "safety_ppe_jobsite"
+   ]
+  },
+  "rhino safety": {
+   "manufacturer": "Rhino",
+   "categories": [
+    "safety_ppe_jobsite"
+   ]
+  },
+  "werner": {
+   "manufacturer": "Werner",
+   "categories": [
+    "safety_ppe_jobsite"
+   ]
+  },
+  "louisville ladder": {
+   "manufacturer": "Louisville Ladder",
+   "categories": [
+    "safety_ppe_jobsite"
+   ]
+  },
+  "link-seal": {
+   "manufacturer": "GPT Link-Seal",
+   "categories": [
+    "firestop_sealing"
+   ]
+  },
+  "link seal": {
+   "manufacturer": "GPT Link-Seal",
+   "categories": [
+    "firestop_sealing"
+   ]
+  },
+  "zsi": {
+   "manufacturer": "ZSI-Foster",
+   "categories": [
+    "strut_channel_hardware"
+   ]
+  },
+  "hubw": {
+   "manufacturer": "Hubbell Wiring Device-Kellems",
+   "categories": [
+    "wiring_devices"
+   ]
+  },
+  "kris-tech": {
+   "manufacturer": "Kris-Tech Wire",
+   "categories": [
+    "building_wire"
+   ]
+  },
+  "morris products": {
+   "manufacturer": "Morris Products",
+   "categories": [
+    "terminals_lugs_connectors",
+    "wiring_devices",
+    "tape_misc_consumables"
+   ]
+  },
+  "chief": {
+   "manufacturer": "Chief (Legrand AV)",
+   "categories": [
+    "datacom_connectivity"
+   ]
+  },
+  "racoman": {
+   "manufacturer": "Racoman",
+   "categories": [
+    "enclosures_nema"
+   ]
+  },
+  "corning": {
+   "manufacturer": "Corning",
+   "categories": [
+    "low_voltage_cable",
+    "datacom_connectivity"
+   ]
+  },
+  "andrew": {
+   "manufacturer": "CommScope Andrew",
+   "categories": [
+    "datacom_connectivity"
+   ]
+  },
+  "uno x": {
+   "manufacturer": "Encore Uno X",
+   "categories": [
+    "lighting_fixtures"
+   ]
+  },
+  "quazite": {
+   "manufacturer": "Hubbell Quazite",
+   "categories": [
+    "boxes_pvc_nonmetallic"
+   ]
+  }
+ },
+ "vendor_map": {},
+ "abbreviations": {
+  "MILB": "Milbank",
+  "HUBW": "Hubbell",
+  "DPLX": "duplex",
+  "RCP": "receptacle",
+  "RCPT": "receptacle",
+  "RECEPT": "receptacle",
+  "TGL": "toggle",
+  "GTTR": "gutter",
+  "WRWY": "wireway",
+  "BSHG": "bushing",
+  "INSL": "insulated",
+  "CVR": "cover",
+  "CVRS": "covers",
+  "WLK": "Walker",
+  "PLS": "plastic",
+  "GRD": "ground",
+  "COND": "conduit",
+  "CPLG": "coupling",
+  "CONN": "connector",
+  "ADPT": "adapter",
+  "FLEX": "flex",
+  "STRP": "strap",
+  "BRKT": "bracket",
+  "LKNT": "locknut",
+  "GALV": "galvanized",
+  "ALUM": "aluminum",
+  "RGD": "rigid",
+  "NIP": "nipple"
+ },
+ "vendor_overrides": {},
+ "note": "Public copy: vendor_map and vendor_overrides are intentionally empty. The engine works without them; the Brain's resolver then relies on your own mined RFQ history."
+}
