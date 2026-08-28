@@ -116,7 +116,7 @@ try:
 except Exception:
     pythoncom = None
 
-APP_TITLE = "MaINbox v4.2.102 AI Assistant"  # v4.2.102 (Steve: "when mainbox does an auto refresh it seems to be slowing/locking up my pc"): measured from the ops log, not inspected. TODAY: 225 slow_save events; mainbox_status.json is 18.8 MB (9,631 entries, 8,786 of them for emails no longer in the cache -- May/June rows) and the closed-email guard is 38 MB (24,823 records); both are JSON-SERIALIZED ON THE TK THREAD on every call (save_json_async snapshots on the caller, by design since v4.1.58) and then fsync-written by the writer -- and they arrive in BURSTS: 07:27:36-39 = 4x status (18 MB) + 2x guard (37 MB) + cache in three seconds; 08:17:36-38 the same. ~2 GB/hour of fsync writes plus ~3-4 s of main-thread serialization per burst is what the PC feels. ROOT CAUSE 1: every mutation site calls flush_status_data / _save_closed_email_guard / save_cached_state directly (53 / 13 / 49 call sites), so N edits in one refresh pass = N full serializations. FIX 1: the three methods become COALESCING wrappers -- on the main thread they schedule ONE deferred run (root.after 1500 ms, keyed per file; a second call while one is pending is a no-op) around the original bodies, which are preserved byte-identical as flush_status_data_inner / _save_closed_email_guard_inner / save_cached_state_inner (hash-verified); off-main-thread callers run the inner immediately (no Tk from workers). _flush_deferred_saves_now() cancels the timers and runs every pending inner once -- called on both exit paths and before the cloud-backup flush so the durability contract (flush_pending_async_saves) is unchanged. The bulk-write deferral in the guard save is kept in the wrapper. ROOT CAUSE 2: status rows never leave the file -- 3,191 May + 2,195 June entries for emails that left the cache months ago are re-serialized every 15 s. FIX 2: _archive_stale_status_entries(days=60) at startup moves rows whose email is not loaded, not referenced by an active follow-up/reminder, and untouched for 60+ days into mainbox_status_archive.json (append-merge, never deleted; the closed-email guard independently keeps every closed decision, so a re-imported old email still lands closed); ops_log status/archived n. ROOT CAUSE 3 (v4.2.100 regression, RFQ windows not the refresh): material_family_token -> mainbox_material.classify runs ~1,700 regexes (1.9 ms) and procurement_suggest_vendors_for_materials sweeps all 510 memory keys per item lacking exact history = ~1 s per item on the main thread. FIX 3: classify() is lru_cached (16K entries) in mainbox_material.py (identical copy shipped to the Brain), so a sweep costs once. Also: mainbox_bridge.py 1.0.1 retries the heartbeat/snapshot os.replace (the voice server reading the file made Windows refuse the rename -> Bridge: tick error). VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == the 3 wrappers changed, 6 added (3 inners byte-identical to the originals, _deferred_save, _flush_deferred_saves_now, _archive_stale_status_entries); harness: coalescing (5 calls -> 1 inner run), immediate off-main, flush-now runs pending once, archive on a synthetic status table; NOT restarted into on the live app. Previous: v4.2.101 (Steve, Louie/Welsbach 8/28 06:28): a QUOTE REVISION was closed as a won PO with the congrats popup. ROOT CAUSE: the v4.2.87 returned-bid detector fires on the attachment FILENAME alone (our S-numbered bid PDF back from a durable-C sender) -- by design for Danny, whose Acrobat return carries only Adobe boilerplate -- so it never read Louie's own words: "One last change: Remove the following lines: AF 3/8 SPLIT LOCK WASHER ..., AF 2FHNS43816 ... HEX NUTS". Ops log 06:39: returned_bid_closed_thread (token empty, row_subj "RE: Bid S100102003") + po_congrats_shown closed=1. Steve reopened the row himself at 07:45. FIX: new module-level returned_bid_customer_intent(fresh_text) -> ("veto"|"go_ahead"|"silent", why). VETO when the customer's fresh text (quoted history + signature already stripped by _strip_reply_boilerplate_for_intent) carries revision / change / question language: remove|delete|take off|change|revise|revision|update|instead|replace|swap|add|correct|wrong|missing|requote|re-quote|price|pricing|quote me|lead time|availability|how much|can you|could you|a question mark. GO_AHEAD on ok|okay|approved|go ahead|proceed|release|process|order|purchase order|po|confirmed|accepted|good to go|ship it. SILENT when nothing substantive remains after dropping Adobe/Acrobat/"find the pdf attached"/download lines and the signature -- Danny's exact shape. The scan branch now fires only when intent is go_ahead or silent; a veto logs returned_bid_vetoed (subject, doc, the matched phrase) and FALLS THROUGH to the ordinary request/negative gates, so the message is still examined as a normal customer reply and nothing is closed. VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == {returned_bid_customer_intent added, the coverage attachment scan method changed}; harness 14/14 on Louie's real text (veto: "remove"), Danny's Adobe boilerplate (silent), "$OK" (go_ahead), and 11 other shapes; not restarted into on the live app. CONFINEMENT: the returned-bid branch only; the customer-PO detector (_detect_and_queue_customer_po), the won-close, and the popup are untouched. Previous: v4.2.100 (Steve): material typing from Steve's OWN data. ROOT CAUSE: vendor suggestion's "same family" fallback (v4.2.70) knew three families -- conduit / wire / strut -- from three hand-written regexes, so a 1-1/4 rigid request could fall back to an EMT vendor but a breaker, a lug, a PVC box, an LED troffer or a floor box had NO family and no fallback at all, and the wire regex lumped MC, THHN, SOOW cord and CAT6 together. FIX: a research workflow mined 41K RFQ/reply item lines, 34.5K catalog SKUs and 10.9K sent messages into material_rules.json (42 fine categories in 9 groups, 479 brand aliases, curated vendor map) + the regex engine mainbox_material.py -- shipped in this repo and used byte-for-byte by the MaINbox Brain (mainbox_brain/material_classify.py) so the desktop and the phone type material identically. material_family_token() now asks the engine first and returns the FINE category id ("conduit_emt", "fittings_rigid", "circuit_breakers" ...) as the family; the original three regexes remain the fallback when the engine is missing or returns nothing, so v4.2.70 behaviour is a strict subset of the new one. Family fallback semantics/weights in procurement_suggest_vendors_for_materials are untouched -- only the family key got smarter. VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == {material_family_token} changed + module-level guarded import added; harness classifies 20 real lines through the extracted function with and without the engine. NOT restarted into on the live app. Previous: v4.2.99 (Steve): MaINbox Voice becomes an extension of MaINbox -- follow-ups sync to the phone (view / snooze / complete / edit note / cancel / create on the go). ROOT CAUSE: the phone had no path into follow-ups at all. MaINbox has no always-on HTTP listener (the diag bridge is MAINBOX_DIAG-gated and read-only by policy), and its JSON lanes are rewritten wholesale via os.replace, so an outside writer would race and be silently reverted or dedupe-cancelled. The one always-on channel is the Brain file bridge (%LOCALAPPDATA%\MaINbox\bridge), which was inert here because mainbox_bridge.py never existed on this PC. FIX: (1) ship mainbox_bridge.py (ENGINE 1.0.0, stdlib-only; heartbeat.json / followups.json / commands/*.json -> results/*.json). (2) _bridge_active_followups now publishes ALL three queue lanes (manual, scenario, commitment) with a STABLE id per record (_bridge_followup_id: sha1 of lane+created_at+entry_id+conversation_id+subject+type+target_date, stamped as item["id"]; records never had an id -- queue_ids are positional), plus entry_id/kind/group/note/lane so the phone can show and address them; signature widened to note+kind+entry_id so note edits republish. (3) _bridge_tick handles five new commands -- create_followup / snooze_followup / cancel_followup / complete_followup / update_followup_note -- via _bridge_cmd_* methods that run on the Tk main thread inside the existing 4s tick and reuse the app's own semantics byte-for-byte: create mirrors open_followup_window.schedule_or_edit (cancels the prior active manual row for that email with "Replaced by ...", stamps followup_time, sets _followup_dedup_needed); snooze mirrors the queue window's snooze_rows (due_at/snoozed_at/snooze_label + followup_time); cancel writes cancelled/cancelled_at/cancel_reason, removes the Outlook calendar twin, and -- because it is user-initiated -- stamps status_data[eid]["reply_needed_dismissed_at"] exactly like v4.2.17/18 so the 30s sweep cannot rebuild it; complete mirrors deploy_due_followup_row's bookkeeping (completed/completed_at, followup_time="Completed") WITHOUT drafting. Every mutation ends in _bridge_after_followup_change: the three lane saves, save_cached_state, the three renders, an ops_log("followup", phone_*) event, and a forced republish so the phone sees the result within its 7s wait. Phone-created follow-ups with no email get entry_id="" / source="phone" / use_ai=False; they show in the queue and Upcoming pane, and their due alert fires on the phone (get_due_followup_review_rows skips email-less rows by design -- unchanged). VERIFIED: ast/py_compile; the timeout-constant guard holds; small setup_ui byte-identical; method-level hash diff == {_bridge_active_followups, _bridge_followups_signature, _bridge_tick} changed + 10 methods added, nothing else; harness on the extracted methods with a stub app (create/snooze/note/complete/cancel round-trips through the real adapter files); NOT yet restarted into on the live app -- v4.2.98 was running during delivery. CONFINEMENT: bridge methods only; no change to any follow-up creator, the due check, the diag bridge, or COM paths. Previous: v4.2.98 (Steve): the auto-refresh stutter, found by live measurement rather than inspection. Steve reported slowdowns "when the refresh auto-ran". Measured through the diag bridge (whose latency IS main-thread responsiveness, since every request is marshaled via root.after and blocks on an Event): idle p50 16.9ms/max 83ms, under bridge load p50 17.5ms/max 123ms, and -- importing 5 then 20 REAL emails through the rig -- p50 17.7/18.1ms, max 160/237ms, ZERO samples over 250ms across ~9000 samples. So the refresh itself is clean; _refresh_apply_inbound already batches per-email writes behind _commitment_batch. The stutter is what the refresh STARTS: AI triage drains its backlog one email every ~10s and every completion ran sort_emails_for_display + render_email_rows + render_group_rows + render_followup_preview_queue on the MAIN thread. render_email_rows deletes and reinserts EVERY visible row (654 emails, 245 groups here) -- a full rebuild for one changed field. The 20-email capture shows it exactly: 150-240ms hitches at 16:03:41, :51, 16:04:21, :31, 16:05:01 ... each landing within a second of an ai/task_done, plus 56 slow_save events in six minutes. Twenty emails = ~3.5 minutes of periodic stutter, which is precisely what was being felt. Fix: new update_email_rows_in_place repaints only the touched rows via tree.item(). It is deliberately paranoid -- it returns True only if EVERY row can be updated, and bails to the original full render if the tree or row is missing, the row no longer matches the active filter, its importance rank changed (rank decides its block), its group membership changed (decides group-child indent), or it was never rendered with placement stamps. Those stamps (_row_rank/_row_gid) are recorded at all THREE insert sites in render_email_rows, so "same slot, new text" is distinguishable from "this row must move"; a row can never be left showing new text in a stale position. The triage success block uses it only when every result maps to a live row, otherwise it falls through to exactly the render it always did. Verified at delivery: compile+guards+confinement, harness driving the real extracted method (in-place path, and each bail condition forcing the full render), and a live before/after latency capture. ALSO CONFIRMED LIVE THIS SESSION: v4.2.96 Update Since ran against real Outlook for the first time -- ops update_since_done my=34 sales=36, no failure, app idle and responsive immediately after. Live result in MAINBOX_TEST_LOG.md v4.2.98.  # v4.2.97 (Steve):  # v4.2.97 (Steve): main-thread COM audit, fix 3 -- FULL UPDATE moves off the Tk main thread. It was the last main-thread entry pulling the whole heavy scan tree onto the UI thread: import_from_folder at FULL limits (1000 My Inbox + 3000 Sales) with build_email_data per message, then the sent-tracker, vendor-quote and customer-attachment scans -- which is why import_from_folder, build_email_data and all three scans showed as dual-path in mainbox_thread_audit.py even after v4.2.96. This one was deferred twice on purpose: full_update carries the v4.1.23-v4.1.27 rollback transaction (undo snapshot, coverage deep-copy, message-error tolerance, shrink detection, EntryID identity-loss detection) whose whole job is preventing silent data loss, so it got its own delivery. Method: the validation and rollback blocks were LIFTED VERBATIM from the v4.2.96 source by slicing it programmatically -- 69 and 38 lines respectively, asserted by length and by first/last line -- never retyped, because a typo in those would stay invisible until the day they were needed. New: _full_scan_my_inbox_in / _full_scan_sales_in (worker twins that resolve folders from the WORKER namespace instead of the *_folder_safe helpers, which read self.namespace); _full_update_validate (pure Python over self.emails/_prev_emails, no COM, no Tk -- run ON the worker deliberately so a failed transaction aborts BEFORE the post-transaction scans, exactly as the straight-line try block did); _full_update_phase_scans (the outside-the-transaction scans, body unchanged except three update_loading calls became progress(), asserted to be exactly three); _full_update_scan_work (one worker call, so the pass holds the Outlook lock once and stays as atomic as the synchronous version); _full_update_rollback and _full_update_commit on the main thread. The snapshot/clear/flag setup still runs on main BEFORE the worker starts, so the rollback point exists however the pass dies -- including the case the synchronous version never had, the worker not running at all because Outlook was busy, which lands in on_error and rolls back like any other failure. One genuinely new behaviour, and it is a fix: if the COMMIT tail throws, the old code let the exception escape full_update and left the modal "Working" box up forever; the transaction has already succeeded there, so it now reports and always closes the window without discarding a healthy import. New ops events full_update_rolled_back / full_update_commit_failed. Verified at delivery: compile+guards+confinement, mainbox_thread_audit.py showing the dual-path walks cleared, and a harness driving the real extracted pieces -- happy path, each validation trip (incomplete / missing source / error tolerance / shrink+errors / identity loss / 20% guard) rolling back, busy-worker rollback, and commit-failure keeping the data. NOT verified: no live Full Update has been run against real Outlook on this build. Live result in MAINBOX_TEST_LOG.md v4.2.97.  # v4.2.96 (Steve):  # v4.2.96 (Steve): main-thread COM audit, fix 2 -- UPDATE SINCE DATE moves off the Tk main thread. It ran the entire deep walk inline on the UI thread: both mailbox imports with NO scan limit (since_dt is the only bound), plus a 120-item sent-tracker scan, a 150-item quote scan and an 80-item attachment scan. The app already recorded the cost -- the cloud-restore site notes this exact call "froze the UI for as long as the Sales mailbox took to scan (10+ minutes in Online mode)" -- but that fix only routed RESTORE away from it; the Update-Since button itself was never moved. Now: new _update_since_date_work (WORKER-THREAD ONLY) does the walk and returns plain counts; update_since_date drives run_outlook_worker, marshals progress text back with root.after(0, ...) so the loading window keeps painting, and keeps every state/render call in on_done on the main thread byte-for-byte as before. Folders are resolved from the WORKER's namespace via GetDefaultFolder(6) / _find_sales_inbox_folder_in rather than get_my_inbox_folder_safe / find_sales_inbox_folder_safe, which read self.namespace -- the main thread's COM handle, and precisely the drift the v3.9.85 note warns about. The three scans it calls were already worker-safe (each connects its own thread-local fresh_outlook and none touches self.namespace) -- verified before moving, not assumed. The loading window now closes on EVERY path including failure, and a busy worker says so instead of looking like a no-op. New ops events update_since_done / update_since_failed. DELIBERATELY NOT TOUCHED: full_update. It is 206 lines carrying the v4.1.23-v4.1.27 rollback transaction (undo snapshot, coverage deep-copy, message-error tolerance, shrink detection, EntryID identity loss detection) whose entire purpose is preventing silent data loss; moving it is its own delivery with its own harness, not a hitchhiker on this one. Verified at delivery: compile+guards+confinement (1 changed + 1 added), mainbox_thread_audit.py re-run confirming the walk left the main-thread list, and a harness driving the extracted worker/on_done/on_error split incl. the busy path and the always-close-the-modal guarantee. NOT verified: no live Update-Since has been run against real Outlook on this build. Live result in MAINBOX_TEST_LOG.md v4.2.96.  # v4.2.95 (Steve):  # v4.2.95 (Steve): main-thread COM audit, fix 1 of N -- the Outlook CONTACTS walk moves off the Tk main thread. Steve asked for an audit of the whole app ("I feel like we keep moving the processes off but they end up back on"), and a static call-graph audit of all 1532 functions found 75 that touch Outlook COM, 43 worker-side, and 22 still reachable from a Tk main-thread entry point (8 of them bulk folder walks). This is the worst of the AUTOMATIC ones and the one that best matches the reported feeling: load_outlook_contacts_trusted_senders is scheduled from __init__ by root.after(1800, ...) -- a main-thread timer -- and walked up to 2500 contacts x 3 property reads (~7500 COM calls) INLINE on the UI thread at every single startup, with nothing on screen to say so. It was never reported as a freeze precisely because it hides inside startup: no user action, no visible cause, every launch. Fix: new _load_contacts_work (WORKER-THREAD ONLY) does the walk -- the loop body is byte-for-byte the v4.2.94 one -- and returns a plain set; load_outlook_contacts_trusted_senders now just drives run_outlook_worker, and every state write (trusted_contact_emails, contacts_cache, save_json) plus the status label happen in on_done on the main thread. It deliberately no longer seeds the found-set from self.trusted_contact_emails inside the walk (that would read main-thread state from a worker); the merge moved to on_done, which is equivalent and safe. Busy handling: the startup refresh normally owns the single Outlook worker at 1.8s, so a busy skip is the NORMAL case here, not a failure -- it retries up to 3 times at 45s spacing then gives up quietly, because contacts are a safety net and never worth nagging about. New ops events contacts_loaded / contacts_load_failed make it visible in telemetry for the first time. Also shipped: mainbox_thread_audit.py, the read-only analyzer itself, so this class of drift can be re-checked every version instead of noticed by feel. Verified at delivery: compile+guards+confinement (1 changed + 1 added), the audit re-run showing the contacts walk gone from the main-thread list, and a harness driving the extracted worker/on_done split over a fake Contacts folder. NOT verified: no live startup has run this build yet. Live result in MAINBOX_TEST_LOG.md v4.2.95.  # v4.2.94 (Steve):  # v4.2.94 (Steve): a PO is a PO however it arrives -- all three PO paths now archive and notify. Reported live: Steve received Allan Briteway PO 510880 at 9:59am (Kojo notification + "RE: Bid S100101909"), opened PO Review, pressed "Apply to matched job" -- and the job just sat there. Confirmed from the store: the award WAS recorded correctly (po_awards PO 510880 on grp_20260825170616093041 at 10:17:59) but the group stayed archived:false with FOUR open rows. Root cause: three PO arrival paths had drifted to three behaviours -- (1) the v4.2.87 returned-bid detector did the full won-close + congrats popup; (2) the auto-popup prompt offered archive as an opt-in CHECKBOX and never closed rows; (3) PO Review's _apply_selected recorded the award and then did only render_group_rows/render_email_rows/_refresh_tree -- no close, no archive, no popup. Steve's call on both forks: close EVERY open row in the job (vendor rows included -- once the customer has PO'd, the quoting conversation is over on both sides), and unify rather than patch path 3 alone. Built: _po_congrats_popup (the single "You got a PO!" dialog, lifted verbatim from v4.2.87 so its behaviour is unchanged where it already worked -- "Processing it now" default with Enter/Escape/WM_DELETE, "Remind me in 1 hour" -> _schedule_process_po_reminder, default button focused, po_congrats_shown telemetry; only wording and the follow-on callback are parameterised); _close_job_rows_as_won (every row in the job whose status is New / Needs Reply / Waiting on Customer / Waiting on Vendor, through the standard 3-step _complete_row_as_won, which is what archives via the assistant "won" Cleanup when Auto-Archive is on -- ai_user_locked rows are still never touched, since that flag exists to mean "leave my decision alone"); and _finish_po_award tying them together, idempotent by construction (a second call finds no open rows and reports 0 closed). Wired into all three paths. Path 1 keeps its own token-based row selection byte-identical and only swaps its inline popup for the shared one; the auto-popup's archive checkbox is left in place and still honoured, now belt-and-braces since _archive_group_by_id no-ops on an already-archived group. Verified at delivery: compile+guards+confinement (3 paths changed + 3 methods added; the 2 "removed" closures are _done/_remind relocating into the shared popup; both setup_ui byte-identical), harness on the REAL Allan Briteway job proving all 4 open rows close incl. the Brazill vendor row, the popup names PO 510880 and the count, second call is a no-op, missing/blank group refuses, user-locked rows untouched, no row outside the job affected, and path 1 still calls the shared popup + keeps its queue drain with exactly one popup implementation left in the file. NOT verified: no live PO has come through this build yet -- the Allan Briteway job was already applied under v4.2.93 and is closed by hand at this delivery. Live result in MAINBOX_TEST_LOG.md v4.2.94.  # v4.2.93 (Steve):  # v4.2.93 (Steve): the MBTEST-0826A LIVE RUN caught a real hole in the v4.2.91 Sent Queue -- a claimed conversation could still be split into a second group. Setup: a real RFQ sent from Outlook to the rig gmail with Steve's own address CC'd, the sent item assigned to a test job through the shipped assign_sent_message_to_group (claim written, verified to survive an app restart), then the app started so the CC'd inbound copy -- same ConversationID, confirmed -- imported fresh with the claim already in place. Expected: it joins the claimed job. Observed: the app created a NEW group "MBTEST-0826A P&A - Fordham Rd Switchgear" (ops coverage/intake_group_created 08:53:03) and put it there, leaving one job in two groups -- the exact failure the Sent Queue exists to prevent. Root cause: v4.2.91 hooked find_group_id_for_thread, but COVERAGE INTAKE never calls it. Intake has its own ladder -- membership -> _coverage_group_id_for_conversation -> create a new job group (the v4.2.60 "grp-keyed from birth" path) -- so a claimed conversation arriving as a fresh quote request sailed straight past the claim. Fix: _coverage_group_id_for_conversation consults the claim first. That method is the right home rather than the call site -- it already answers "which group owns this conversation", the intake ladder consults it BEFORE deciding to create, and every other coverage caller wants the same answer. Reads groups_data only (no COM, no Tk), so it is safe on the worker thread intake runs on. Confined to that one method; the claim store, scan, ranking and assign paths are byte-identical to v4.2.92. Verified at delivery: compile+guards+confinement (1 changed, 0 added), sent-queue harness re-run green, and a SECOND live run (MBTEST-0826B) repeating the identical scenario end to end against real Outlook. Live result in MAINBOX_TEST_LOG.md v4.2.93.  # v4.2.92 (Steve):  # v4.2.92 (Steve): found by the FIRST LIVE RUN of the v4.2.91 Sent Queue (MBTEST-0826A, a real RFQ sent from Outlook to the rig gmail with Steve's own address CC'd) -- our OWN domain was being counted as a "same company" ranking signal. CC'ing yourself on an outgoing RFQ is routine (it is how the shared-mailbox copy gets made), so americanpoweresc.com landed in the recipient set and then matched every job containing any internal mail: the picker's top five suggestions for the test send were unrelated jobs ("Return of W2-6TLEG" 5.0, "Purchase Order P000021085" 3.0, "Direct Shipment P/O S100100303" 3.0, ...) all scoring on our own domain, burying the real candidates. The harness could not have caught this -- its synthetic row carried only a vendor address; it took real mail with a real CC. Fix: subtract our own domains from BOTH sides of the same-company comparison (recipient set and group-member set), and lowercase both so the match is case-insensitive. New _own_domains_for_ranking resolves our domains WITHOUT COM -- the real resolver _own_mailbox_domains reads ns.CurrentUser.AddressEntry, and this path runs on the Tk main thread when the assign picker opens, where CLAUDE.md forbids COM outright -- so it uses that resolver's cache when a worker has already filled it and otherwise derives the same answer from memory (configured internal_domains + MAINBOX_INTERNAL_DOMAINS + Employee-typed sender rows). Empty set means the same-company signal simply does not fire, never a wrong match; subject / job-code / recency signals are untouched. Confined to the ranking scorer -- the claim mechanic, the scan and the assign path are byte-identical to v4.2.91. Verified at delivery: compile+guards+confinement (1 changed + 1 added), the v4.2.91 sent-queue harness re-run green, and the ranking re-scored against the SAME real live row. Live result in MAINBOX_TEST_LOG.md v4.2.92.  # v4.2.91 (Steve):  # v4.2.91 (Steve): STEP 2 of the grouping rework -- the OUTLOOK SENT QUEUE, Steve's own design ("an outlook sent queue, anything sent from outlook can be viewed there and manually assigned"). Why this is load-bearing rather than a convenience, and the reason it was built before the compose-time picker: our outgoing RFQ NEVER enters self.emails -- only inbound mail is imported -- so when a vendor replies, that reply has no same-conversation sibling in the store, priority 1 of find_group_id_for_thread cannot fire, and the entire vendor half of a job is tied to it by fuzzy subject text alone. That is precisely the arm v4.2.89 had to fence with a 30-day window. Claiming the conversation at send time replaces the guess with a fact. Proven in harness: a vendor reply on our own RFQ thread resolves to "" on v4.2.90 and to the claimed job on v4.2.91. Built: (1) conversation_claims in groups_data (rides existing save/backup/snapshot, no new file) mapping conversation_id -> {group_id, at, subject, by}; a claim whose group was since deleted returns "" AND self-heals out of the map, so a stale claim can never strand mail. (2) find_group_id_for_conversation consults claims FIRST -- explicit beats inferred -- the only change to existing grouping behavior, and a no-op until a claim exists. (3) _sent_queue_collect_work: WORKER-THREAD-ONLY COM scan of the shared Sales Sent Items (via the existing _find_sales_sent_folder_in) plus the default Sent folder, SENT_QUEUE_SCAN_DAYS=14 per Steve's call, date-Restricted with SENT_QUEUE_SCAN_LIMIT=600 as a runaway guard; mail only (Class 43), plain dicts only, no COM object crosses the marshal boundary. (4) the Sent Queue window (new "Sent Queue" header button): "Needs a job only" on by default per Steve, Assign to Job / Open in Outlook / Refresh, run_outlook_worker with the busy-retry the Inbox Viewer already uses. (5) the assign picker: candidates RANKED with an auditable reason per row (same subject / job code / same company / active this week; archived penalised), Enter assigns and Escape cancels per the standing popup rule, a "Show all jobs" toggle so a wrong ranking is never a dead end, and New Job. Assigning ADOPTS THE THREAD (Steve's call) so the vendor reply follows automatically. The window never sends, never deletes and never edits an Outlook item -- its only write is the assignment. Verified at delivery: compile+guards+confinement (2 changed -- _main_button_specs and find_group_id_for_conversation -- - plus 18 added, 0 removed; both setup_ui byte-identical), harness on REAL extracted methods and the REAL corpus covering claim honour/case/stale/malformed, claim-beats-walk both ways, assign writes membership+claim+ops event, refusals for bad group/row, adopt_thread=False, the end-to-end vendor-reply case above, no over-reach on unclaimed threads, and ranking sanity on real groups; plus a read-only COM probe proving the Sent Items scan returns real rows. NOT yet exercised by hand in the running UI. Live result in MAINBOX_TEST_LOG.md v4.2.91.  # v4.2.90 (Steve):  # v4.2.90 (Steve): the v4.2.89 subject-merge window is now a USER SETTING, and the Capone- MNPW Wiremold group is split. Steve: "30 days works for now why don't we add a setting so the user can always edit this if they want". New setting "group_subject_merge_max_age_days" (Settings -> Functionality Settings, spinbox 1-365, default 30 = the v4.2.89 value, so behavior is unchanged until Steve moves it): default in DEFAULT_SETTINGS, clamped 1..365 in the settings merge (garbage falls back to the shipped default rather than disabling the guard, so a corrupt or cloud-restored settings file cannot silently reopen the defect), a labelled spinbox with a plain-English note that replies still group by conversation, and persisted on Save. find_group_id_for_thread READS the setting at match time rather than caching it on self, so editing the value applies to the next grouped email with no restart; the subject_merge_blocked ops event reports the value actually in force. 1 means same-day only; 365 restores the pre-v4.2.89 unbounded-in-practice behavior. DATA SURGERY (Steve: "yes please split"): grp_20260708125147304610 held TWO jobs -- the July cycle (conversation CD1E5858..., request 7/8 + Brazill quote 7/8 + replies 7/9) and the August cycle (conversation 905DBAE8..., 8/25 request + 2 replies) -- welded by the shared subject and sharing ONE coverage ledger that was stamped with the July conversation, so today's request read against a 7/8 quote. The three August emails move to a new group and the ledger is split by added_at, July lines staying put. Done offline with the app stopped (backups written), idempotent. NOT a code path -- nothing in the app merges or splits groups by itself. Verified at delivery: compile+guards+confinement (1 changed + 0 added: find_group_id_for_thread only, plus constants/settings/UI blocks outside any function), settings round-trip harness (default, clamp bounds 0/-5/999/garbage, save->load->read at match time), and the v4.2.89 grouping harness re-run green against the new read path. Live result in MAINBOX_TEST_LOG.md v4.2.90.  # v4.2.89 (Steve): step 1 of the grouping rework -- the INBOUND guard. Reported: "Capone- MNPW Wiremold" showed a customer request dated 8/25 sitting against a vendor quote dated 7/8. Root cause proven from the store: the July cycle (conversation CD1E5858..., Capone request 7/8 + Brazill quote 7/8 + replies 7/9) and the August cycle (conversation 905DBAE8..., 8/25 request + two replies) are DIFFERENT Outlook conversations sharing only the normalized subject "mnpw wiremold" -- the project name Capone reuses. find_group_id_for_thread priority 2 matched on subject with NO time bound, so the new job welded onto the July group, and the coverage ledger -- still stamped with the JULY conversation, its 10 requested lines all added 2026-07-08T12:51:36 -- showed its July request and July quotes against today's arrival -- note the ledger content itself is ALL July (48 quoted lines, 13 stamped 2026-07-01 and 35 stamped 2026-07-08; NONE from August), so the defect is purely the group merge: today's 8/25 request had no ledger of its own and inherited July's. All three grouping call sites funnel through this one method, so the fix is one choke point. Two changes, confined to it: (1) STALENESS WINDOW GROUP_SUBJECT_MERGE_MAX_AGE_DAYS = 30, chosen from the real corpus not guessed: across 439 consecutive in-group gaps p50 0.06d / p90 2.9d / p98 11.9d / p99 17.2d, and EXACTLY TWO gaps exceed 30 days -- both known-bad merges (Capone 47.1d, PJS- 312E Marcy Houses 66.0d) -- so 30d sits above every legitimate gap in the history and below both defects; absolute distance, so back-filled older mail lands on its own era. (2) the documented "most recent group wins" tie-break was DEAD CODE: it ranked candidates on received_time / sent_time / date and NONE of those fields exists on any email record (0 of 649 carry them; all 649 carry received / received_timestamp), so every candidate scored "" and `"" > ""` is False -- the FIRST match in iteration order won, arbitrarily. Now ranked on received_timestamp. DELIBERATELY REJECTED, and recorded because it was the first instinct and Steve had approved it: also refusing ARCHIVED groups. Measuring it against the real corpus killed it -- an archived gate refused 30+ merges whose MEDIAN distance from the group was THREE DAYS (25 inside a single day), because a group here is auto-archived the moment a quote goes out (replied_rfq_auto_archive), so "archived" routinely means "quoted an hour ago". Those same-day cases are vendor replies to our own outgoing RFQ, and since our sent RFQ is NOT in self.emails the reply has no same-conversation sibling -- the subject arm is the only thing that can tie it to the job, so the gate would have orphaned them. Time alone blocks both reported defects anyway. New _log_subject_merge_blocked_once records each refusal (once-per-session, v4.1.84 discipline). Step 1 of 4 (guard -> Outlook sent queue -> Forward/New group picker -> Reply/Reply-All). Verified at delivery: compile+guards+confinement (1 changed + 1 added + 1 constant), harness on REAL extracted methods from BOTH v4.2.88 and v4.2.89 replaying the REAL Capone records and all 606 grouped emails: the reported merge reproduces on .88 and is blocked on .89, nothing is re-pointed to a different group, and 10/10 unit cases incl. the 29d/31d boundary, archived+same-conversation still matching, generic-subject guard intact, and the tie-break. Live result in MAINBOX_TEST_LOG.md v4.2.89.  # v4.2.88 (Steve): two live reports, two independent root causes. (1) FOLLOW-UP FLOOD -- the assistant's "Schedule a follow-up" ask was keyed followup:<entry_id>, a per-MESSAGE key, while the scheduling lane it feeds has always been per-THREAD (schedule_scenario_reminder refuses a second tracker once active_automatic_tracking_exists_for_email sees one for the thread). Every new message in a live thread therefore minted a brand-new pending ask that no existing record could collapse onto, and the v4.2.82 Dismiss fix could not help because each sibling message was a different key; the flood guard never engaged either, since a HELD ask never schedules anything, so no tracker ever exists. Measured live 2026-08-25: 8 pending asks were only 4 real threads -- FIVE were one conversation (2F4B84A9F7D376459B597DF4C98BC048 "Material list 6531", Dennis x3 + George x2). Fix: new _assistant_followup_dedup_key keys the ask on ConversationID (followup:conv:<id>), which also survives Cached-Exchange EntryID drift; rows with no conversation id keep the old per-message key, so they are unchanged. dedup_key is only ever compared for equality (never parsed), so the format change is safe. (2) ANOTHER REP'S MAIL IN MY WINDOW -- Louis Ferro's 1:53pm "STOCK CHECK SUB 2" was tagged 'JS, Canals' and is NOT in the SB restrict set (read-only COM probe, all 4746 scanned), so the category-filtered import could not have produced it. It came through import_matching_inthread_reply_from_outlook, the ONE deliberate category bypass (v3.9.19): at 9:02am Louis's SB-tagged message arrived, at 1:10pm Steve replied and armed a sent/waiting tracker, at 1:53pm Louis sent a DIFFERENT message (new conversation 8CD33547..., same subject) tagged to JS, and the rescue scan -- which keys trackers by NORMALIZED SUBJECT -- matched it, passed the v4.1.77 sender guard (it really was from Louis), and imported it ignoring the category filter. v3.9.19 justified that bypass for replies arriving UNCATEGORIZED but never checked, so it also swallowed mail explicitly owned by another rep. Fix: ownership gate in the candidate loop, SHARED SALES MAILBOX ONLY (My Inbox is personal and never category-filtered, so untouched) -- no categories at all still imports (v3.9.19 intent preserved), MY category still imports, ONLY-other-reps' categories skips the message entirely so it is neither imported nor allowed to clear a tracker (fail-safe per v4.1.91: my row keeps waiting rather than silently closing on someone else's mail). New _log_foreign_category_skip_once carries once-per-session telemetry (v4.1.84 discipline). Steve's calls on both forks. Verified at delivery: compile+guards+confinement (2 changed + 2 added), harness replaying the REAL 8 assistant records (8->4 threads, 5-ask pile collapses to 1) and the REAL Louis Ferro shapes (JS-tagged skipped, uncategorized allowed, SB-tagged allowed, My Inbox untouched, v4.1.77 sender guard intact); read-only COM probe proved the categories and restrict-set membership. Existing 8 pending asks collapsed to 4 by offline data surgery at restart (v4.2.82 precedent -- the app never touches assistant.activity), survivors re-keyed to followup:conv:. Live result in MAINBOX_TEST_LOG.md v4.2.88.  # v4.2.87 (Steve): PO-received flow for Danny's '$OK' pattern. His go-ahead is OUR OWN bid PDF (S100101819-0001.pdf) annotated '$OK' and returned through Acrobat -- the body is pure Adobe boilerplate, so no wording detector can see it; the attachment FILENAME is the signal (a customer does not send your own S-numbered bid back unless acting on it). New: (1) the attachment scan detects a durable-C sender returning an S-numbered PDF and queues it (worker-side, no UI); (2) main-thread drain closes the job's open rows as WON -- same-token rows included (his request row and '$OK' row share the job number, e.g. 1582-324) via the 3-step close now extracted as _complete_row_as_won (shared with the v4.2.86 invoice sweep, behavior unchanged) -- then shows the congrats popup Steve asked for: 'Processing it now' (default, Enter/Escape) or 'Remind me in 1 hour', which appends a process_po scenario reminder DIRECTLY (deliberate: schedule_scenario_reminder refuses Completed rows, and the thread was just completed by this very flow -- that is why the nudge is wanted); new process_po fire branch shows the reminder and completes the item. Close happens at detection regardless of the popup answer. (3) gate version 6->7 so the two existing '$OK' messages re-examine and fire live. Verified at delivery: compile+guards+confinement, harness on Danny's REAL shapes (filename regex, token close incl. request-row sibling, reminder append + dedupe, negatives: vendor sender / non-S pdf / user-locked). Live result in MAINBOX_TEST_LOG.md v4.2.87.  # v4.2.86 (Steve): Danny/campbellanddawes threads 1590-085 + 1586-226 -- rows sat Needs Reply / Waiting on Customer with active trackers AFTER the orders were quoted, PO'd and INVOICED, because the whole deal happened in the ERP and no sent reply ever existed for the scans to see. Two fixes. (1) DN-unclearable trackers: _reply_sender_matches_tracker_recipient sorted candidates by 'contains @'; an unresolved Exchange DN ('/O=EXCHANGELABS/...') has no '@', was treated as a DISPLAY NAME, matched no human reply ever, and returned False -- the tracker became permanently unclearable by the very party it was waiting on (ops-proven: clear_skipped_sender_mismatch waiting_on='/O=EXCHANGE...' reply_sender=danny@, 8/22). DNs are now skipped as non-identifying; a tracker whose only recipient identity is a DN falls to the documented fail-open. The real-SMTP mismatch guard (v4.1.77 wrong-vendor case) is unchanged. (2) INVOICE-CLOSES-THREAD: new _sweep_invoice_completed_threads in _refresh_finalize_pass -- an internal invoice copy naming a PO ('Invoice S100101798.001 PO# 1590-085' from our own domain) closes open Needs-Reply/Waiting-on-Customer rows from EXTERNAL senders whose subject carries the same PO token, via the EXACT 3-step sequence the closed-thread pass already uses (Completed + cancel followups + assistant 'won' Cleanup: logged, undoable, honors Auto-Archive). Conservative: token >=5 chars w/ digit, user-locked rows untouched, max 6 threads/pass, once per invoice per session, idempotent. Verified at delivery: compile+guards+confinement (2 changed + 1 added), harness replaying Danny's REAL rows + the DN tracker case (both threads close, DN tracker clears, wrong-vendor guard + external-invoice + user-locked negatives hold). Live: on the first refresh after restart the sweep should close both threads -- result in MAINBOX_TEST_LOG.md v4.2.86.  # v4.2.85 (Steve): George's Brewster xlsx has 8 real items; 25 were kept. The 17 extras were two artifact classes the v4.2.84 rules could not see: (a) QTY-ECHO -- 13 template rows whose ONLY filled cell was the pre-filled cost-code column each became 'qty=92002 desc=| 92002' (same number counted twice; they carried a qty, so the v4.2.27 qty-less chrome gate passed them, and bare digits are deliberately kept by the letterhead filter as possible part numbers); (b) SPREADSHEET HELPER chrome -- a literal VLOOKUP formula, 'Must use data validation if the table is filled out', 'Fomula to use...' (template's own typo), and a 'Location | Address' column legend. Fixes at the same write-time choke point: (1) update_coverage_requested drops a LETTERLESS description whose digits exactly equal the qty digits (bare-digit part numbers with a real qty differ and survive; qty-less bare numbers untouched); (2) _looks_like_contact_or_letterhead learns vlookup(/data-validation/if-table-is-filled fragments and pipe-joined column-legend rows. Data surgery at restart trims George's ledger to the true 8 lines. Verified at delivery: compile+guards+confinement (2 methods), harness replaying all 17 REAL artifact rows (all dropped) + the 8 real lines and bare-part/qty regression suite (all kept). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.85.  # v4.2.84 (Steve): purchase-form header chrome no longer lands as requested items. The v4.2.83 re-scan ingested George Caruso's Brewster xlsx (34 rows) but ~9 were form-header cells: "PURCHASE INFORMATON" (the template's own TYPO evaded the existing 'purchase information' rule), "SPECIAL INSTRUCTIONS", "BUY AMERICA", "DBE", "BOTH", an ISO date cell ("2026-08-24 00:00:00"), and "Independent Way Brewster NY 10509" (no comma, so the city-state-zip rule missed; house number had been split into qty). Junk outstanding rows are harmful, not cosmetic: they can never be quoted, so the job can never reach EVERYTHING QUOTED. Fixes in _looks_like_contact_or_letterhead (the single write-time choke point): (1) ISO datetime whole-row added to the date-chrome rule; (2) whole-row label vocabulary gains special instructions / buy america* / purchase informat\w* (typo-tolerant) / dbe|mbe|sbe|wbe|lbe / both / vendor / supplier / date needed / needed by / required by -- fullmatch only, "both ends threaded" untouched; (3) city-state-zip comma now optional. Deliberately NOT filtered (could be real part numbers): whole-row bare digits ("6515") and NNN-NNNN ("882-6209") -- those two removed from George's ledger by data surgery at restart. Verified at delivery: compile+guards+confinement (one method), harness replaying all 9 real junk rows (7 filtered by rule, regression suite of real material lines untouched). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.84.  # v4.2.83 (Steve): George Caruso's 8/24 1:13pm quote request ("FW: 6515 material request", Brewster xlsx attached) never reached quote coverage. Root cause proven from the store: the intake scan EXAMINED it and negative-checkpointed it under gate v5 (request_scan_negative[entry_id]=5) -- his ask "Please send me a quote" matched no COVERAGE_ATTACH_REQUEST_PHRASES entry ("send me pricing" yes, "send me a quote" no), the subject's "material request" is in the DASL Restrict vocabulary but NOT in the in-loop request gate, and "my request for materials" misses the material-LIST regex. Fixes: (1) "send me/us/over a quote" + "send me a price/prices" phrase family added; (2) "material request" / "request for materials" wording added to the v4.2.68 KNOWN-CUSTOMER-gated branch (durable C only -- unknown/vendor senders still cannot qualify); (3) COVERAGE_REQUEST_GATE_VERSION 5 -> 6, the designed mechanism that automatically re-examines every v5 negative on the next scan pass, George's message included -- no store surgery needed. Verified at delivery: compile+guards+confinement (one method + constants), harness replaying George's REAL body/subject through the extracted gate expressions (old gate rejects, new gate accepts; bland-submittal wording still rejected). Live re-scan after restart follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.83.  # v4.2.82 (Steve): assistant Dismiss finally sticks. Reported live: the Dennis McCloskey "Re: Material list 6531" follow-up ask kept returning after every Dismiss. Root cause in mainbox_assistant.py, NOT this file: Dismiss sets state="rejected", but "rejected" was missing from AssistantEngine._LIVE_STATES, so the dedup gate saw no live record for the same dedup_key ("followup:<entry_id>") and every ~15-min re-triage minted a brand-new pending ask; the flood guard never helped because it only trips once a follow-up was actually SCHEDULED, which a dismissed ask never was. Fix (module): "rejected" added to _LIVE_STATES -- the collapse branch never changes an existing record's state, so re-scans now land silently on the dismissed row (repeat_count ticks). Applies to every dedup-keyed suggestion kind, incl. cancelled armed auto-sends (must never re-arm). App file change: this title line only. Verified: module ast+py_compile+--selftest incl. two new regression cases (dismissed armed send swallows re-scan; ask->Dismiss->re-scan does not return); app compile+guards+confinement (zero function changes). Data fix at restart: the still-pending Dennis ask flipped to rejected so it does not need one more dismiss.  # v4.2.81 (Steve): "Quote Scan" header button removed as obsolete (Steve's call, agreed). It was the ONLY caller of mainbox_quote_pipeline_entry.run_quote_scan -- the June manual pipeline (possible-quotes window, mint, ack draft, extractor handoff) now superseded by automatic intake (v4.2.54-61: coverage + group + pre-seeded RFQ at arrival) and the P&A picker (v4.2.78-80). Removed: the button (main setup_ui) + the orphaned _mb_quote_scan handler; NOTHING else -- the pipeline entry module stays (load_saved_senders/add_saved_sender still used by typing + Settings), the refresh-time scan_recent_inbox_for_quotes pass is separate machinery and untouched, Settings texts naming "Quote Scan" for saved-sender recognition left as-is. Rollback = previous version file. Verified at delivery: compile+guards+confinement (main setup_ui + removed handler only; small setup_ui byte-identical), grep proves run_quote_scan unreferenced in the app. Restart into this version follows delivery (result in MAINBOX_TEST_LOG.md v4.2.81).  # v4.2.80 (Steve): picker record-pick no longer appends near-duplicate requested rows. Live rig 0822B (2026-08-22, Steve's real pick): _resolve_record_link_choice matched the request's re-typed lines against the job with the strict distinctive-noun gate -- built to keep money off the wrong line -- and plural/word-order drift ('200A meter sockets' vs '200A meter socket', '4\" square 1900 boxes' vs '4\" square box 1900') failed it, so both landed as appended near-dupes. Fix: two-tier match in the append decision only -- strict gate first (unchanged, still picks the flip target), then plain coverage_items_match as the 'already on this job?' bar; append only when both miss. Confined to the one v4.2.78 method. Verified at delivery: compile+guards+confinement, harness replaying the exact live lines (0 appends, THHN + plural forms all recognized; genuinely-new line still appends). Live rig round 3 follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.80.  # v4.2.79 (Steve): known-customer veto no longer decided by dict order. Live rig failure (2026-08-22): a real bare-'P&A' vendor RFQ send parsed fine (waiting-flip proved the v4.2.78 parsers live) but auto-coverage bailed ok:false in 30ms -- the recipient had 5 status rows typed C (July rig tests, address played customer) and 9 typed V (later tests), and the first-match-wins walk hit a C while /why's durable resolver said V for the same address. Fix: (a) consult the per-sender registry first (same v4.1.55 priority _durable_email_type_for_email uses); (b) MAJORITY vote over all matching saved rows instead of first-match ('a confident C', as the docstring always said). Single-type addresses behave exactly as before. Verified at delivery: compile+guards+confinement, harness on the extracted method (mixed 5C/9V -> allow, all-C -> veto, registry C overrides V rows, tie -> allow, no rows -> learning-hint fallback intact). Live rig re-run of the picker chain follows this delivery -- result recorded in MAINBOX_TEST_LOG.md v4.2.79.  # v4.2.78 (Steve): bare-'P&A' sent RFQs now reach a group picker instead of silently mis-grouping. Root cause chain (proven by harness + injection): sentence-form bodies ("can you quote 25 X and 500ft of Y?") and qty-last lines ("<item> - qty 25") parsed to ZERO items, so auto-coverage bailed before ledger/picker and the outgoing-request >=2-item link could never fire. Fixes: (1) _QTY_LAST_LINE_RE reads "- qty N" / "- 10 pcs/ea/box..." endings (explicit unit or qty keyword still required -- bare trailing numbers stay rejected); (2) _REQ_SENTENCE_ITEM_RE anchors on and/also-need continuations and makes for/on optional, so multi-item request sentences yield every item; (3) both parsers are the fallback ladder in _auto_create_coverage_for_sent_rfq_inner AND update_coverage_waiting_from_request; (4) the v4.1.12 link picker now ALSO lists existing coverage records ranked by gated item-name + exact-qty evidence (_score_coverage_record_candidates), picking one adopts its group, flips its matched items to Waiting, appends genuinely-new lines, drops the auto ledger and retires the auto group (_resolve_record_link_choice; no blind merge -- re-typed/typo'd lines would shelve near-duplicates); Skip renamed "Keep as new group", Enter links / Escape keeps (standing popup rule); (5) diag bridge /coverage read the never-shipped "jobs" key -- now reads "threads". Verified: compile+guards+confinement, parser/scorer/resolve/dialog harnesses on extracted code, /coverage live. NOT verified: a real Outlook send driving the picker end-to-end (needs the live rig).  # v4.2.77 (Steve): Quote Review "Requested item / vendor" column no longer opens huge. Root cause: it was the ONLY stretch=True column, so ttk handed it every pixel of window slack (430 default -> ~600+ shown) AND snapped it back when dragged smaller -- freed space returns to the sole stretchable column. Fix: 280px fixed width (stretch off, resizable), slack moved to the last column (Stock / Lead). Plus app-wide column-width PERSISTENCE: new tree-column memory (mainbox_tree_columns.json, keyed by column ids + heading texts) installed once via bind_class on the main root -- restores saved widths after a Treeview's first <Map>+layout (after_idle; harness caught the stretch pass overwriting an at-Map restore), saves on <ButtonRelease-1> only when the press landed on a header separator (deliberate drag), so window-resize stretching is never recorded. Zero per-window wiring. Verified: compile+guards+confinement, live-Tk harness (drag-save/restore round trip, all-stretch tree, minwidth clamp, re-Map no-stomp) on extracted helpers. Not live-Outlook-dependent.  # v4.2.76: availability wording no longer breaks quote-line matching (caught by the live rig test minutes after v4.2.75). Root cause: per-line stock/lead text ("in stock", "2-3 weeks lead", "backordered") rides in the parsed description and its words landed in the DISTINCTIVE-NOUN sets -- {connectors, weeks, lead} vs {connectors} fails the v3.9.57 same-product subset gate, so a priced line carrying stock info could not match its requested line (first-reply case would never flip). Fix: _COVERAGE_AVAIL_NOISE_WORDS excluded in both noun collectors (+ digit-range fragments like "2-3"). Verified: compile+guards+confinement (2 collectors), harness fresh-first-reply matching with stock-noted lines, window render shows latest per-vendor prices+avail, live rig re-check.
+APP_TITLE = "MaINbox v4.2.103 AI Assistant"  # v4.2.103 (Steve: "add a search feature to the inbox viewer, along with anything else that outlook has that mainbox does not"): the Inbox Viewer grows the day-to-day Outlook features a rep would otherwise switch windows for. Outlook itself must stay running (MaINbox drives it over COM) and compose/reply still open Outlook's editor on purpose (signatures, formatting, Sent Items all behave); everything else is now in the viewer. (1) SEARCH: a search box in the toolbar filters the loaded rows as you type (subject / from / address / company / categories / mailbox, all words must match); Enter or "Search mailbox" runs a real Outlook query on a worker across the selected folders -- DASL Restrict on subject + from name + from address (+ body when "in body" is ticked), bounded to the last N days (default 365, Settings), with a linear fallback walk when a store refuses DASL -- and shows the hits in place ("Search: ... -- N results"); Escape or Clear returns to the live list. (2) FOLDERS: the Mailboxes picker now enumerates, per store, Inbox + Sent Items + Drafts + Deleted Items + Junk + Inbox subfolders (one level); picks carry a default_folder id or a subfolder EntryID + path (resolved by EntryID first, then store -> Inbox -> name, so Cached-Exchange id drift cannot blank a pane); pane labels become "Store / Folder" for anything that is not the inbox. (3) MOVE TO FOLDER: right-click -> Move to -> any enumerated folder (msg.Move on a worker; rows leave the list; ops_log). (4) FLAG: right-click -> Flag for follow-up / Clear flag (FlagRequest + FlagStatus on a worker); new "⚑" column shows flagged rows. (5) ATTACHMENTS: right-click an attachment link -> Save As... (asksaveasfilename) or Save all... (askdirectory); left-click still opens from the temp folder. (6) VIEW FORMATTED: a link above the reading pane writes the message HTMLBody to a temp .html and opens it in the default browser -- vendor price tables and logos readable without Outlook. (7) UNREAD COUNTS: pane headers and the status line show unread, the window title shows the total unread. (8) LIMIT: Settings -> "Emails per folder" (100-2000, was a hand-edited JSON key) and a "Load more" toolbar button that adds 200 to the current scan. VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == the 11 viewer methods changed + 9 added, nothing removed; harness on the extracted pure helpers (row filter, DASL builder/escaping, folder label + resolution order) 12/12; NOT run against live Outlook -- every COM path copies an existing worker idiom (GetItemFromID + store hop, Restrict, SaveAsFile, Move) byte-for-byte in shape. CONFINEMENT: viewer only; the main window, scans, triage and coverage untouched. Previous: v4.2.102 (Steve: "when mainbox does an auto refresh it seems to be slowing/locking up my pc"): measured from the ops log, not inspected. TODAY: 225 slow_save events; mainbox_status.json is 18.8 MB (9,631 entries, 8,786 of them for emails no longer in the cache -- May/June rows) and the closed-email guard is 38 MB (24,823 records); both are JSON-SERIALIZED ON THE TK THREAD on every call (save_json_async snapshots on the caller, by design since v4.1.58) and then fsync-written by the writer -- and they arrive in BURSTS: 07:27:36-39 = 4x status (18 MB) + 2x guard (37 MB) + cache in three seconds; 08:17:36-38 the same. ~2 GB/hour of fsync writes plus ~3-4 s of main-thread serialization per burst is what the PC feels. ROOT CAUSE 1: every mutation site calls flush_status_data / _save_closed_email_guard / save_cached_state directly (53 / 13 / 49 call sites), so N edits in one refresh pass = N full serializations. FIX 1: the three methods become COALESCING wrappers -- on the main thread they schedule ONE deferred run (root.after 1500 ms, keyed per file; a second call while one is pending is a no-op) around the original bodies, which are preserved byte-identical as flush_status_data_inner / _save_closed_email_guard_inner / save_cached_state_inner (hash-verified); off-main-thread callers run the inner immediately (no Tk from workers). _flush_deferred_saves_now() cancels the timers and runs every pending inner once -- called on both exit paths and before the cloud-backup flush so the durability contract (flush_pending_async_saves) is unchanged. The bulk-write deferral in the guard save is kept in the wrapper. ROOT CAUSE 2: status rows never leave the file -- 3,191 May + 2,195 June entries for emails that left the cache months ago are re-serialized every 15 s. FIX 2: _archive_stale_status_entries(days=60) at startup moves rows whose email is not loaded, not referenced by an active follow-up/reminder, and untouched for 60+ days into mainbox_status_archive.json (append-merge, never deleted; the closed-email guard independently keeps every closed decision, so a re-imported old email still lands closed); ops_log status/archived n. ROOT CAUSE 3 (v4.2.100 regression, RFQ windows not the refresh): material_family_token -> mainbox_material.classify runs ~1,700 regexes (1.9 ms) and procurement_suggest_vendors_for_materials sweeps all 510 memory keys per item lacking exact history = ~1 s per item on the main thread. FIX 3: classify() is lru_cached (16K entries) in mainbox_material.py (identical copy shipped to the Brain), so a sweep costs once. Also: mainbox_bridge.py 1.0.1 retries the heartbeat/snapshot os.replace (the voice server reading the file made Windows refuse the rename -> Bridge: tick error). VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == the 3 wrappers changed, 6 added (3 inners byte-identical to the originals, _deferred_save, _flush_deferred_saves_now, _archive_stale_status_entries); harness: coalescing (5 calls -> 1 inner run), immediate off-main, flush-now runs pending once, archive on a synthetic status table; NOT restarted into on the live app. Previous: v4.2.101 (Steve, Louie/Welsbach 8/28 06:28): a QUOTE REVISION was closed as a won PO with the congrats popup. ROOT CAUSE: the v4.2.87 returned-bid detector fires on the attachment FILENAME alone (our S-numbered bid PDF back from a durable-C sender) -- by design for Danny, whose Acrobat return carries only Adobe boilerplate -- so it never read Louie's own words: "One last change: Remove the following lines: AF 3/8 SPLIT LOCK WASHER ..., AF 2FHNS43816 ... HEX NUTS". Ops log 06:39: returned_bid_closed_thread (token empty, row_subj "RE: Bid S100102003") + po_congrats_shown closed=1. Steve reopened the row himself at 07:45. FIX: new module-level returned_bid_customer_intent(fresh_text) -> ("veto"|"go_ahead"|"silent", why). VETO when the customer's fresh text (quoted history + signature already stripped by _strip_reply_boilerplate_for_intent) carries revision / change / question language: remove|delete|take off|change|revise|revision|update|instead|replace|swap|add|correct|wrong|missing|requote|re-quote|price|pricing|quote me|lead time|availability|how much|can you|could you|a question mark. GO_AHEAD on ok|okay|approved|go ahead|proceed|release|process|order|purchase order|po|confirmed|accepted|good to go|ship it. SILENT when nothing substantive remains after dropping Adobe/Acrobat/"find the pdf attached"/download lines and the signature -- Danny's exact shape. The scan branch now fires only when intent is go_ahead or silent; a veto logs returned_bid_vetoed (subject, doc, the matched phrase) and FALLS THROUGH to the ordinary request/negative gates, so the message is still examined as a normal customer reply and nothing is closed. VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == {returned_bid_customer_intent added, the coverage attachment scan method changed}; harness 14/14 on Louie's real text (veto: "remove"), Danny's Adobe boilerplate (silent), "$OK" (go_ahead), and 11 other shapes; not restarted into on the live app. CONFINEMENT: the returned-bid branch only; the customer-PO detector (_detect_and_queue_customer_po), the won-close, and the popup are untouched. Previous: v4.2.100 (Steve): material typing from Steve's OWN data. ROOT CAUSE: vendor suggestion's "same family" fallback (v4.2.70) knew three families -- conduit / wire / strut -- from three hand-written regexes, so a 1-1/4 rigid request could fall back to an EMT vendor but a breaker, a lug, a PVC box, an LED troffer or a floor box had NO family and no fallback at all, and the wire regex lumped MC, THHN, SOOW cord and CAT6 together. FIX: a research workflow mined 41K RFQ/reply item lines, 34.5K catalog SKUs and 10.9K sent messages into material_rules.json (42 fine categories in 9 groups, 479 brand aliases, curated vendor map) + the regex engine mainbox_material.py -- shipped in this repo and used byte-for-byte by the MaINbox Brain (mainbox_brain/material_classify.py) so the desktop and the phone type material identically. material_family_token() now asks the engine first and returns the FINE category id ("conduit_emt", "fittings_rigid", "circuit_breakers" ...) as the family; the original three regexes remain the fallback when the engine is missing or returns nothing, so v4.2.70 behaviour is a strict subset of the new one. Family fallback semantics/weights in procurement_suggest_vendors_for_materials are untouched -- only the family key got smarter. VERIFIED: ast/py_compile; guard constant absent; small setup_ui byte-identical; method diff == {material_family_token} changed + module-level guarded import added; harness classifies 20 real lines through the extracted function with and without the engine. NOT restarted into on the live app. Previous: v4.2.99 (Steve): MaINbox Voice becomes an extension of MaINbox -- follow-ups sync to the phone (view / snooze / complete / edit note / cancel / create on the go). ROOT CAUSE: the phone had no path into follow-ups at all. MaINbox has no always-on HTTP listener (the diag bridge is MAINBOX_DIAG-gated and read-only by policy), and its JSON lanes are rewritten wholesale via os.replace, so an outside writer would race and be silently reverted or dedupe-cancelled. The one always-on channel is the Brain file bridge (%LOCALAPPDATA%\MaINbox\bridge), which was inert here because mainbox_bridge.py never existed on this PC. FIX: (1) ship mainbox_bridge.py (ENGINE 1.0.0, stdlib-only; heartbeat.json / followups.json / commands/*.json -> results/*.json). (2) _bridge_active_followups now publishes ALL three queue lanes (manual, scenario, commitment) with a STABLE id per record (_bridge_followup_id: sha1 of lane+created_at+entry_id+conversation_id+subject+type+target_date, stamped as item["id"]; records never had an id -- queue_ids are positional), plus entry_id/kind/group/note/lane so the phone can show and address them; signature widened to note+kind+entry_id so note edits republish. (3) _bridge_tick handles five new commands -- create_followup / snooze_followup / cancel_followup / complete_followup / update_followup_note -- via _bridge_cmd_* methods that run on the Tk main thread inside the existing 4s tick and reuse the app's own semantics byte-for-byte: create mirrors open_followup_window.schedule_or_edit (cancels the prior active manual row for that email with "Replaced by ...", stamps followup_time, sets _followup_dedup_needed); snooze mirrors the queue window's snooze_rows (due_at/snoozed_at/snooze_label + followup_time); cancel writes cancelled/cancelled_at/cancel_reason, removes the Outlook calendar twin, and -- because it is user-initiated -- stamps status_data[eid]["reply_needed_dismissed_at"] exactly like v4.2.17/18 so the 30s sweep cannot rebuild it; complete mirrors deploy_due_followup_row's bookkeeping (completed/completed_at, followup_time="Completed") WITHOUT drafting. Every mutation ends in _bridge_after_followup_change: the three lane saves, save_cached_state, the three renders, an ops_log("followup", phone_*) event, and a forced republish so the phone sees the result within its 7s wait. Phone-created follow-ups with no email get entry_id="" / source="phone" / use_ai=False; they show in the queue and Upcoming pane, and their due alert fires on the phone (get_due_followup_review_rows skips email-less rows by design -- unchanged). VERIFIED: ast/py_compile; the timeout-constant guard holds; small setup_ui byte-identical; method-level hash diff == {_bridge_active_followups, _bridge_followups_signature, _bridge_tick} changed + 10 methods added, nothing else; harness on the extracted methods with a stub app (create/snooze/note/complete/cancel round-trips through the real adapter files); NOT yet restarted into on the live app -- v4.2.98 was running during delivery. CONFINEMENT: bridge methods only; no change to any follow-up creator, the due check, the diag bridge, or COM paths. Previous: v4.2.98 (Steve): the auto-refresh stutter, found by live measurement rather than inspection. Steve reported slowdowns "when the refresh auto-ran". Measured through the diag bridge (whose latency IS main-thread responsiveness, since every request is marshaled via root.after and blocks on an Event): idle p50 16.9ms/max 83ms, under bridge load p50 17.5ms/max 123ms, and -- importing 5 then 20 REAL emails through the rig -- p50 17.7/18.1ms, max 160/237ms, ZERO samples over 250ms across ~9000 samples. So the refresh itself is clean; _refresh_apply_inbound already batches per-email writes behind _commitment_batch. The stutter is what the refresh STARTS: AI triage drains its backlog one email every ~10s and every completion ran sort_emails_for_display + render_email_rows + render_group_rows + render_followup_preview_queue on the MAIN thread. render_email_rows deletes and reinserts EVERY visible row (654 emails, 245 groups here) -- a full rebuild for one changed field. The 20-email capture shows it exactly: 150-240ms hitches at 16:03:41, :51, 16:04:21, :31, 16:05:01 ... each landing within a second of an ai/task_done, plus 56 slow_save events in six minutes. Twenty emails = ~3.5 minutes of periodic stutter, which is precisely what was being felt. Fix: new update_email_rows_in_place repaints only the touched rows via tree.item(). It is deliberately paranoid -- it returns True only if EVERY row can be updated, and bails to the original full render if the tree or row is missing, the row no longer matches the active filter, its importance rank changed (rank decides its block), its group membership changed (decides group-child indent), or it was never rendered with placement stamps. Those stamps (_row_rank/_row_gid) are recorded at all THREE insert sites in render_email_rows, so "same slot, new text" is distinguishable from "this row must move"; a row can never be left showing new text in a stale position. The triage success block uses it only when every result maps to a live row, otherwise it falls through to exactly the render it always did. Verified at delivery: compile+guards+confinement, harness driving the real extracted method (in-place path, and each bail condition forcing the full render), and a live before/after latency capture. ALSO CONFIRMED LIVE THIS SESSION: v4.2.96 Update Since ran against real Outlook for the first time -- ops update_since_done my=34 sales=36, no failure, app idle and responsive immediately after. Live result in MAINBOX_TEST_LOG.md v4.2.98.  # v4.2.97 (Steve):  # v4.2.97 (Steve): main-thread COM audit, fix 3 -- FULL UPDATE moves off the Tk main thread. It was the last main-thread entry pulling the whole heavy scan tree onto the UI thread: import_from_folder at FULL limits (1000 My Inbox + 3000 Sales) with build_email_data per message, then the sent-tracker, vendor-quote and customer-attachment scans -- which is why import_from_folder, build_email_data and all three scans showed as dual-path in mainbox_thread_audit.py even after v4.2.96. This one was deferred twice on purpose: full_update carries the v4.1.23-v4.1.27 rollback transaction (undo snapshot, coverage deep-copy, message-error tolerance, shrink detection, EntryID identity-loss detection) whose whole job is preventing silent data loss, so it got its own delivery. Method: the validation and rollback blocks were LIFTED VERBATIM from the v4.2.96 source by slicing it programmatically -- 69 and 38 lines respectively, asserted by length and by first/last line -- never retyped, because a typo in those would stay invisible until the day they were needed. New: _full_scan_my_inbox_in / _full_scan_sales_in (worker twins that resolve folders from the WORKER namespace instead of the *_folder_safe helpers, which read self.namespace); _full_update_validate (pure Python over self.emails/_prev_emails, no COM, no Tk -- run ON the worker deliberately so a failed transaction aborts BEFORE the post-transaction scans, exactly as the straight-line try block did); _full_update_phase_scans (the outside-the-transaction scans, body unchanged except three update_loading calls became progress(), asserted to be exactly three); _full_update_scan_work (one worker call, so the pass holds the Outlook lock once and stays as atomic as the synchronous version); _full_update_rollback and _full_update_commit on the main thread. The snapshot/clear/flag setup still runs on main BEFORE the worker starts, so the rollback point exists however the pass dies -- including the case the synchronous version never had, the worker not running at all because Outlook was busy, which lands in on_error and rolls back like any other failure. One genuinely new behaviour, and it is a fix: if the COMMIT tail throws, the old code let the exception escape full_update and left the modal "Working" box up forever; the transaction has already succeeded there, so it now reports and always closes the window without discarding a healthy import. New ops events full_update_rolled_back / full_update_commit_failed. Verified at delivery: compile+guards+confinement, mainbox_thread_audit.py showing the dual-path walks cleared, and a harness driving the real extracted pieces -- happy path, each validation trip (incomplete / missing source / error tolerance / shrink+errors / identity loss / 20% guard) rolling back, busy-worker rollback, and commit-failure keeping the data. NOT verified: no live Full Update has been run against real Outlook on this build. Live result in MAINBOX_TEST_LOG.md v4.2.97.  # v4.2.96 (Steve):  # v4.2.96 (Steve): main-thread COM audit, fix 2 -- UPDATE SINCE DATE moves off the Tk main thread. It ran the entire deep walk inline on the UI thread: both mailbox imports with NO scan limit (since_dt is the only bound), plus a 120-item sent-tracker scan, a 150-item quote scan and an 80-item attachment scan. The app already recorded the cost -- the cloud-restore site notes this exact call "froze the UI for as long as the Sales mailbox took to scan (10+ minutes in Online mode)" -- but that fix only routed RESTORE away from it; the Update-Since button itself was never moved. Now: new _update_since_date_work (WORKER-THREAD ONLY) does the walk and returns plain counts; update_since_date drives run_outlook_worker, marshals progress text back with root.after(0, ...) so the loading window keeps painting, and keeps every state/render call in on_done on the main thread byte-for-byte as before. Folders are resolved from the WORKER's namespace via GetDefaultFolder(6) / _find_sales_inbox_folder_in rather than get_my_inbox_folder_safe / find_sales_inbox_folder_safe, which read self.namespace -- the main thread's COM handle, and precisely the drift the v3.9.85 note warns about. The three scans it calls were already worker-safe (each connects its own thread-local fresh_outlook and none touches self.namespace) -- verified before moving, not assumed. The loading window now closes on EVERY path including failure, and a busy worker says so instead of looking like a no-op. New ops events update_since_done / update_since_failed. DELIBERATELY NOT TOUCHED: full_update. It is 206 lines carrying the v4.1.23-v4.1.27 rollback transaction (undo snapshot, coverage deep-copy, message-error tolerance, shrink detection, EntryID identity loss detection) whose entire purpose is preventing silent data loss; moving it is its own delivery with its own harness, not a hitchhiker on this one. Verified at delivery: compile+guards+confinement (1 changed + 1 added), mainbox_thread_audit.py re-run confirming the walk left the main-thread list, and a harness driving the extracted worker/on_done/on_error split incl. the busy path and the always-close-the-modal guarantee. NOT verified: no live Update-Since has been run against real Outlook on this build. Live result in MAINBOX_TEST_LOG.md v4.2.96.  # v4.2.95 (Steve):  # v4.2.95 (Steve): main-thread COM audit, fix 1 of N -- the Outlook CONTACTS walk moves off the Tk main thread. Steve asked for an audit of the whole app ("I feel like we keep moving the processes off but they end up back on"), and a static call-graph audit of all 1532 functions found 75 that touch Outlook COM, 43 worker-side, and 22 still reachable from a Tk main-thread entry point (8 of them bulk folder walks). This is the worst of the AUTOMATIC ones and the one that best matches the reported feeling: load_outlook_contacts_trusted_senders is scheduled from __init__ by root.after(1800, ...) -- a main-thread timer -- and walked up to 2500 contacts x 3 property reads (~7500 COM calls) INLINE on the UI thread at every single startup, with nothing on screen to say so. It was never reported as a freeze precisely because it hides inside startup: no user action, no visible cause, every launch. Fix: new _load_contacts_work (WORKER-THREAD ONLY) does the walk -- the loop body is byte-for-byte the v4.2.94 one -- and returns a plain set; load_outlook_contacts_trusted_senders now just drives run_outlook_worker, and every state write (trusted_contact_emails, contacts_cache, save_json) plus the status label happen in on_done on the main thread. It deliberately no longer seeds the found-set from self.trusted_contact_emails inside the walk (that would read main-thread state from a worker); the merge moved to on_done, which is equivalent and safe. Busy handling: the startup refresh normally owns the single Outlook worker at 1.8s, so a busy skip is the NORMAL case here, not a failure -- it retries up to 3 times at 45s spacing then gives up quietly, because contacts are a safety net and never worth nagging about. New ops events contacts_loaded / contacts_load_failed make it visible in telemetry for the first time. Also shipped: mainbox_thread_audit.py, the read-only analyzer itself, so this class of drift can be re-checked every version instead of noticed by feel. Verified at delivery: compile+guards+confinement (1 changed + 1 added), the audit re-run showing the contacts walk gone from the main-thread list, and a harness driving the extracted worker/on_done split over a fake Contacts folder. NOT verified: no live startup has run this build yet. Live result in MAINBOX_TEST_LOG.md v4.2.95.  # v4.2.94 (Steve):  # v4.2.94 (Steve): a PO is a PO however it arrives -- all three PO paths now archive and notify. Reported live: Steve received Allan Briteway PO 510880 at 9:59am (Kojo notification + "RE: Bid S100101909"), opened PO Review, pressed "Apply to matched job" -- and the job just sat there. Confirmed from the store: the award WAS recorded correctly (po_awards PO 510880 on grp_20260825170616093041 at 10:17:59) but the group stayed archived:false with FOUR open rows. Root cause: three PO arrival paths had drifted to three behaviours -- (1) the v4.2.87 returned-bid detector did the full won-close + congrats popup; (2) the auto-popup prompt offered archive as an opt-in CHECKBOX and never closed rows; (3) PO Review's _apply_selected recorded the award and then did only render_group_rows/render_email_rows/_refresh_tree -- no close, no archive, no popup. Steve's call on both forks: close EVERY open row in the job (vendor rows included -- once the customer has PO'd, the quoting conversation is over on both sides), and unify rather than patch path 3 alone. Built: _po_congrats_popup (the single "You got a PO!" dialog, lifted verbatim from v4.2.87 so its behaviour is unchanged where it already worked -- "Processing it now" default with Enter/Escape/WM_DELETE, "Remind me in 1 hour" -> _schedule_process_po_reminder, default button focused, po_congrats_shown telemetry; only wording and the follow-on callback are parameterised); _close_job_rows_as_won (every row in the job whose status is New / Needs Reply / Waiting on Customer / Waiting on Vendor, through the standard 3-step _complete_row_as_won, which is what archives via the assistant "won" Cleanup when Auto-Archive is on -- ai_user_locked rows are still never touched, since that flag exists to mean "leave my decision alone"); and _finish_po_award tying them together, idempotent by construction (a second call finds no open rows and reports 0 closed). Wired into all three paths. Path 1 keeps its own token-based row selection byte-identical and only swaps its inline popup for the shared one; the auto-popup's archive checkbox is left in place and still honoured, now belt-and-braces since _archive_group_by_id no-ops on an already-archived group. Verified at delivery: compile+guards+confinement (3 paths changed + 3 methods added; the 2 "removed" closures are _done/_remind relocating into the shared popup; both setup_ui byte-identical), harness on the REAL Allan Briteway job proving all 4 open rows close incl. the Brazill vendor row, the popup names PO 510880 and the count, second call is a no-op, missing/blank group refuses, user-locked rows untouched, no row outside the job affected, and path 1 still calls the shared popup + keeps its queue drain with exactly one popup implementation left in the file. NOT verified: no live PO has come through this build yet -- the Allan Briteway job was already applied under v4.2.93 and is closed by hand at this delivery. Live result in MAINBOX_TEST_LOG.md v4.2.94.  # v4.2.93 (Steve):  # v4.2.93 (Steve): the MBTEST-0826A LIVE RUN caught a real hole in the v4.2.91 Sent Queue -- a claimed conversation could still be split into a second group. Setup: a real RFQ sent from Outlook to the rig gmail with Steve's own address CC'd, the sent item assigned to a test job through the shipped assign_sent_message_to_group (claim written, verified to survive an app restart), then the app started so the CC'd inbound copy -- same ConversationID, confirmed -- imported fresh with the claim already in place. Expected: it joins the claimed job. Observed: the app created a NEW group "MBTEST-0826A P&A - Fordham Rd Switchgear" (ops coverage/intake_group_created 08:53:03) and put it there, leaving one job in two groups -- the exact failure the Sent Queue exists to prevent. Root cause: v4.2.91 hooked find_group_id_for_thread, but COVERAGE INTAKE never calls it. Intake has its own ladder -- membership -> _coverage_group_id_for_conversation -> create a new job group (the v4.2.60 "grp-keyed from birth" path) -- so a claimed conversation arriving as a fresh quote request sailed straight past the claim. Fix: _coverage_group_id_for_conversation consults the claim first. That method is the right home rather than the call site -- it already answers "which group owns this conversation", the intake ladder consults it BEFORE deciding to create, and every other coverage caller wants the same answer. Reads groups_data only (no COM, no Tk), so it is safe on the worker thread intake runs on. Confined to that one method; the claim store, scan, ranking and assign paths are byte-identical to v4.2.92. Verified at delivery: compile+guards+confinement (1 changed, 0 added), sent-queue harness re-run green, and a SECOND live run (MBTEST-0826B) repeating the identical scenario end to end against real Outlook. Live result in MAINBOX_TEST_LOG.md v4.2.93.  # v4.2.92 (Steve):  # v4.2.92 (Steve): found by the FIRST LIVE RUN of the v4.2.91 Sent Queue (MBTEST-0826A, a real RFQ sent from Outlook to the rig gmail with Steve's own address CC'd) -- our OWN domain was being counted as a "same company" ranking signal. CC'ing yourself on an outgoing RFQ is routine (it is how the shared-mailbox copy gets made), so americanpoweresc.com landed in the recipient set and then matched every job containing any internal mail: the picker's top five suggestions for the test send were unrelated jobs ("Return of W2-6TLEG" 5.0, "Purchase Order P000021085" 3.0, "Direct Shipment P/O S100100303" 3.0, ...) all scoring on our own domain, burying the real candidates. The harness could not have caught this -- its synthetic row carried only a vendor address; it took real mail with a real CC. Fix: subtract our own domains from BOTH sides of the same-company comparison (recipient set and group-member set), and lowercase both so the match is case-insensitive. New _own_domains_for_ranking resolves our domains WITHOUT COM -- the real resolver _own_mailbox_domains reads ns.CurrentUser.AddressEntry, and this path runs on the Tk main thread when the assign picker opens, where CLAUDE.md forbids COM outright -- so it uses that resolver's cache when a worker has already filled it and otherwise derives the same answer from memory (configured internal_domains + MAINBOX_INTERNAL_DOMAINS + Employee-typed sender rows). Empty set means the same-company signal simply does not fire, never a wrong match; subject / job-code / recency signals are untouched. Confined to the ranking scorer -- the claim mechanic, the scan and the assign path are byte-identical to v4.2.91. Verified at delivery: compile+guards+confinement (1 changed + 1 added), the v4.2.91 sent-queue harness re-run green, and the ranking re-scored against the SAME real live row. Live result in MAINBOX_TEST_LOG.md v4.2.92.  # v4.2.91 (Steve):  # v4.2.91 (Steve): STEP 2 of the grouping rework -- the OUTLOOK SENT QUEUE, Steve's own design ("an outlook sent queue, anything sent from outlook can be viewed there and manually assigned"). Why this is load-bearing rather than a convenience, and the reason it was built before the compose-time picker: our outgoing RFQ NEVER enters self.emails -- only inbound mail is imported -- so when a vendor replies, that reply has no same-conversation sibling in the store, priority 1 of find_group_id_for_thread cannot fire, and the entire vendor half of a job is tied to it by fuzzy subject text alone. That is precisely the arm v4.2.89 had to fence with a 30-day window. Claiming the conversation at send time replaces the guess with a fact. Proven in harness: a vendor reply on our own RFQ thread resolves to "" on v4.2.90 and to the claimed job on v4.2.91. Built: (1) conversation_claims in groups_data (rides existing save/backup/snapshot, no new file) mapping conversation_id -> {group_id, at, subject, by}; a claim whose group was since deleted returns "" AND self-heals out of the map, so a stale claim can never strand mail. (2) find_group_id_for_conversation consults claims FIRST -- explicit beats inferred -- the only change to existing grouping behavior, and a no-op until a claim exists. (3) _sent_queue_collect_work: WORKER-THREAD-ONLY COM scan of the shared Sales Sent Items (via the existing _find_sales_sent_folder_in) plus the default Sent folder, SENT_QUEUE_SCAN_DAYS=14 per Steve's call, date-Restricted with SENT_QUEUE_SCAN_LIMIT=600 as a runaway guard; mail only (Class 43), plain dicts only, no COM object crosses the marshal boundary. (4) the Sent Queue window (new "Sent Queue" header button): "Needs a job only" on by default per Steve, Assign to Job / Open in Outlook / Refresh, run_outlook_worker with the busy-retry the Inbox Viewer already uses. (5) the assign picker: candidates RANKED with an auditable reason per row (same subject / job code / same company / active this week; archived penalised), Enter assigns and Escape cancels per the standing popup rule, a "Show all jobs" toggle so a wrong ranking is never a dead end, and New Job. Assigning ADOPTS THE THREAD (Steve's call) so the vendor reply follows automatically. The window never sends, never deletes and never edits an Outlook item -- its only write is the assignment. Verified at delivery: compile+guards+confinement (2 changed -- _main_button_specs and find_group_id_for_conversation -- - plus 18 added, 0 removed; both setup_ui byte-identical), harness on REAL extracted methods and the REAL corpus covering claim honour/case/stale/malformed, claim-beats-walk both ways, assign writes membership+claim+ops event, refusals for bad group/row, adopt_thread=False, the end-to-end vendor-reply case above, no over-reach on unclaimed threads, and ranking sanity on real groups; plus a read-only COM probe proving the Sent Items scan returns real rows. NOT yet exercised by hand in the running UI. Live result in MAINBOX_TEST_LOG.md v4.2.91.  # v4.2.90 (Steve):  # v4.2.90 (Steve): the v4.2.89 subject-merge window is now a USER SETTING, and the Capone- MNPW Wiremold group is split. Steve: "30 days works for now why don't we add a setting so the user can always edit this if they want". New setting "group_subject_merge_max_age_days" (Settings -> Functionality Settings, spinbox 1-365, default 30 = the v4.2.89 value, so behavior is unchanged until Steve moves it): default in DEFAULT_SETTINGS, clamped 1..365 in the settings merge (garbage falls back to the shipped default rather than disabling the guard, so a corrupt or cloud-restored settings file cannot silently reopen the defect), a labelled spinbox with a plain-English note that replies still group by conversation, and persisted on Save. find_group_id_for_thread READS the setting at match time rather than caching it on self, so editing the value applies to the next grouped email with no restart; the subject_merge_blocked ops event reports the value actually in force. 1 means same-day only; 365 restores the pre-v4.2.89 unbounded-in-practice behavior. DATA SURGERY (Steve: "yes please split"): grp_20260708125147304610 held TWO jobs -- the July cycle (conversation CD1E5858..., request 7/8 + Brazill quote 7/8 + replies 7/9) and the August cycle (conversation 905DBAE8..., 8/25 request + 2 replies) -- welded by the shared subject and sharing ONE coverage ledger that was stamped with the July conversation, so today's request read against a 7/8 quote. The three August emails move to a new group and the ledger is split by added_at, July lines staying put. Done offline with the app stopped (backups written), idempotent. NOT a code path -- nothing in the app merges or splits groups by itself. Verified at delivery: compile+guards+confinement (1 changed + 0 added: find_group_id_for_thread only, plus constants/settings/UI blocks outside any function), settings round-trip harness (default, clamp bounds 0/-5/999/garbage, save->load->read at match time), and the v4.2.89 grouping harness re-run green against the new read path. Live result in MAINBOX_TEST_LOG.md v4.2.90.  # v4.2.89 (Steve): step 1 of the grouping rework -- the INBOUND guard. Reported: "Capone- MNPW Wiremold" showed a customer request dated 8/25 sitting against a vendor quote dated 7/8. Root cause proven from the store: the July cycle (conversation CD1E5858..., Capone request 7/8 + Brazill quote 7/8 + replies 7/9) and the August cycle (conversation 905DBAE8..., 8/25 request + two replies) are DIFFERENT Outlook conversations sharing only the normalized subject "mnpw wiremold" -- the project name Capone reuses. find_group_id_for_thread priority 2 matched on subject with NO time bound, so the new job welded onto the July group, and the coverage ledger -- still stamped with the JULY conversation, its 10 requested lines all added 2026-07-08T12:51:36 -- showed its July request and July quotes against today's arrival -- note the ledger content itself is ALL July (48 quoted lines, 13 stamped 2026-07-01 and 35 stamped 2026-07-08; NONE from August), so the defect is purely the group merge: today's 8/25 request had no ledger of its own and inherited July's. All three grouping call sites funnel through this one method, so the fix is one choke point. Two changes, confined to it: (1) STALENESS WINDOW GROUP_SUBJECT_MERGE_MAX_AGE_DAYS = 30, chosen from the real corpus not guessed: across 439 consecutive in-group gaps p50 0.06d / p90 2.9d / p98 11.9d / p99 17.2d, and EXACTLY TWO gaps exceed 30 days -- both known-bad merges (Capone 47.1d, PJS- 312E Marcy Houses 66.0d) -- so 30d sits above every legitimate gap in the history and below both defects; absolute distance, so back-filled older mail lands on its own era. (2) the documented "most recent group wins" tie-break was DEAD CODE: it ranked candidates on received_time / sent_time / date and NONE of those fields exists on any email record (0 of 649 carry them; all 649 carry received / received_timestamp), so every candidate scored "" and `"" > ""` is False -- the FIRST match in iteration order won, arbitrarily. Now ranked on received_timestamp. DELIBERATELY REJECTED, and recorded because it was the first instinct and Steve had approved it: also refusing ARCHIVED groups. Measuring it against the real corpus killed it -- an archived gate refused 30+ merges whose MEDIAN distance from the group was THREE DAYS (25 inside a single day), because a group here is auto-archived the moment a quote goes out (replied_rfq_auto_archive), so "archived" routinely means "quoted an hour ago". Those same-day cases are vendor replies to our own outgoing RFQ, and since our sent RFQ is NOT in self.emails the reply has no same-conversation sibling -- the subject arm is the only thing that can tie it to the job, so the gate would have orphaned them. Time alone blocks both reported defects anyway. New _log_subject_merge_blocked_once records each refusal (once-per-session, v4.1.84 discipline). Step 1 of 4 (guard -> Outlook sent queue -> Forward/New group picker -> Reply/Reply-All). Verified at delivery: compile+guards+confinement (1 changed + 1 added + 1 constant), harness on REAL extracted methods from BOTH v4.2.88 and v4.2.89 replaying the REAL Capone records and all 606 grouped emails: the reported merge reproduces on .88 and is blocked on .89, nothing is re-pointed to a different group, and 10/10 unit cases incl. the 29d/31d boundary, archived+same-conversation still matching, generic-subject guard intact, and the tie-break. Live result in MAINBOX_TEST_LOG.md v4.2.89.  # v4.2.88 (Steve): two live reports, two independent root causes. (1) FOLLOW-UP FLOOD -- the assistant's "Schedule a follow-up" ask was keyed followup:<entry_id>, a per-MESSAGE key, while the scheduling lane it feeds has always been per-THREAD (schedule_scenario_reminder refuses a second tracker once active_automatic_tracking_exists_for_email sees one for the thread). Every new message in a live thread therefore minted a brand-new pending ask that no existing record could collapse onto, and the v4.2.82 Dismiss fix could not help because each sibling message was a different key; the flood guard never engaged either, since a HELD ask never schedules anything, so no tracker ever exists. Measured live 2026-08-25: 8 pending asks were only 4 real threads -- FIVE were one conversation (2F4B84A9F7D376459B597DF4C98BC048 "Material list 6531", Dennis x3 + George x2). Fix: new _assistant_followup_dedup_key keys the ask on ConversationID (followup:conv:<id>), which also survives Cached-Exchange EntryID drift; rows with no conversation id keep the old per-message key, so they are unchanged. dedup_key is only ever compared for equality (never parsed), so the format change is safe. (2) ANOTHER REP'S MAIL IN MY WINDOW -- Louis Ferro's 1:53pm "STOCK CHECK SUB 2" was tagged 'JS, Canals' and is NOT in the SB restrict set (read-only COM probe, all 4746 scanned), so the category-filtered import could not have produced it. It came through import_matching_inthread_reply_from_outlook, the ONE deliberate category bypass (v3.9.19): at 9:02am Louis's SB-tagged message arrived, at 1:10pm Steve replied and armed a sent/waiting tracker, at 1:53pm Louis sent a DIFFERENT message (new conversation 8CD33547..., same subject) tagged to JS, and the rescue scan -- which keys trackers by NORMALIZED SUBJECT -- matched it, passed the v4.1.77 sender guard (it really was from Louis), and imported it ignoring the category filter. v3.9.19 justified that bypass for replies arriving UNCATEGORIZED but never checked, so it also swallowed mail explicitly owned by another rep. Fix: ownership gate in the candidate loop, SHARED SALES MAILBOX ONLY (My Inbox is personal and never category-filtered, so untouched) -- no categories at all still imports (v3.9.19 intent preserved), MY category still imports, ONLY-other-reps' categories skips the message entirely so it is neither imported nor allowed to clear a tracker (fail-safe per v4.1.91: my row keeps waiting rather than silently closing on someone else's mail). New _log_foreign_category_skip_once carries once-per-session telemetry (v4.1.84 discipline). Steve's calls on both forks. Verified at delivery: compile+guards+confinement (2 changed + 2 added), harness replaying the REAL 8 assistant records (8->4 threads, 5-ask pile collapses to 1) and the REAL Louis Ferro shapes (JS-tagged skipped, uncategorized allowed, SB-tagged allowed, My Inbox untouched, v4.1.77 sender guard intact); read-only COM probe proved the categories and restrict-set membership. Existing 8 pending asks collapsed to 4 by offline data surgery at restart (v4.2.82 precedent -- the app never touches assistant.activity), survivors re-keyed to followup:conv:. Live result in MAINBOX_TEST_LOG.md v4.2.88.  # v4.2.87 (Steve): PO-received flow for Danny's '$OK' pattern. His go-ahead is OUR OWN bid PDF (S100101819-0001.pdf) annotated '$OK' and returned through Acrobat -- the body is pure Adobe boilerplate, so no wording detector can see it; the attachment FILENAME is the signal (a customer does not send your own S-numbered bid back unless acting on it). New: (1) the attachment scan detects a durable-C sender returning an S-numbered PDF and queues it (worker-side, no UI); (2) main-thread drain closes the job's open rows as WON -- same-token rows included (his request row and '$OK' row share the job number, e.g. 1582-324) via the 3-step close now extracted as _complete_row_as_won (shared with the v4.2.86 invoice sweep, behavior unchanged) -- then shows the congrats popup Steve asked for: 'Processing it now' (default, Enter/Escape) or 'Remind me in 1 hour', which appends a process_po scenario reminder DIRECTLY (deliberate: schedule_scenario_reminder refuses Completed rows, and the thread was just completed by this very flow -- that is why the nudge is wanted); new process_po fire branch shows the reminder and completes the item. Close happens at detection regardless of the popup answer. (3) gate version 6->7 so the two existing '$OK' messages re-examine and fire live. Verified at delivery: compile+guards+confinement, harness on Danny's REAL shapes (filename regex, token close incl. request-row sibling, reminder append + dedupe, negatives: vendor sender / non-S pdf / user-locked). Live result in MAINBOX_TEST_LOG.md v4.2.87.  # v4.2.86 (Steve): Danny/campbellanddawes threads 1590-085 + 1586-226 -- rows sat Needs Reply / Waiting on Customer with active trackers AFTER the orders were quoted, PO'd and INVOICED, because the whole deal happened in the ERP and no sent reply ever existed for the scans to see. Two fixes. (1) DN-unclearable trackers: _reply_sender_matches_tracker_recipient sorted candidates by 'contains @'; an unresolved Exchange DN ('/O=EXCHANGELABS/...') has no '@', was treated as a DISPLAY NAME, matched no human reply ever, and returned False -- the tracker became permanently unclearable by the very party it was waiting on (ops-proven: clear_skipped_sender_mismatch waiting_on='/O=EXCHANGE...' reply_sender=danny@, 8/22). DNs are now skipped as non-identifying; a tracker whose only recipient identity is a DN falls to the documented fail-open. The real-SMTP mismatch guard (v4.1.77 wrong-vendor case) is unchanged. (2) INVOICE-CLOSES-THREAD: new _sweep_invoice_completed_threads in _refresh_finalize_pass -- an internal invoice copy naming a PO ('Invoice S100101798.001 PO# 1590-085' from our own domain) closes open Needs-Reply/Waiting-on-Customer rows from EXTERNAL senders whose subject carries the same PO token, via the EXACT 3-step sequence the closed-thread pass already uses (Completed + cancel followups + assistant 'won' Cleanup: logged, undoable, honors Auto-Archive). Conservative: token >=5 chars w/ digit, user-locked rows untouched, max 6 threads/pass, once per invoice per session, idempotent. Verified at delivery: compile+guards+confinement (2 changed + 1 added), harness replaying Danny's REAL rows + the DN tracker case (both threads close, DN tracker clears, wrong-vendor guard + external-invoice + user-locked negatives hold). Live: on the first refresh after restart the sweep should close both threads -- result in MAINBOX_TEST_LOG.md v4.2.86.  # v4.2.85 (Steve): George's Brewster xlsx has 8 real items; 25 were kept. The 17 extras were two artifact classes the v4.2.84 rules could not see: (a) QTY-ECHO -- 13 template rows whose ONLY filled cell was the pre-filled cost-code column each became 'qty=92002 desc=| 92002' (same number counted twice; they carried a qty, so the v4.2.27 qty-less chrome gate passed them, and bare digits are deliberately kept by the letterhead filter as possible part numbers); (b) SPREADSHEET HELPER chrome -- a literal VLOOKUP formula, 'Must use data validation if the table is filled out', 'Fomula to use...' (template's own typo), and a 'Location | Address' column legend. Fixes at the same write-time choke point: (1) update_coverage_requested drops a LETTERLESS description whose digits exactly equal the qty digits (bare-digit part numbers with a real qty differ and survive; qty-less bare numbers untouched); (2) _looks_like_contact_or_letterhead learns vlookup(/data-validation/if-table-is-filled fragments and pipe-joined column-legend rows. Data surgery at restart trims George's ledger to the true 8 lines. Verified at delivery: compile+guards+confinement (2 methods), harness replaying all 17 REAL artifact rows (all dropped) + the 8 real lines and bare-part/qty regression suite (all kept). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.85.  # v4.2.84 (Steve): purchase-form header chrome no longer lands as requested items. The v4.2.83 re-scan ingested George Caruso's Brewster xlsx (34 rows) but ~9 were form-header cells: "PURCHASE INFORMATON" (the template's own TYPO evaded the existing 'purchase information' rule), "SPECIAL INSTRUCTIONS", "BUY AMERICA", "DBE", "BOTH", an ISO date cell ("2026-08-24 00:00:00"), and "Independent Way Brewster NY 10509" (no comma, so the city-state-zip rule missed; house number had been split into qty). Junk outstanding rows are harmful, not cosmetic: they can never be quoted, so the job can never reach EVERYTHING QUOTED. Fixes in _looks_like_contact_or_letterhead (the single write-time choke point): (1) ISO datetime whole-row added to the date-chrome rule; (2) whole-row label vocabulary gains special instructions / buy america* / purchase informat\w* (typo-tolerant) / dbe|mbe|sbe|wbe|lbe / both / vendor / supplier / date needed / needed by / required by -- fullmatch only, "both ends threaded" untouched; (3) city-state-zip comma now optional. Deliberately NOT filtered (could be real part numbers): whole-row bare digits ("6515") and NNN-NNNN ("882-6209") -- those two removed from George's ledger by data surgery at restart. Verified at delivery: compile+guards+confinement (one method), harness replaying all 9 real junk rows (7 filtered by rule, regression suite of real material lines untouched). Post-restart ledger check in MAINBOX_TEST_LOG.md v4.2.84.  # v4.2.83 (Steve): George Caruso's 8/24 1:13pm quote request ("FW: 6515 material request", Brewster xlsx attached) never reached quote coverage. Root cause proven from the store: the intake scan EXAMINED it and negative-checkpointed it under gate v5 (request_scan_negative[entry_id]=5) -- his ask "Please send me a quote" matched no COVERAGE_ATTACH_REQUEST_PHRASES entry ("send me pricing" yes, "send me a quote" no), the subject's "material request" is in the DASL Restrict vocabulary but NOT in the in-loop request gate, and "my request for materials" misses the material-LIST regex. Fixes: (1) "send me/us/over a quote" + "send me a price/prices" phrase family added; (2) "material request" / "request for materials" wording added to the v4.2.68 KNOWN-CUSTOMER-gated branch (durable C only -- unknown/vendor senders still cannot qualify); (3) COVERAGE_REQUEST_GATE_VERSION 5 -> 6, the designed mechanism that automatically re-examines every v5 negative on the next scan pass, George's message included -- no store surgery needed. Verified at delivery: compile+guards+confinement (one method + constants), harness replaying George's REAL body/subject through the extracted gate expressions (old gate rejects, new gate accepts; bland-submittal wording still rejected). Live re-scan after restart follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.83.  # v4.2.82 (Steve): assistant Dismiss finally sticks. Reported live: the Dennis McCloskey "Re: Material list 6531" follow-up ask kept returning after every Dismiss. Root cause in mainbox_assistant.py, NOT this file: Dismiss sets state="rejected", but "rejected" was missing from AssistantEngine._LIVE_STATES, so the dedup gate saw no live record for the same dedup_key ("followup:<entry_id>") and every ~15-min re-triage minted a brand-new pending ask; the flood guard never helped because it only trips once a follow-up was actually SCHEDULED, which a dismissed ask never was. Fix (module): "rejected" added to _LIVE_STATES -- the collapse branch never changes an existing record's state, so re-scans now land silently on the dismissed row (repeat_count ticks). Applies to every dedup-keyed suggestion kind, incl. cancelled armed auto-sends (must never re-arm). App file change: this title line only. Verified: module ast+py_compile+--selftest incl. two new regression cases (dismissed armed send swallows re-scan; ask->Dismiss->re-scan does not return); app compile+guards+confinement (zero function changes). Data fix at restart: the still-pending Dennis ask flipped to rejected so it does not need one more dismiss.  # v4.2.81 (Steve): "Quote Scan" header button removed as obsolete (Steve's call, agreed). It was the ONLY caller of mainbox_quote_pipeline_entry.run_quote_scan -- the June manual pipeline (possible-quotes window, mint, ack draft, extractor handoff) now superseded by automatic intake (v4.2.54-61: coverage + group + pre-seeded RFQ at arrival) and the P&A picker (v4.2.78-80). Removed: the button (main setup_ui) + the orphaned _mb_quote_scan handler; NOTHING else -- the pipeline entry module stays (load_saved_senders/add_saved_sender still used by typing + Settings), the refresh-time scan_recent_inbox_for_quotes pass is separate machinery and untouched, Settings texts naming "Quote Scan" for saved-sender recognition left as-is. Rollback = previous version file. Verified at delivery: compile+guards+confinement (main setup_ui + removed handler only; small setup_ui byte-identical), grep proves run_quote_scan unreferenced in the app. Restart into this version follows delivery (result in MAINBOX_TEST_LOG.md v4.2.81).  # v4.2.80 (Steve): picker record-pick no longer appends near-duplicate requested rows. Live rig 0822B (2026-08-22, Steve's real pick): _resolve_record_link_choice matched the request's re-typed lines against the job with the strict distinctive-noun gate -- built to keep money off the wrong line -- and plural/word-order drift ('200A meter sockets' vs '200A meter socket', '4\" square 1900 boxes' vs '4\" square box 1900') failed it, so both landed as appended near-dupes. Fix: two-tier match in the append decision only -- strict gate first (unchanged, still picks the flip target), then plain coverage_items_match as the 'already on this job?' bar; append only when both miss. Confined to the one v4.2.78 method. Verified at delivery: compile+guards+confinement, harness replaying the exact live lines (0 appends, THHN + plural forms all recognized; genuinely-new line still appends). Live rig round 3 follows delivery -- result in MAINBOX_TEST_LOG.md v4.2.80.  # v4.2.79 (Steve): known-customer veto no longer decided by dict order. Live rig failure (2026-08-22): a real bare-'P&A' vendor RFQ send parsed fine (waiting-flip proved the v4.2.78 parsers live) but auto-coverage bailed ok:false in 30ms -- the recipient had 5 status rows typed C (July rig tests, address played customer) and 9 typed V (later tests), and the first-match-wins walk hit a C while /why's durable resolver said V for the same address. Fix: (a) consult the per-sender registry first (same v4.1.55 priority _durable_email_type_for_email uses); (b) MAJORITY vote over all matching saved rows instead of first-match ('a confident C', as the docstring always said). Single-type addresses behave exactly as before. Verified at delivery: compile+guards+confinement, harness on the extracted method (mixed 5C/9V -> allow, all-C -> veto, registry C overrides V rows, tie -> allow, no rows -> learning-hint fallback intact). Live rig re-run of the picker chain follows this delivery -- result recorded in MAINBOX_TEST_LOG.md v4.2.79.  # v4.2.78 (Steve): bare-'P&A' sent RFQs now reach a group picker instead of silently mis-grouping. Root cause chain (proven by harness + injection): sentence-form bodies ("can you quote 25 X and 500ft of Y?") and qty-last lines ("<item> - qty 25") parsed to ZERO items, so auto-coverage bailed before ledger/picker and the outgoing-request >=2-item link could never fire. Fixes: (1) _QTY_LAST_LINE_RE reads "- qty N" / "- 10 pcs/ea/box..." endings (explicit unit or qty keyword still required -- bare trailing numbers stay rejected); (2) _REQ_SENTENCE_ITEM_RE anchors on and/also-need continuations and makes for/on optional, so multi-item request sentences yield every item; (3) both parsers are the fallback ladder in _auto_create_coverage_for_sent_rfq_inner AND update_coverage_waiting_from_request; (4) the v4.1.12 link picker now ALSO lists existing coverage records ranked by gated item-name + exact-qty evidence (_score_coverage_record_candidates), picking one adopts its group, flips its matched items to Waiting, appends genuinely-new lines, drops the auto ledger and retires the auto group (_resolve_record_link_choice; no blind merge -- re-typed/typo'd lines would shelve near-duplicates); Skip renamed "Keep as new group", Enter links / Escape keeps (standing popup rule); (5) diag bridge /coverage read the never-shipped "jobs" key -- now reads "threads". Verified: compile+guards+confinement, parser/scorer/resolve/dialog harnesses on extracted code, /coverage live. NOT verified: a real Outlook send driving the picker end-to-end (needs the live rig).  # v4.2.77 (Steve): Quote Review "Requested item / vendor" column no longer opens huge. Root cause: it was the ONLY stretch=True column, so ttk handed it every pixel of window slack (430 default -> ~600+ shown) AND snapped it back when dragged smaller -- freed space returns to the sole stretchable column. Fix: 280px fixed width (stretch off, resizable), slack moved to the last column (Stock / Lead). Plus app-wide column-width PERSISTENCE: new tree-column memory (mainbox_tree_columns.json, keyed by column ids + heading texts) installed once via bind_class on the main root -- restores saved widths after a Treeview's first <Map>+layout (after_idle; harness caught the stretch pass overwriting an at-Map restore), saves on <ButtonRelease-1> only when the press landed on a header separator (deliberate drag), so window-resize stretching is never recorded. Zero per-window wiring. Verified: compile+guards+confinement, live-Tk harness (drag-save/restore round trip, all-stretch tree, minwidth clamp, re-Map no-stomp) on extracted helpers. Not live-Outlook-dependent.  # v4.2.76: availability wording no longer breaks quote-line matching (caught by the live rig test minutes after v4.2.75). Root cause: per-line stock/lead text ("in stock", "2-3 weeks lead", "backordered") rides in the parsed description and its words landed in the DISTINCTIVE-NOUN sets -- {connectors, weeks, lead} vs {connectors} fails the v3.9.57 same-product subset gate, so a priced line carrying stock info could not match its requested line (first-reply case would never flip). Fix: _COVERAGE_AVAIL_NOISE_WORDS excluded in both noun collectors (+ digit-range fragments like "2-3"). Verified: compile+guards+confinement (2 collectors), harness fresh-first-reply matching with stock-noted lines, window render shows latest per-vendor prices+avail, live rig re-check.
 APP_NAME = "MaINbox"
 CURRENT_MAINBOX_SETTINGS = {}
 
@@ -1872,6 +1872,36 @@ def returned_bid_customer_intent(fresh_text):
     # substantive words we cannot classify: neither approval nor revision --
     # be conservative and treat as a veto so a thread is never closed on a guess
     return "veto", "unclassified text: " + " ".join(words[:8])
+
+
+def _inbox_viewer_row_matches(row, query, body=""):
+    """v4.2.103: every whitespace-separated word of the query must appear in
+    the row's subject / from / address / company / categories / mailbox (or
+    the supplied body text). Case-insensitive substring; a quoted phrase is
+    one word."""
+    words = [w.strip('"') for w in re.findall(r'"[^"]+"|\S+', str(query or "")) if w.strip('"')]
+    if not words:
+        return True
+    hay = " ".join(str(row.get(k, "") or "") for k in
+                   ("subject", "from", "sender", "sender_email", "company", "categories", "folder", "group"))
+    hay = (hay + " " + str(body or "")).casefold()
+    return all(w.casefold() in hay for w in words)
+
+
+def _inbox_viewer_dasl_filter(query, in_body=False):
+    """v4.2.103: DASL restriction for a mailbox search -- each word must match
+    the subject OR the sender name OR the sender address (OR the body when
+    in_body). Quotes and percent signs are escaped for the SQL-style syntax."""
+    words = [w.strip('"') for w in re.findall(r'"[^"]+"|\S+', str(query or "")) if w.strip('"')]
+    props = ["urn:schemas:httpmail:subject", "urn:schemas:httpmail:fromname",
+             "urn:schemas:httpmail:fromemail"]
+    if in_body:
+        props.append("urn:schemas:httpmail:textdescription")
+    clauses = []
+    for w in words:
+        w = w.replace("'", "''").replace("%", "[%]")
+        clauses.append("(" + " OR ".join(f"\"{p}\" LIKE '%{w}%'" for p in props) + ")")
+    return "@SQL=" + " AND ".join(clauses)
 
 
 def _strip_reply_boilerplate_for_intent(text):
@@ -17017,6 +17047,7 @@ class OutlookWorkflowMonitor:
         """Single source of truth for Inbox Viewer columns (id order = Treeview
         values order, so ids may be hidden/reordered but never re-mapped)."""
         return [
+            {"id": "flag", "label": "\u2691", "width": 28},
             {"id": "categories", "label": "Categories", "width": 110},
             {"id": "company", "label": "Company", "width": 110, "default_visible": False},
             {"id": "from", "label": "From", "width": 170},
@@ -17117,6 +17148,39 @@ class OutlookWorkflowMonitor:
                         "entry_id": str(getattr(inbox, "EntryID", "") or ""),
                         "store_id": str(getattr(inbox, "StoreID", "") or ""),
                     })
+                    # v4.2.103: the other everyday folders of this store, plus the
+                    # inbox's own subfolders (one level). default_folder ids are
+                    # the olDefaultFolders constants (locale-safe); subfolders
+                    # carry EntryID + a name path for drift-proof re-resolution.
+                    for did, dname in ((5, "Sent Items"), (16, "Drafts"), (3, "Deleted Items"), (23, "Junk Email")):
+                        try:
+                            f = root.Store.GetDefaultFolder(did)
+                            if f is None:
+                                continue
+                            found.append({
+                                "store": store_name, "default_folder": did,
+                                "name": str(getattr(f, "Name", dname) or dname),
+                                "entry_id": str(getattr(f, "EntryID", "") or ""),
+                                "store_id": str(getattr(f, "StoreID", "") or ""),
+                            })
+                        except Exception:
+                            continue
+                    try:
+                        subs = inbox.Folders
+                        for j in range(1, min(int(subs.Count), 60) + 1):
+                            try:
+                                sf = subs.Item(j)
+                                found.append({
+                                    "store": store_name, "subfolder_of": "inbox",
+                                    "name": str(getattr(sf, "Name", "") or ""),
+                                    "path": ["Inbox", str(getattr(sf, "Name", "") or "")],
+                                    "entry_id": str(getattr(sf, "EntryID", "") or ""),
+                                    "store_id": str(getattr(sf, "StoreID", "") or ""),
+                                })
+                            except Exception:
+                                continue
+                    except Exception:
+                        pass
                 except Exception:
                     continue
         except Exception:
@@ -17127,7 +17191,30 @@ class OutlookWorkflowMonitor:
         """WORKER-THREAD ONLY. Resolve one saved pick to (folder, label).
         EntryID first, then a store-name walk (EntryIDs drift under Cached
         Exchange Mode, so a stale id must not blank the whole mailbox)."""
-        label = str(sel.get("store") or sel.get("name") or "Inbox")
+        label = self._inbox_viewer_label_for_sel(sel)
+        # v4.2.103: Sent / Drafts / Deleted / Junk (by default-folder id) and
+        # inbox subfolders (EntryID, then store -> Inbox -> name).
+        if sel.get("default_folder") or sel.get("subfolder_of"):
+            try:
+                if sel.get("entry_id"):
+                    return namespace.GetFolderFromID(sel["entry_id"], sel.get("store_id") or None), label
+            except Exception:
+                pass
+            try:
+                folders = namespace.Folders
+                for i in range(1, folders.Count + 1):
+                    root = folders.Item(i)
+                    if str(root.Name).strip().lower() != str(sel.get("store", "")).strip().lower():
+                        continue
+                    if sel.get("default_folder"):
+                        return root.Store.GetDefaultFolder(int(sel["default_folder"])), label
+                    node = root
+                    for part in (sel.get("path") or []):
+                        node = node.Folders.Item(part)
+                    return node, label
+            except Exception:
+                pass
+            return None, label
         if sel.get("default") == "my_inbox":
             try:
                 return namespace.GetDefaultFolder(6), "My Inbox"
@@ -17226,6 +17313,8 @@ class OutlookWorkflowMonitor:
                             "received": received_disp,
                             "received_ts": received_ts,
                             "folder": label,
+                            # v4.2.103: Outlook follow-up flag (2 = olFlagMarked)
+                            "flag": "\u2691" if int(getattr(msg, "FlagStatus", 0) or 0) == 2 else "",
                         })
                         count += 1
                 except Exception:
@@ -17284,15 +17373,20 @@ class OutlookWorkflowMonitor:
     def _inbox_viewer_pane_labels(self):
         """Mailbox labels for split panes, in configured order -- must produce
         the same strings the scan worker stamps into row['folder']."""
-        labels = []
-        for sel in self._inbox_viewer_selected_folders():
-            if sel.get("default") == "my_inbox":
-                labels.append("My Inbox")
-            elif sel.get("default") == "sales_inbox":
-                labels.append(SALES_MAILBOX_NAME)
-            else:
-                labels.append(str(sel.get("store") or sel.get("name") or "Inbox"))
-        return labels
+        return [self._inbox_viewer_label_for_sel(sel) for sel in self._inbox_viewer_selected_folders()]
+
+    def _inbox_viewer_label_for_sel(self, sel):
+        """v4.2.103: the one label rule -- pane headers, row['folder'] and the
+        picker all use it. Inboxes keep their store name (My Inbox / Sales);
+        every other folder reads 'Store / Folder'."""
+        if sel.get("default") == "my_inbox":
+            return "My Inbox"
+        if sel.get("default") == "sales_inbox":
+            return SALES_MAILBOX_NAME
+        store = str(sel.get("store") or "").strip()
+        if sel.get("default_folder") or sel.get("subfolder_of"):
+            return f"{store or 'Mailbox'} / {str(sel.get('name') or 'Folder').strip()}"
+        return store or str(sel.get("name") or "Inbox")
 
     def _build_inbox_viewer_body(self, pane_labels=None):
         """(Re)build the viewer's tree area: one flat list, or -- when the
@@ -17827,6 +17921,17 @@ class OutlookWorkflowMonitor:
                     link.pack(fill="x", pady=1)
                     link.bind("<Button-1>",
                               lambda e, a=dict(att), r=dict(row or {}): self._inbox_viewer_open_attachment(r, a))
+                    # v4.2.103: right-click -> Save As... / Save all...
+                    link.bind("<Button-3>",
+                              lambda e, a=dict(att), r=dict(row or {}), alls=list(attachments or []):
+                              self._inbox_viewer_attachment_menu(e, r, a, alls))
+                if row and row.get("entry_id"):
+                    hint = tk.Label(frame, text="\U0001F310 View formatted (opens in your browser)"
+                                    + ("     |  right-click an attachment to Save As / Save all" if attachments else ""),
+                                    bg=_BG2, fg=_FG_DIM, cursor="hand2", anchor="w", padx=8,
+                                    font=(_FONT, _FONT_SIZE))
+                    hint.pack(fill="x", pady=(2, 1))
+                    hint.bind("<Button-1>", lambda e, r=dict(row): self._inbox_viewer_view_html(r))
         except Exception:
             pass
         try:
@@ -18044,6 +18149,455 @@ class OutlookWorkflowMonitor:
 
         self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-markread")
 
+    # ── v4.2.103: search / move / flag / save-as / formatted view / load more ──
+    def _inbox_viewer_filter_changed(self):
+        """Typing in the search box: instant filter over the loaded rows. A
+        mailbox search result set is left alone until Enter/Clear."""
+        if getattr(self, "_inbox_viewer_search_mode", None):
+            return
+        self._render_inbox_viewer_rows()
+
+    def _inbox_viewer_search_clear(self):
+        try:
+            self._inbox_viewer_search_var.set("")
+        except Exception:
+            pass
+        if getattr(self, "_inbox_viewer_search_mode", None):
+            self._inbox_viewer_search_mode = None
+            self._inbox_viewer_refresh()
+        else:
+            self._render_inbox_viewer_rows()
+
+    def _inbox_viewer_load_more(self):
+        self._inbox_viewer_extra_limit = int(getattr(self, "_inbox_viewer_extra_limit", 0) or 0) + 200
+        ops_log("inbox_viewer", "load_more", extra=self._inbox_viewer_extra_limit)
+        self._inbox_viewer_search_mode = None
+        self._inbox_viewer_refresh()
+
+    def _inbox_viewer_search_mailbox(self):
+        """Enter / 'Search mailbox': ask Outlook itself across the selected
+        folders (DASL Restrict on subject + from [+ body], bounded to the last
+        N days; linear fallback when a store refuses DASL). Results replace the
+        list until Clear/Escape."""
+        try:
+            query = str(self._inbox_viewer_search_var.get() or "").strip()
+        except Exception:
+            query = ""
+        if len(query) < 2:
+            try:
+                self._inbox_viewer_status_var.set("Type at least 2 characters to search the mailbox.")
+            except Exception:
+                pass
+            return
+        win = getattr(self, "_inbox_viewer_win", None)
+        cfg = self._load_inbox_viewer_config()
+        try:
+            days = int(cfg.get("search_days", 365) or 365)
+        except Exception:
+            days = 365
+        in_body = bool(getattr(self, "_inbox_viewer_search_body_var", None) and self._inbox_viewer_search_body_var.get())
+        folder_sels = self._inbox_viewer_selected_folders()
+        try:
+            self._inbox_viewer_status_var.set(f"Searching Outlook for {query!r}...")
+        except Exception:
+            pass
+
+        def work(outlook, namespace):
+            return self._inbox_viewer_search_work(namespace, folder_sels, query, days, in_body, limit=400)
+
+        def done(result):
+            try:
+                if win is None or not win.winfo_exists():
+                    return
+            except Exception:
+                return
+            result = result or {}
+            self._inbox_viewer_search_mode = {"query": query, "days": days,
+                                              "scope": ", ".join(self._inbox_viewer_pane_labels())}
+            self._inbox_viewer_rows = result.get("rows", [])
+            self._render_inbox_viewer_rows()
+            ops_log("inbox_viewer", "search", q=query[:60], rows=len(self._inbox_viewer_rows),
+                    days=days, body=in_body, fallback=int(result.get("fallbacks", 0) or 0))
+            errors = result.get("errors") or []
+            if errors:
+                try:
+                    self.log("Inbox Viewer search: " + "; ".join(str(e) for e in errors[:3]))
+                except Exception:
+                    pass
+
+        def error(exc):
+            try:
+                self._inbox_viewer_status_var.set(
+                    "Outlook worker busy -- press Enter again in a moment." if "already busy" in str(exc)
+                    else f"Search failed: {exc}")
+            except Exception:
+                pass
+
+        self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-search")
+
+    def _inbox_viewer_search_work(self, namespace, folder_sels, query, days, in_body, limit=400):
+        """WORKER-THREAD ONLY. Restrict each selected folder with a DASL filter
+        (the idiom the coverage scan uses at its RFQ detector), newest first,
+        capped per folder; falls back to a bounded linear walk with Python
+        matching if Restrict raises for a store."""
+        rows, errors, fallbacks = [], [], 0
+        cut = (datetime.now() - timedelta(days=int(days))).strftime("%m/%d/%Y %I:%M %p")
+        dasl = _inbox_viewer_dasl_filter(query, in_body)
+        for sel in folder_sels:
+            try:
+                folder, label = self._inbox_viewer_resolve_folder(namespace, sel)
+            except Exception as exc:
+                errors.append(f"{sel.get('store', '?')}: {exc}")
+                continue
+            if folder is None:
+                continue
+            items = None
+            try:
+                items = folder.Items.Restrict(f"[ReceivedTime] >= '{cut}'")
+                items = items.Restrict(dasl)
+                items.Sort("[ReceivedTime]", True)
+            except Exception:
+                items = None
+            walk_all = False
+            if items is None:
+                fallbacks += 1
+                walk_all = True
+                try:
+                    items = folder.Items.Restrict(f"[ReceivedTime] >= '{cut}'")
+                    items.Sort("[ReceivedTime]", True)
+                except Exception as exc:
+                    errors.append(f"{label}: {exc}")
+                    continue
+            count, seen_walk = 0, 0
+            try:
+                msg = items.GetFirst()
+            except Exception:
+                msg = None
+            while msg is not None and count < limit and seen_walk < 3000:
+                seen_walk += 1
+                try:
+                    if int(getattr(msg, "Class", 0) or 0) == 43:
+                        row = self._inbox_viewer_row_from_msg(msg, label)
+                        if not walk_all or _inbox_viewer_row_matches(row, query, body=(str(msg.Body or "")[:20000] if in_body else "")):
+                            rows.append(row)
+                            count += 1
+                except Exception:
+                    pass
+                try:
+                    msg = items.GetNext()
+                except Exception:
+                    break
+        return {"rows": rows, "errors": errors, "fallbacks": fallbacks}
+
+    def _inbox_viewer_row_from_msg(self, msg, label):
+        """WORKER-THREAD ONLY. One viewer row dict from a MailItem (same shape
+        as the scan worker builds)."""
+        received_disp, received_ts = "", 0.0
+        rt = getattr(msg, "ReceivedTime", None)
+        if rt is not None:
+            try:
+                received_disp = rt.strftime("%a %m/%d %I:%M %p")
+            except Exception:
+                received_disp = str(rt)
+            try:
+                received_ts = rt.timestamp()
+            except Exception:
+                received_ts = 0.0
+        sender_email = self.get_sender_email(msg)
+        try:
+            imid = outlook_msg_internet_id(msg)
+        except Exception:
+            imid = ""
+        try:
+            conv_id = str(msg.ConversationID or "")
+        except Exception:
+            conv_id = ""
+        return {
+            "message_id": imid, "conversation_id": conv_id,
+            "entry_id": str(getattr(msg, "EntryID", "") or ""),
+            "store_id": str(getattr(getattr(msg, "Parent", None), "StoreID", "") or ""),
+            "subject": str(getattr(msg, "Subject", "") or ""),
+            "sender": str(getattr(msg, "SenderName", "") or ""),
+            "from": str(getattr(msg, "SenderName", "") or ""),
+            "sender_email": sender_email,
+            "company": self._inbox_viewer_company_from_email(sender_email),
+            "categories": str(getattr(msg, "Categories", "") or ""),
+            "unread": bool(getattr(msg, "UnRead", False)),
+            "received": received_disp, "received_ts": received_ts, "folder": label,
+            "flag": "\u2691" if int(getattr(msg, "FlagStatus", 0) or 0) == 2 else "",
+        }
+
+    def _inbox_viewer_selected_jobs(self):
+        trees = [t for _l, t in getattr(self, "_inbox_viewer_trees", None) or []]
+        active = getattr(self, "_inbox_viewer_active_tree", None)
+        if active in trees:
+            trees = [active] + [t for t in trees if t is not active]
+        for tree in trees:
+            rows = self._inbox_viewer_rows_for_tree_selection(tree)
+            if rows:
+                return [dict(r) for r in rows if r.get("entry_id")]
+        return []
+
+    def _inbox_viewer_set_flag(self, on=True):
+        """Right-click -> Flag for follow-up / Clear flag (real Outlook flag)."""
+        jobs = self._inbox_viewer_selected_jobs()
+        if not jobs:
+            return
+
+        def work(outlook, namespace):
+            changed = []
+            for row in jobs:
+                try:
+                    if row.get("store_id"):
+                        msg = namespace.GetItemFromID(row["entry_id"], row["store_id"])
+                    else:
+                        msg = namespace.GetItemFromID(row["entry_id"])
+                    if on:
+                        try:
+                            msg.FlagRequest = "Follow up"
+                        except Exception:
+                            pass
+                        msg.FlagStatus = 2      # olFlagMarked
+                    else:
+                        try:
+                            msg.ClearTaskFlag()
+                        except Exception:
+                            msg.FlagStatus = 0  # olNoFlag
+                    msg.Save()
+                    changed.append(row["entry_id"])
+                except Exception:
+                    continue
+            return changed
+
+        def done(changed):
+            changed = set(changed or [])
+            if changed:
+                for r in getattr(self, "_inbox_viewer_rows", None) or []:
+                    if r.get("entry_id") in changed:
+                        r["flag"] = "\u2691" if on else ""
+                self._render_inbox_viewer_rows()
+            try:
+                self._inbox_viewer_status_var.set(f"{'Flagged' if on else 'Cleared flag on'} {len(changed)} email(s).")
+            except Exception:
+                pass
+            ops_log("inbox_viewer", "flag", on=on, count=len(changed), asked=len(jobs))
+
+        def error(exc):
+            try:
+                self._inbox_viewer_status_var.set(f"Flag failed: {exc}")
+            except Exception:
+                pass
+
+        self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-flag")
+
+    def _inbox_viewer_move_selected(self, target_sel):
+        """Right-click -> Move to -> <folder>: msg.Move on a worker; the rows
+        leave the list (their EntryIDs change on move, so no in-place edit)."""
+        jobs = self._inbox_viewer_selected_jobs()
+        if not jobs or not isinstance(target_sel, dict):
+            return
+        target_label = self._inbox_viewer_label_for_sel(target_sel)
+        try:
+            self._inbox_viewer_status_var.set(f"Moving {len(jobs)} email(s) to {target_label}...")
+        except Exception:
+            pass
+
+        def work(outlook, namespace):
+            folder, _lbl = self._inbox_viewer_resolve_folder(namespace, target_sel)
+            if folder is None:
+                raise RuntimeError(f"folder '{target_label}' not found in Outlook")
+            moved = []
+            for row in jobs:
+                try:
+                    if row.get("store_id"):
+                        msg = namespace.GetItemFromID(row["entry_id"], row["store_id"])
+                    else:
+                        msg = namespace.GetItemFromID(row["entry_id"])
+                    msg.Move(folder)
+                    moved.append(row["entry_id"])
+                except Exception:
+                    continue
+            return moved
+
+        def done(moved):
+            moved = set(moved or [])
+            if moved:
+                self._inbox_viewer_rows = [r for r in (self._inbox_viewer_rows or [])
+                                           if r.get("entry_id") not in moved]
+                self._render_inbox_viewer_rows()
+            failed = len(jobs) - len(moved)
+            note = f"Moved {len(moved)} email(s) to {target_label}" + (f" ({failed} failed)" if failed else "")
+            try:
+                self._inbox_viewer_status_var.set(note + ".")
+            except Exception:
+                pass
+            ops_log("inbox_viewer", "moved", count=len(moved), failed=failed, target=target_label[:40])
+
+        def error(exc):
+            try:
+                self._inbox_viewer_status_var.set(
+                    "Outlook worker busy -- try again in a moment." if "already busy" in str(exc)
+                    else f"Move failed: {exc}")
+            except Exception:
+                pass
+
+        self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-move")
+
+    def _inbox_viewer_attachment_menu(self, event, row, att, all_atts):
+        menu = tk.Menu(getattr(self, "_inbox_viewer_win", None) or self.root, tearoff=0)
+        menu.add_command(label=f"Open {att.get('name', '')}",
+                         command=lambda: self._inbox_viewer_open_attachment(row, att))
+        menu.add_command(label="Save As...", command=lambda: self._inbox_viewer_save_attachments(row, [att], ask_name=True))
+        if len(all_atts) > 1:
+            menu.add_command(label=f"Save all {len(all_atts)} attachments...",
+                             command=lambda: self._inbox_viewer_save_attachments(row, all_atts, ask_name=False))
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            try:
+                menu.grab_release()
+            except Exception:
+                pass
+
+    def _inbox_viewer_save_attachments(self, row, atts, ask_name=True):
+        """Save As... (one, choose the file name) or Save all... (choose a
+        folder). SaveAsFile on a worker, exactly like the temp-open path."""
+        parent = getattr(self, "_inbox_viewer_win", None) or self.root
+        if not row.get("entry_id") or not atts:
+            return
+        targets = []
+        if ask_name and len(atts) == 1:
+            name = str(atts[0].get("name") or "attachment")
+            path = filedialog.asksaveasfilename(parent=parent, title="Save attachment as",
+                                                initialfile=name,
+                                                defaultextension=os.path.splitext(name)[1] or "")
+            if not path:
+                return
+            targets = [(dict(atts[0]), path)]
+        else:
+            folder = filedialog.askdirectory(parent=parent, title="Save attachments to folder")
+            if not folder:
+                return
+            for a in atts:
+                safe = re.sub(r"[\\/:*?\"<>|]", "_", str(a.get("name") or "attachment"))
+                targets.append((dict(a), os.path.join(folder, safe)))
+        job_row = dict(row)
+
+        def work(outlook, namespace):
+            if job_row.get("store_id"):
+                msg = namespace.GetItemFromID(job_row["entry_id"], job_row["store_id"])
+            else:
+                msg = namespace.GetItemFromID(job_row["entry_id"])
+            saved = []
+            atts_com = msg.Attachments
+            for a, path in targets:
+                target = None
+                try:
+                    cand = atts_com.Item(int(a.get("index", 0)))
+                    if str(cand.FileName or "").strip().casefold() == str(a["name"]).casefold():
+                        target = cand
+                except Exception:
+                    target = None
+                if target is None:
+                    for i in range(1, int(atts_com.Count) + 1):
+                        try:
+                            cand = atts_com.Item(i)
+                            if str(cand.FileName or "").strip().casefold() == str(a["name"]).casefold():
+                                target = cand
+                                break
+                        except Exception:
+                            continue
+                if target is None:
+                    continue
+                target.SaveAsFile(path)
+                saved.append(path)
+            return saved
+
+        def done(saved):
+            saved = saved or []
+            try:
+                self._inbox_viewer_status_var.set(
+                    f"Saved {len(saved)} attachment(s)" + (f" to {os.path.dirname(saved[0])}" if saved else "") + ".")
+            except Exception:
+                pass
+            ops_log("inbox_viewer", "attachments_saved", count=len(saved), asked=len(targets))
+
+        def error(exc):
+            try:
+                self._inbox_viewer_status_var.set(
+                    "Outlook worker busy -- try again in a moment." if "already busy" in str(exc)
+                    else f"Save failed: {exc}")
+            except Exception:
+                pass
+
+        self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-saveatt")
+
+    def _inbox_viewer_view_html(self, row):
+        """'View formatted': write the message's HTMLBody to a temp .html and
+        open it in the default browser -- tables, logos and quotes readable
+        without switching to Outlook."""
+        if not row.get("entry_id"):
+            return
+        job_row = dict(row)
+        try:
+            self._inbox_viewer_status_var.set("Opening formatted view...")
+        except Exception:
+            pass
+
+        def work(outlook, namespace):
+            if job_row.get("store_id"):
+                msg = namespace.GetItemFromID(job_row["entry_id"], job_row["store_id"])
+            else:
+                msg = namespace.GetItemFromID(job_row["entry_id"])
+            html = ""
+            try:
+                html = str(msg.HTMLBody or "")
+            except Exception:
+                html = ""
+            if not html.strip():
+                body = html_escape_basic(str(msg.Body or ""))
+                html = f"<html><body><pre style='font-family:Segoe UI,sans-serif;white-space:pre-wrap'>{body}</pre></body></html>"
+            subj = html_escape_basic(str(getattr(msg, "Subject", "") or ""))
+            sender = html_escape_basic(str(getattr(msg, "SenderName", "") or ""))
+            when = html_escape_basic(str(job_row.get("received", "")))
+            banner = (f"<div style='font-family:Segoe UI,sans-serif;padding:8px 12px;background:#f3f4f6;"
+                      f"border-bottom:1px solid #ccc'><b>{subj}</b><br><span style='color:#555'>{sender} &middot; {when}"
+                      f" &middot; MaINbox Inbox Viewer</span></div>")
+            if "<body" in html.lower():
+                html = re.sub(r"(?i)(<body[^>]*>)", lambda m: m.group(1) + banner, html, count=1)
+            else:
+                html = banner + html
+            sub = re.sub(r"[^A-Za-z0-9]", "", str(job_row.get("entry_id", "")))[-12:] or "msg"
+            tdir = os.path.join(tempfile.gettempdir(), "mainbox_viewer_html")
+            os.makedirs(tdir, exist_ok=True)
+            path = os.path.join(tdir, f"{sub}.html")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(html)
+            return path
+
+        def done(path):
+            if not path:
+                return
+            try:
+                os.startfile(path)
+                self._inbox_viewer_status_var.set("Opened formatted view in your browser.")
+                ops_log("inbox_viewer", "view_html")
+            except Exception as exc:
+                try:
+                    self._inbox_viewer_status_var.set(f"Could not open browser: {exc}")
+                except Exception:
+                    pass
+
+        def error(exc):
+            try:
+                self._inbox_viewer_status_var.set(
+                    "Outlook worker busy -- try again in a moment." if "already busy" in str(exc)
+                    else f"Formatted view failed: {exc}")
+            except Exception:
+                pass
+
+        self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-html")
+
     def open_inbox_viewer_window(self):
         """Live Outlook-style inbox view inside MaINbox. Rows carrying the
         user's own sales category are highlighted; unread is bold. Refreshes
@@ -18092,8 +18646,33 @@ class OutlookWorkflowMonitor:
                   command=self.open_inbox_viewer_settings).pack(side="right", padx=3)
         tk.Button(top, text="Refresh", width=9,
                   command=self._inbox_viewer_refresh).pack(side="right", padx=3)
+        tk.Button(top, text="Load more", width=9,
+                  command=self._inbox_viewer_load_more).pack(side="right", padx=3)
         tk.Button(top, text="New Email", width=10,
                   command=self._inbox_viewer_new_email).pack(side="right", padx=3)
+        # v4.2.103: search. Typing filters the loaded rows instantly; Enter (or
+        # the button) asks Outlook itself, across the selected folders.
+        self._inbox_viewer_search_var = tk.StringVar(value="")
+        self._inbox_viewer_search_body_var = tk.BooleanVar(
+            value=bool(self._load_inbox_viewer_config().get("search_body", False)))
+        sbox = tk.Frame(top, bg=_BG)
+        sbox.pack(side="left", padx=(18, 0))
+        tk.Label(sbox, text="Search", bg=_BG, fg=_FG_DIM).pack(side="left", padx=(0, 4))
+        ent = tk.Entry(sbox, textvariable=self._inbox_viewer_search_var, width=28,
+                       bg=_ENTRY_BG, fg=_FG, insertbackground=_FG, relief="flat")
+        ent.pack(side="left", ipady=3)
+        ent.bind("<KeyRelease>", lambda e: self._inbox_viewer_filter_changed())
+        ent.bind("<Return>", lambda e: self._inbox_viewer_search_mailbox())
+        ent.bind("<Escape>", lambda e: self._inbox_viewer_search_clear())
+        self._inbox_viewer_search_entry = ent
+        tk.Button(sbox, text="Search mailbox", command=self._inbox_viewer_search_mailbox).pack(side="left", padx=(4, 0))
+        tk.Checkbutton(sbox, text="in body", variable=self._inbox_viewer_search_body_var,
+                       command=lambda: self._save_inbox_viewer_config(
+                           {"search_body": bool(self._inbox_viewer_search_body_var.get())}),
+                       bg=_BG, fg=_FG, selectcolor=_BG3, activebackground=_BG).pack(side="left", padx=(4, 0))
+        tk.Button(sbox, text="Clear", command=self._inbox_viewer_search_clear).pack(side="left", padx=(4, 0))
+        self._inbox_viewer_search_mode = None
+        self._inbox_viewer_extra_limit = 0
 
         holder = tk.Frame(win, bg=_BG)
         holder.pack(fill="both", expand=True, padx=10, pady=(0, 4))
@@ -18135,11 +18714,16 @@ class OutlookWorkflowMonitor:
                 self._inbox_viewer_status_var.set("Refreshing from Outlook...")
             except Exception:
                 pass
+        # v4.2.103: a mailbox search result set stays on screen until cleared --
+        # the 2-minute auto tick must not wipe it.
+        if quiet and getattr(self, "_inbox_viewer_search_mode", None):
+            return
         folder_sels = self._inbox_viewer_selected_folders()
         try:
             limit = int(self._load_inbox_viewer_config().get("scan_limit", 200))
         except Exception:
             limit = 200
+        limit = max(10, limit + int(getattr(self, "_inbox_viewer_extra_limit", 0) or 0))
 
         def work(outlook, namespace):
             return self._inbox_viewer_collect_work(namespace, folder_sels, limit)
@@ -18264,6 +18848,15 @@ class OutlookWorkflowMonitor:
             rows = [r for r in rows
                     if sales_l not in str(r.get("folder", "")).lower()
                     or self._inbox_viewer_row_is_unclaimed(r, my_cat, neutral)]
+        # v4.2.103: instant text filter (all words must match somewhere in the row)
+        query = ""
+        try:
+            query = str(self._inbox_viewer_search_var.get() or "").strip()
+        except Exception:
+            query = ""
+        if query and not getattr(self, "_inbox_viewer_search_mode", None):
+            rows = [r for r in rows if _inbox_viewer_row_matches(r, query)]
+        unread_total = sum(1 for r in rows if r.get("unread"))
         split = trees[0][0] is not None
         mine_count = 0
         if not split:
@@ -18289,13 +18882,24 @@ class OutlookWorkflowMonitor:
                 header = (getattr(self, "_inbox_viewer_pane_headers", None) or {}).get(label)
                 if header is not None:
                     mine_note = f"  |  {pane_mine} '{my_cat}'" if my_cat else ""
-                    header.set(f"{label}  --  {len(pane_rows)} emails{mine_note}")
+                    pane_unread = sum(1 for r in pane_rows if r.get("unread"))
+                    header.set(f"{label}  --  {len(pane_rows)} emails, {pane_unread} unread{mine_note}")
         try:
             stamp = datetime.now().strftime("%I:%M:%S %p")
             mine_note = f" | {mine_count} tagged '{my_cat}'" if my_cat else ""
             filt_note = " | Unclaimed view (Sales)" if unclaimed else ""
-            self._inbox_viewer_status_var.set(
-                f"{len(rows)} emails{mine_note}{filt_note} | updated {stamp}")
+            mode = getattr(self, "_inbox_viewer_search_mode", None)
+            if mode:
+                self._inbox_viewer_status_var.set(
+                    f"Search: {mode.get('query', '')!r} -- {len(rows)} result(s) in {mode.get('scope', '')} "
+                    f"(last {mode.get('days', '?')} days) | Esc or Clear to return")
+            else:
+                q_note = f" | filter {query!r}" if query else ""
+                self._inbox_viewer_status_var.set(
+                    f"{len(rows)} emails, {unread_total} unread{mine_note}{filt_note}{q_note} | updated {stamp}")
+            win = getattr(self, "_inbox_viewer_win", None)
+            if win is not None and win.winfo_exists():
+                win.title(f"Inbox Viewer ({unread_total} unread)" if unread_total else "Inbox Viewer")
         except Exception:
             pass
 
@@ -18452,6 +19056,32 @@ class OutlookWorkflowMonitor:
         menu.add_separator()
         menu.add_command(label="Mark as Read", command=lambda: self._inbox_viewer_mark_read(True))
         menu.add_command(label="Mark as Unread", command=lambda: self._inbox_viewer_mark_read(False))
+        # v4.2.103: Outlook follow-up flag + move to folder
+        menu.add_command(label="Flag for follow-up", command=lambda: self._inbox_viewer_set_flag(True))
+        menu.add_command(label="Clear flag", command=lambda: self._inbox_viewer_set_flag(False))
+        menu.add_separator()
+        mv = tk.Menu(menu, tearoff=0)
+        known = list(getattr(self, "_inbox_viewer_known_folders", None) or [])
+        if known:
+            for info in known:
+                mv.add_command(label=self._inbox_viewer_label_for_sel(info),
+                               command=lambda i=dict(info): self._inbox_viewer_move_selected(i))
+        else:
+            mv.add_command(label="(loading folder list -- right-click again in a moment)", state="disabled")
+            # first use: enumerate in the background so the next right-click has it
+            if not getattr(self, "_inbox_viewer_folders_loading", False):
+                self._inbox_viewer_folders_loading = True
+
+                def _got(found):
+                    self._inbox_viewer_folders_loading = False
+                    if found:
+                        self._inbox_viewer_known_folders = [dict(i) for i in found]
+
+                def _err(_exc):
+                    self._inbox_viewer_folders_loading = False
+                self.run_outlook_worker(lambda o, ns: self._inbox_viewer_enumerate_inboxes_work(ns),
+                                        on_done=_got, on_error=_err, label="inbox-viewer-enumerate")
+        menu.add_cascade(label="Move to", menu=mv)
         menu.add_separator()
         menu.add_command(label="Delete (to Deleted Items)", command=self._inbox_viewer_delete_selected)
         # v4.2.39: toggle Outlook categories straight from the viewer. Checked
@@ -18504,11 +19134,21 @@ class OutlookWorkflowMonitor:
         remember_window_geometry(win, "MaINbox Inbox Viewer Mailboxes", "460x420")
         win.transient(parent)
         apply_theme(win)
-        tk.Label(win, text="Choose Inboxes", font=(_FONT, 14, "bold"), fg=_ACCENT, bg=_BG).pack(anchor="w", padx=14, pady=(12, 2))
-        tk.Label(win, text="Tick the inboxes the viewer should show. Enter saves.",
+        tk.Label(win, text="Choose Folders", font=(_FONT, 14, "bold"), fg=_ACCENT, bg=_BG).pack(anchor="w", padx=14, pady=(12, 2))
+        tk.Label(win, text="Tick the folders the viewer should show (Sent, Drafts, Deleted, Junk and Inbox subfolders too). Enter saves.",
                  bg=_BG, fg=_FG_DIM, wraplength=420, justify="left").pack(anchor="w", padx=14, pady=(0, 8))
-        body = tk.Frame(win, bg=_BG2)
-        body.pack(fill="both", expand=True, padx=14, pady=4)
+        _outer = tk.Frame(win, bg=_BG2)
+        _outer.pack(fill="both", expand=True, padx=14, pady=4)
+        _canvas = tk.Canvas(_outer, bg=_BG2, highlightthickness=0)
+        _vsb = ttk.Scrollbar(_outer, orient="vertical", command=_canvas.yview)
+        _canvas.configure(yscrollcommand=_vsb.set)
+        _vsb.pack(side="right", fill="y")
+        _canvas.pack(side="left", fill="both", expand=True)
+        body = tk.Frame(_canvas, bg=_BG2)
+        _cwin = _canvas.create_window((0, 0), window=body, anchor="nw")
+        body.bind("<Configure>", lambda e: _canvas.configure(scrollregion=_canvas.bbox("all")))
+        _canvas.bind("<Configure>", lambda e: _canvas.itemconfigure(_cwin, width=e.width))
+        win.bind("<MouseWheel>", lambda e: _canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
         loading = tk.Label(body, text="Loading mailbox list from Outlook...", bg=_BG2, fg=_FG_DIM)
         loading.pack(anchor="w", padx=8, pady=8)
 
@@ -18530,6 +19170,7 @@ class OutlookWorkflowMonitor:
             if not found:
                 tk.Label(body, text="No inboxes found (is Outlook running?)", bg=_BG2, fg=_FG_DIM).pack(anchor="w", padx=8, pady=8)
                 return
+            self._inbox_viewer_known_folders = [dict(i) for i in found]   # v4.2.103: Move to
             for info in found:
                 prior = saved_by_id.get(info.get("entry_id")) \
                     or saved_by_store.get(str(info.get("store", "")).strip().lower())
@@ -18540,12 +19181,16 @@ class OutlookWorkflowMonitor:
                 else:
                     # First run: pre-tick the stock pair (own inbox + Sales).
                     store_l = str(info.get("store", "")).lower()
-                    checked = (SALES_MAILBOX_NAME.lower() in store_l) or (len(state["vars"]) == 0)
+                    _is_inbox = not (info.get("default_folder") or info.get("subfolder_of"))
+                    checked = _is_inbox and ((SALES_MAILBOX_NAME.lower() in store_l) or (len(state["vars"]) == 0))
                 var = tk.BooleanVar(value=checked)
                 state["vars"].append((info, var))
-                tk.Checkbutton(body, text=f"{info.get('store', '?')}  --  {info.get('name', 'Inbox')}",
-                               variable=var, bg=_BG2, fg=_FG, selectcolor=_BG3,
-                               activebackground=_BG2, anchor="w").pack(fill="x", padx=8, pady=2)
+                _is_inbox = not (info.get("default_folder") or info.get("subfolder_of"))
+                _txt = (f"{info.get('store', '?')}  --  {info.get('name', 'Inbox')}" if _is_inbox
+                        else f"      {info.get('name', 'Folder')}")
+                tk.Checkbutton(body, text=_txt,
+                               variable=var, bg=_BG2, fg=_FG if _is_inbox else _FG_DIM, selectcolor=_BG3,
+                               activebackground=_BG2, anchor="w").pack(fill="x", padx=8, pady=(2 if _is_inbox else 0))
 
         def enum_error(exc):
             try:
@@ -19084,6 +19729,31 @@ class OutlookWorkflowMonitor:
                   command=self.open_inbox_viewer_mailbox_picker).pack(anchor="w", pady=3)
         tk.Button(lf1, text="Columns...", width=24,
                   command=self.open_inbox_viewer_column_editor).pack(anchor="w", pady=3)
+        # v4.2.103: the scan limit used to be a hand-edited JSON key.
+        _cfg = self._load_inbox_viewer_config()
+        _row = tk.Frame(lf1, bg=_BG2)
+        _row.pack(anchor="w", pady=(6, 2), fill="x")
+        tk.Label(_row, text="Emails per folder:", bg=_BG2, fg=_FG).pack(side="left")
+        _lim_var = tk.StringVar(value=str(int(_cfg.get("scan_limit", 200) or 200)))
+        tk.Spinbox(_row, from_=100, to=2000, increment=100, textvariable=_lim_var, width=6,
+                   bg=_ENTRY_BG, fg=_FG, buttonbackground=_BG3).pack(side="left", padx=6)
+        tk.Label(_row, text="Search covers the last", bg=_BG2, fg=_FG).pack(side="left", padx=(12, 0))
+        _days_var = tk.StringVar(value=str(int(_cfg.get("search_days", 365) or 365)))
+        tk.Spinbox(_row, from_=30, to=3650, increment=30, textvariable=_days_var, width=6,
+                   bg=_ENTRY_BG, fg=_FG, buttonbackground=_BG3).pack(side="left", padx=6)
+        tk.Label(_row, text="days", bg=_BG2, fg=_FG).pack(side="left")
+
+        def _save_limits(*_a):
+            try:
+                lim = max(100, min(2000, int(str(_lim_var.get()).strip() or 200)))
+                days = max(30, min(3650, int(str(_days_var.get()).strip() or 365)))
+            except Exception:
+                return
+            self._save_inbox_viewer_config({"scan_limit": lim, "search_days": days})
+            self._inbox_viewer_extra_limit = 0
+            ops_log("inbox_viewer", "limits_saved", scan_limit=lim, search_days=days)
+        _lim_var.trace_add("write", _save_limits)
+        _days_var.trace_add("write", _save_limits)
 
         lf2 = tk.LabelFrame(win, text="Deleted Items", bg=_BG2, fg=_ACCENT, padx=10, pady=8)
         lf2.pack(fill="x", padx=14, pady=6)
