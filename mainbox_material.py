@@ -16,7 +16,7 @@ Run as a script: fills material_rules.json['vendor_map'] from vendor_evidence.js
 rules['vendor_overrides']: customer removal, domain merges, manual vendors, per-vendor category fixes) and
 prints the hard-example self-check.
 """
-import json, re, os, sys, collections
+import json, re, os, sys, collections, functools
 HERE = os.path.dirname(os.path.abspath(__file__))
 RULES_PATH = os.path.join(HERE, "material_rules.json")
 _R = json.load(open(RULES_PATH, encoding="utf-8"))
@@ -75,7 +75,7 @@ def _brand_hits(s):
     return [a for a in hits if not any(a != b and a in b for b in hits)]   # longest non-overlapping ("cooper lighting" beats "cooper")
 
 
-def classify(text):
+def _classify_uncached(text):
     """Return (category_id | 'group:<g>' | None, score 0..1, reasons list)."""
     if not text:
         return None, 0.0, ["empty"]
@@ -242,3 +242,17 @@ if __name__ == "__main__":
     import random; random.seed(3)
     for line, cid, score in random.sample(samples, min(10, len(samples))):
         print(f"  {line[:70]!r} -> {cid} ({score})")
+
+
+# v1.2 (2026-08-28): memoized. classify() runs ~1,700 regexes (~1.9 ms); the
+# desktop's vendor-suggestion fallback sweeps every stored material key per item
+# (510 keys -> ~1 s per item on the UI thread). Same text -> same answer, so the
+# sweep now costs once. Reasons come back as a tuple (shared, immutable).
+@functools.lru_cache(maxsize=16384)
+def _classify_cached(text):
+    cat, score, reasons = _classify_uncached(text)
+    return cat, score, tuple(reasons or ())
+
+
+def classify(text):
+    return _classify_cached(str(text or ""))

@@ -23,8 +23,8 @@ result is written; stale results are pruned after an hour. A handler that
 raises is reported as {"ok": False, "error": ...} instead of crashing the
 tick. This module is deliberately stdlib-only and never imports MaINbox.
 
-ENGINE_VERSION 1.0.0 (2026-08-26): first release, for MaINbox v4.2.99 +
-MaINbox Voice v0.10.
+ENGINE_VERSION 1.0.1 (2026-08-28): rename retry + in-place fallback.
+1.0.0 (2026-08-26): first release, for MaINbox v4.2.99 + MaINbox Voice v0.10.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ import json
 import time
 import traceback
 
-ENGINE_VERSION = "1.0.0"
+ENGINE_VERSION = "1.0.1"
 _RESULT_TTL_S = 3600
 
 
@@ -49,7 +49,25 @@ def _atomic_write(path: str, data) -> None:
     tmp = f"{path}.{os.getpid()}.tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=1, default=str)
-    os.replace(tmp, path)
+    # 1.0.1: Windows refuses the rename while another process (the voice
+    # server) has the target open for reading -> "Access is denied" and a
+    # logged tick error. Retry briefly, then fall back to an in-place write.
+    last = None
+    for attempt in range(5):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError as e:
+            last = e
+            time.sleep(0.05 * (attempt + 1))
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=1, default=str)
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 class MainboxAdapter:
