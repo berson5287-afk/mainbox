@@ -2748,6 +2748,28 @@ _AUTOMATED_NOTICE_RE = re.compile(
     r"packing\s+(?:list|slip)|bill\s+of\s+lading|\bbol\b|delivery\s+confirmation|order\s+confirmation|receipt\s+for", re.I)
 
 
+_FRESH_CUT_RE = re.compile(r"(?mi)^\s*(?:-+\s*original message\s*-+|from:\s.+|sent:\s.+|on .{5,80} wrote:?|_{8,}|>+\s)")
+_BANNER_LINE_RE = re.compile(r"(?i)you don'?t often get email from|learn why this is important|external email|caution:|"
+                             r"this message (?:originated|came) from outside|\[external\]|safelinks\.protection")
+
+
+def _fresh_reply_text(body, limit=4000):
+    """v4.2.106: the sender's OWN words -- the body cut at the first quoted-chain
+    marker (Original Message / From: / On ... wrote: / underscores / '>' quotes),
+    with Outlook's 'You don't often get email from ... Learn why this is important'
+    banner and external-mail warnings dropped. Every 'are they asking us?' and
+    'did they send pricing?' test must read THIS, never the quoted chain (which
+    holds our own RFQ wording and question marks)."""
+    text = str(body or "").replace("\r", "\n")
+    m = _FRESH_CUT_RE.search(text)
+    if m and m.start() > 0:
+        text = text[:m.start()]
+    elif m and m.start() == 0:
+        text = ""
+    lines = [ln for ln in text.split("\n") if ln.strip() and not _BANNER_LINE_RE.search(ln)]
+    return "\n".join(lines)[:limit]
+
+
 def role_aware_quick_adjust(quick, subject, sender, body, durable_type="", is_placeholder=False):
     """v4.2.106: the phrase analysis is role-blind -- "rfq"/"p&a"/"please quote" fire on
     a VENDOR's reply to our own RFQ and file it as a customer asking us for pricing,
@@ -2766,7 +2788,10 @@ def role_aware_quick_adjust(quick, subject, sender, body, durable_type="", is_pl
     if not isinstance(quick, dict) or is_placeholder:
         return ""
     subj = str(subject or "")
-    low = (subj + "\n" + str(body or "")).lower()
+    fresh = _fresh_reply_text(body)
+    # the vendor's own words decide; the quoted chain is our RFQ, not their answer
+    low = (subj + "\n" + (fresh if fresh.strip() else str(body or "")[:2000])).lower()
+    body = fresh if fresh.strip() else str(body or "")[:2000]
     dtype = str(durable_type or "").strip().upper()
     stype = str(quick.get("sender_type", "") or "")
     intent = str(quick.get("sender_intent", "") or "")
@@ -47471,6 +47496,12 @@ class OutlookWorkflowMonitor:
                         if quick.get("workflow_category") == "Invoice / Payment":
                             e["category"] = "Invoice / Payment"
                 if not new_status or new_status == e.get("status"):
+                    # the phrase rules can't judge it -- hand it to the AI Triage queue so
+                    # the user can re-triage it in batches under the new role-aware prompt
+                    if not is_ph and not e.get("ai_triage_pending"):
+                        e["ai_triage_pending"] = True
+                        e["ai_triaged_at"] = ""
+                        moved["queued for AI re-triage"] = moved.get("queued for AI re-triage", 0) + 1
                     continue
                 e["status"] = new_status
                 e["ai_triage_reason"] = f"v4.2.106 Needs Reply cleanup: {why}"
@@ -47489,8 +47520,8 @@ class OutlookWorkflowMonitor:
             self.save_settings()
         except Exception:
             pass
-        total = sum(moved.values())
-        if total:
+        total = sum(v for k, v in moved.items() if k != "queued for AI re-triage")
+        if total or moved.get("queued for AI re-triage"):
             try:
                 self.flush_status_data()
                 self.save_cached_state()
