@@ -33,7 +33,7 @@ import json
 import time
 import traceback
 
-ENGINE_VERSION = "1.0.1"
+ENGINE_VERSION = "1.0.2"
 _RESULT_TTL_S = 3600
 
 
@@ -52,22 +52,20 @@ def _atomic_write(path: str, data) -> None:
     # 1.0.1: Windows refuses the rename while another process (the voice
     # server) has the target open for reading -> "Access is denied" and a
     # logged tick error. Retry briefly, then fall back to an in-place write.
-    last = None
-    for attempt in range(5):
+    # 1.0.2 (audit): NO in-place fallback -- truncating the file while a reader
+    # holds it is exactly the torn read the atomic contract exists to prevent.
+    # If the rename cannot land after retries, keep the previous version on disk
+    # (stale beats torn; heartbeat/snapshot refresh 4 s later anyway).
+    for attempt in range(8):
         try:
             os.replace(tmp, path)
             return
-        except PermissionError as e:
-            last = e
+        except PermissionError:
             time.sleep(0.05 * (attempt + 1))
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=1, default=str)
-    finally:
-        try:
-            os.remove(tmp)
-        except OSError:
-            pass
+        os.remove(tmp)
+    except OSError:
+        pass
 
 
 class MainboxAdapter:
