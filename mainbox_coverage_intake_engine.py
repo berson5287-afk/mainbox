@@ -18,7 +18,7 @@ import os
 import re
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
-ENGINE_VERSION = "1.0.0"
+ENGINE_VERSION = "1.1.0"   # v4.3.80: spec-sheet / prose / quantified-list rules
 
 
 class IntakeDecision(str, Enum):
@@ -165,6 +165,34 @@ _SPEC_RE = re.compile(
     r"\b\d{1,2}/\d{1,2}\b|\b\d+(?:\.\d+)?\s*(?:cu|al)\b)", re.I
 )
 _CATALOG_TOKEN_RE = re.compile(r"\b(?=[A-Z0-9._/#\-]{4,35}\b)(?=[A-Z0-9._/#\-]*[A-Z])(?=[A-Z0-9._/#\-]*\d)[A-Z0-9._/#\-]+\b", re.I)
+# v4.3.80 (MaINbox coverage audit 10/2): specification / datasheet / drawing prose that the
+# per-row material-word test let through (every bullet of a cable spec names "wire").
+_SPEC_PROSE_RE = re.compile(
+    r"(?i)(?:^\s*[\u2022\u25aa\u25a0\u2023\u25e6]\s*\S)|copyright|all\s+rights\s+reserved|\bwww\.|"
+    r"\b(?:astm|icea|ansi|ieee)\s*[a-z]?-?\d|standard\s+specification\s+for|\bspecifications?:|\bconstruction:|"
+    r"\bapplications?\s+and\s+features|\bphase\s+spacing\b|\bnot\s+to\s+scale\b|\bsee\s+table\s+\d|"
+    r"\bsupports\s+up\s+to\s+\d|\bused\s+(?:as|on|to)\s+\w|\brequires?\s+any\s+of\b|\bwhether\s+you\b|"
+    r"\bcontent\s+reviewed\b|\bdrawing\s+converted\b|\bfile\s+from\s+paper\b|\bawg\s*/\s*kcmil\s*$|"
+    r"^\s*\d[\d,]*['\u2019\u2032]?\s+(?:and|or|to)\s+\d")
+_CHROME_REASONS = {
+    "empty row", "document metadata/header", "date-only row", "person/name row", "address/location row",
+    "administrative value", "specification/datasheet prose", "ratio note (N per X)", "reel/line header",
+    "prose row without quantity", "no quantity in a quantified list",
+}
+_PER_UNIT_ROW_RE = re.compile(r"(?i)^\s*\d+\s+per\s+[a-z][\w\s()/\-]{0,80}$")
+_REEL_HEADER_RE = re.compile(r"(?i)^\s*(?:reel|spool|roll|pallet|lot|line|item|page)\s*#?\s*\d{1,4}\s*$")
+_SPEC_VOCAB_RE = re.compile(
+    r"(?i)\b(?:astm|icea|ansi|ieee|iec\s*\d|nema\s+(?:type\s+)?\d|specifications?:|construction:|"
+    r"applications?(?:\s+and\s+features)?:|features:|standard\s+specification|copyright|all\s+rights\s+reserved|"
+    r"data\s*sheet|cut\s*sheet|table\s+\d|weights?\s+and\s+measurements|technical\s+data|industry\s+standards|"
+    r"www\.)")
+
+
+def _prose_row(desc: str) -> bool:
+    words = re.findall(r"[A-Za-z]+", desc or "")
+    return len(words) >= 9 or (len(words) >= 6 and (desc or "").rstrip().endswith("."))
+
+
 _FAILURE_PROSE_RE = re.compile(
     r"no\s+(?:readable|extractable)?\s*text|could\s+not\s+(?:be\s+)?extract|failed\s+to\s+(?:parse|read|extract)|"
     r"ocr\s+failed|parser\s+(?:error|failed)|processing\s+completed\s+but\s+produced\s+an\s+empty\s+result|#{4,}",
@@ -309,6 +337,15 @@ def assess_candidate_row(item: Mapping[str, Any], index: int, policy: IntakePoli
         hard = "address/location row"
     elif low in {"yes", "no", "n/a", "na", "none", "new", "open", "closed"}:
         hard = "administrative value"
+    # v4.3.80
+    elif _SPEC_PROSE_RE.search(desc or line):
+        hard = "specification/datasheet prose"
+    elif _PER_UNIT_ROW_RE.fullmatch(desc or line):
+        hard = "ratio note (N per X)"
+    elif _REEL_HEADER_RE.fullmatch(desc or line):
+        hard = "reel/line header"
+    elif qty is None and not _strong_part(part) and _prose_row(desc or line):
+        hard = "prose row without quantity"
 
     if hard:
         return RowAssessment(index, False, -10.0, normalized, reasons, hard, price_evidence, metadata_evidence)
@@ -380,15 +417,28 @@ class CoverageIntakeEngine:
 
         internal = is_internal_sender(context.sender_email, context.internal_domains) or context.sender_type.upper() == "E"
         assessments = [assess_candidate_row(item, idx, self.policy) for idx, item in enumerate(items)]
+        # v4.3.80: a QUANTIFIED list (three or more rows with a quantity) -- a row with neither a
+        # quantity nor a catalog number is chrome or a wrapped tail, not a requirement.
+        qty_rows = sum(1 for a in assessments if _numeric_qty(a.item.get("qty", "")) is not None)
+        if qty_rows >= 3:
+            for a in assessments:
+                if a.accepted and _numeric_qty(a.item.get("qty", "")) is None and not _strong_part(a.item.get("part_number", "")):
+                    a.accepted = False
+                    a.score = -10.0
+                    a.hard_reject_reason = "no quantity in a quantified list"
         accepted = [a for a in assessments if a.accepted]
         rejected = [a for a in assessments if not a.accepted]
         total = max(1, len(assessments))
+        # v4.3.80: document CHROME (headers, title blocks, spec prose, wrapped tails) is not a
+        # vote against the material list -- the ratio is accepted rows over the rows that
+        # could have been material.
+        chrome_count = sum(1 for a in assessments if a.hard_reject_reason in _CHROME_REASONS)
         metadata_count = sum(1 for a in assessments if a.metadata_evidence or a.hard_reject_reason in {
             "document metadata/header", "payment terms", "date-only row", "person/name row", "address/location row", "administrative value"
         })
         price_count = sum(1 for a in assessments if a.price_evidence or a.hard_reject_reason == "price/number-only row")
         price_only_count = sum(1 for a in assessments if a.hard_reject_reason == "price/number-only row")
-        material_ratio = len(accepted) / total
+        material_ratio = len(accepted) / max(1, total - chrome_count)
         metadata_ratio = metadata_count / total
         price_ratio = price_count / total
         price_only_ratio = price_only_count / total
@@ -400,6 +450,7 @@ class CoverageIntakeEngine:
         invoice_hits = len(re.findall(r"\b(?:invoice|amount due|remit to|invoice date)\b", low, re.I))
         packing_hits = len(re.findall(r"\b(?:packing list|packing slip|shipped qty|tracking number)\b", low, re.I))
         submittal_hits = len(re.findall(r"\b(?:submittal|shop drawing|approval drawing|cutsheet|cut sheet)\b", low, re.I))
+        spec_hits = len(_SPEC_VOCAB_RE.findall("\n".join(_item_line(i) for i in items)))   # v4.3.80: the document's own rows
 
         role = DocumentRole.UNKNOWN
         role_confidence = 0.35
@@ -414,6 +465,10 @@ class CoverageIntakeEngine:
             role, role_confidence = DocumentRole.PURCHASE_ORDER, 0.96
         elif submittal_hits >= 1 and len(accepted) == 0:
             role, role_confidence = DocumentRole.SUBMITTAL, 0.90
+        elif spec_hits >= 3 and qty_rows <= max(1, total // 4):
+            # v4.3.80: a specification / datasheet -- standards citations, "Construction:",
+            # "Applications and Features", a copyright line -- with almost no quantities.
+            role, role_confidence = DocumentRole.SUBMITTAL, 0.92
         elif (commercial_heading_hits >= 3 and price_count >= 2) or (quote_subject and price_count >= 2):
             role, role_confidence = DocumentRole.VENDOR_QUOTE, min(0.99, 0.80 + 0.03 * commercial_heading_hits + 0.02 * price_count)
         elif request_language and len(accepted) >= 1 and price_ratio <= self.policy.max_price_only_ratio:
@@ -454,8 +509,14 @@ class CoverageIntakeEngine:
                 and price_only_ratio <= self.policy.max_price_only_ratio
             )
             confidence = min(role_confidence, 0.45 + 0.50 * material_ratio - 0.30 * metadata_ratio - 0.25 * price_only_ratio)
-            if accepted and safe_ratios and confidence >= self.policy.min_accept_confidence:
+            acc_qty = sum(1 for a in accepted if _numeric_qty(a.item.get("qty", "")) is not None)
+            if accepted and safe_ratios and confidence >= self.policy.min_accept_confidence and not (acc_qty == 0 and len(accepted) >= 5):
                 decision = IntakeDecision.ACCEPT
+            elif accepted and acc_qty == 0 and len(accepted) >= 5:
+                # v4.3.80: a column of catalog numbers with no quantities at all is a datasheet's
+                # size table (the LSMI pull-box sheet listed ten LSMI1204xx codes), not a request.
+                decision = IntakeDecision.QUARANTINE
+                review_reason = "A list of catalog numbers without any quantities needs review."
             else:
                 decision = IntakeDecision.QUARANTINE
                 review_reason = "Material-list quality thresholds were not met safely enough for automatic coverage."

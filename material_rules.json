@@ -893,7 +893,7 @@
     "\\b\\d{2}c-mw-\\d{2}\\b",
     "\\btriseal\\b",
     "\\bduct\\s*(?:plugs?|couplings?|elbows?|sweeps?)\\b(?=.*(?:hdpe|innerduct|fiberglass|fre))",
-    "\\b(?:90|45|22\\.5|11\\.25)\\s*(?:deg(?:ree)?|\u00b0)?\\s*(?:elbows?|sweeps?|bends?)\\b(?=.*(?:hdpe|innerduct|fre|fiberglass))",
+    "\\b(?:90|45|22\\.5|11\\.25)\\s*(?:deg(?:ree)?|°)?\\s*(?:elbows?|sweeps?|bends?)\\b(?=.*(?:hdpe|innerduct|fre|fiberglass))",
     "\\bhdpe\\s*(?:bushings?|couplings?|elbows?|sweeps?|plugs?|caps?|adapters?)\\b",
     "\\bpull\\s*tape\\b(?=.*(?:hdpe|innerduct|duct))",
     "\\bfabric\\s*innerduct\\b",
@@ -1411,7 +1411,7 @@
     "\\bgalv(?:anized)?\\s*(?:conduit|pipe|rigid|elbow|90|45|sweep|nipple)s?\\b",
     "\\b(?:30|36|48|60|72|90)\\s*\\\"?\\s*(?:rad|radius)\\b(?!.*(?:pvc|cantex|carlon|sch|hdpe|51\\d{5}|fre|fiberglass))(?<!51\\d{5}\\s)",
     "\\bfactory\\s*(?:elbow|90|45|bend|sweep)s?\\b",
-    "\\b(?:90|45)\\s*(?:deg(?:ree)?|\u00b0)?\\s*(?:elbows?|ells?|sweeps?|bends?)\\b(?!.*(?:hdpe|innerduct|pvc|fre|fiberglass|emt|sch\\s*\\d0|cantex|carlon))",
+    "\\b(?:90|45)\\s*(?:deg(?:ree)?|°)?\\s*(?:elbows?|ells?|sweeps?|bends?)\\b(?!.*(?:hdpe|innerduct|pvc|fre|fiberglass|emt|sch\\s*\\d0|cantex|carlon))",
     "\\bnipples?\\b(?!\\s*chuck)(?!.*(?:pvc\\b(?!\\s*-?\\s*coated)|hdpe|emt\\s*nipple|offset\\s*nipple|wireway))",
     "\\bthreaded\\s*(?:rigid|galv|pipe|conduit|elbow)\\b",
     "\\baluminum\\s*(?:rigid|conduit|pipe)\\b",
@@ -1429,7 +1429,7 @@
     "\\bin-gal\\b",
     "\\b90\\s*x\\s*\\d+\\s*gal\\b",
     "\\b\\d+(?:-1/2)?\\s*deg\\.?\\s*(?:elbows?|ells?|bends?|sweeps?|\\d+\\s*\\\"?\\s*rad)(?!.*(?:pvc|cantex|carlon|sch|hdpe|51\\d{5}))",
-    "\\b(?:90|45)[sd]?\\b\\s*(?:deg|degree|\u00b0)?\\s*(?:x\\s*\\d+\\\"?\\s*rad|elbows?|ells?|alum|al\\b|gal)",
+    "\\b(?:90|45)[sd]?\\b\\s*(?:deg|degree|°)?\\s*(?:x\\s*\\d+\\\"?\\s*rad|elbows?|ells?|alum|al\\b|gal)",
     "\\b(?:alum|al|gal|galv|rigid|rgs|grc|steel)\\s*(?:90|45)[sd]?\\b",
     "\\b(?:lg|large|long)\\s*radius\\s*elbows?\\b",
     "\\belbows?\\b(?!.*(?:pvc|emt|wiremold|internal|external|flat|pull|raceway|hoffman|tray|hdpe|innerduct|fre|fiberglass|sch\\s*\\d0|cantex|carlon))",
@@ -1465,7 +1465,7 @@
     "\\bemt\\s*(?:conduit|pipe|tubing)\\b",
     "\\bemt\\s*(?:90|45|elbow|sweep|bend)s?\\b",
     "\\bthin\\s*-?wall\\b",
-    "\\b\\d[\\\"\u201d']?\\s*-?\\s*10\\s*-?\\s*emt\\b",
+    "\\b\\d[\\\"”']?\\s*-?\\s*10\\s*-?\\s*emt\\b",
     "\\btubing\\b(?=.*(?:emt|metallic|conduit))",
     "\\b(?:blue|red|colored?)\\s*emt\\b",
     "\\bpipe\\b(?=.*\\bemt\\b)",
@@ -1569,7 +1569,7 @@
    "label": "Metal outlet / junction / pull boxes",
    "group": "boxes_enclosures",
    "keywords": [
-    "\\b4\\s*(?:\\\"|\u201d|in(?:ch)?)?\\s*(?:sq(?:uare)?|s\\b|octagon|oct|round)\\b",
+    "\\b4\\s*(?:\\\"|”|in(?:ch)?)?\\s*(?:sq(?:uare)?|s\\b|octagon|oct|round)\\b",
     "\\b4-?11/16\\b",
     "\\b1900\\b",
     "\\b(?:4s|4sq|4o|2g|1g|3g|4g|5g|6g)\\s*(?:box(?:es)?|covers?|rings?|ext(?:ension)?s?|blank|raised|mud|plaster|brackets?|deep|d\\b)",
@@ -1589,7 +1589,7 @@
     "\\b(?:fs|fd|fsc|fdc)\\s*-?\\s*[12]?\\s*(?:box|cover|ext|gang|deep|hub)?\\b(?=.*(?:box|cover|gang|hub|cast|\\d/\\d))",
     "\\bscrew\\s*cover\\s*(?:box|jb|pull)\\b",
     "\\bbox(?:es)?\\b(?=.*(?:steel|galv|metal|ko|knockout|bracket|deep|welded|drawn|\\d+\\s*cu\\s*in))",
-    "(?<!/)(?<!tool )(?<!job )(?<!jobsite )(?<!breaker )(?<!panel )(?<!meter )(?<!fuse )(?<!gang )(?<!storage )(?<!lb )(?<!floor )(?<!recept. )(?<!recept )(?<!receptacle )\\bbox(?:es)?\\b(?!\\s*(?:of|lot|qty|/|per|adapter|conn|fill|min|store|cutter|\\d|-|\u2013|hanger|bracket|support|platform|clip))",
+    "(?<!/)(?<!tool )(?<!job )(?<!jobsite )(?<!breaker )(?<!panel )(?<!meter )(?<!fuse )(?<!gang )(?<!storage )(?<!lb )(?<!floor )(?<!recept. )(?<!recept )(?<!receptacle )\\bbox(?:es)?\\b(?!\\s*(?:of|lot|qty|/|per|adapter|conn|fill|min|store|cutter|\\d|-|–|hanger|bracket|support|platform|clip))",
     "\\bko'?s\\b(?=.*(?:box|gang|deep|octag|4\\s*\\\"|4-?11/16|1900))",
     "\\beccentric\\s*ko'?s?\\b",
     "\\b(?:fan|fixture|fan\\s*/\\s*fixture)\\s*(?:vapor\\s*)?box(?:es)?\\b",
@@ -1616,7 +1616,7 @@
     "\\b(?:deep|octag\\w*|1900|4-?11/16)\\b.*\\bko'?s\\b"
    ],
    "negative": [
-    "\\d+\\s*/\\s*(?:box|bx|ctn|carton)\\b|\\bbox(?:es)?\\s*of\\s*\\d|^\\s*\\(?\\d+\\)?\\s*box(?:es)?\\s*[-\u2013:]|\\b\\d+\\s*box(?:es)?\\s*[-\u2013]\\s|\\bbox(?:es)?\\s*[-\u2013]\\s*\\d|\\bplastic\\b|\\bcarlon\\b|\\bpvc\\b(?!\\s*-?\\s*coated)|\\bquazite\\b|\\bpolymer\\b|\\bfloor\\s*box|\\brecept(?:acle)?\\.?\\s*box|\\bin-?use\\b|\\bcable\\s*tray|\\bcope\\b|\\bwd\\d{3}|\\bpanel\\s*box|\\bjunction\\s*box\\b(?=.*(?:pool|spa|intermatic|pvc|plastic))|\\bexplosion|\\bx\\s*\\d{1,2}\\s*x\\s*\\d{1,2}\\b(?=.*(?:nema|sc\\b|nk\\b|n1\\b|enclosure))|\\bblank\\s*covers?\\b(?=.*(?:gang|white|ivory|almond|nylon|plate))"
+    "\\d+\\s*/\\s*(?:box|bx|ctn|carton)\\b|\\bbox(?:es)?\\s*of\\s*\\d|^\\s*\\(?\\d+\\)?\\s*box(?:es)?\\s*[-–:]|\\b\\d+\\s*box(?:es)?\\s*[-–]\\s|\\bbox(?:es)?\\s*[-–]\\s*\\d|\\bplastic\\b|\\bcarlon\\b|\\bpvc\\b(?!\\s*-?\\s*coated)|\\bquazite\\b|\\bpolymer\\b|\\bfloor\\s*box|\\brecept(?:acle)?\\.?\\s*box|\\bin-?use\\b|\\bcable\\s*tray|\\bcope\\b|\\bwd\\d{3}|\\bpanel\\s*box|\\bjunction\\s*box\\b(?=.*(?:pool|spa|intermatic|pvc|plastic))|\\bexplosion|\\bx\\s*\\d{1,2}\\s*x\\s*\\d{1,2}\\b(?=.*(?:nema|sc\\b|nk\\b|n1\\b|enclosure))|\\bblank\\s*covers?\\b(?=.*(?:gang|white|ivory|almond|nylon|plate))"
    ],
    "priority": 5
   },
@@ -5291,7 +5291,684 @@
    ]
   }
  },
- "vendor_map": {},
+ "vendor_map": {
+  "brazill.com": {
+   "name": "Brazill Brothers & Assoc.",
+   "categories": {
+    "cable_tray": 14,
+    "surface_raceway_floor_boxes": 12,
+    "building_wire": 10,
+    "fittings_rigid": 8,
+    "wiring_devices": 7,
+    "hdpe_innerduct": 7,
+    "mc_cable": 5,
+    "strut_channel_hardware": 3,
+    "tape_misc_consumables": 2,
+    "fittings_pvc": 2
+   },
+   "rfq_count": 222,
+   "confidence": "strong+manual",
+   "merged_from": [
+    "brazillbrothers.com",
+    "brazill.coom"
+   ]
+  },
+  "theaenterprises.com": {
+   "name": "Thea Enterprises",
+   "categories": {
+    "building_wire": 20,
+    "mc_cable": 11,
+    "surface_raceway_floor_boxes": 7,
+    "conduit_pvc": 5,
+    "fittings_rigid": 1,
+    "conduit_rigid_imc": 0
+   },
+   "rfq_count": 192,
+   "confidence": "strong+manual"
+  },
+  "bandbelec.com": {
+   "name": "Bandbelec",
+   "categories": {
+    "building_wire": 26,
+    "conduit_rigid_imc": 8,
+    "conduit_pvc": 7,
+    "fittings_rigid": 2,
+    "fittings_emt": 2,
+    "fittings_pvc": 2,
+    "boxes_pvc_nonmetallic": 1
+   },
+   "rfq_count": 96,
+   "confidence": "strong"
+  },
+  "gumcash.com": {
+   "name": "Gumersell Cashdan (Unistrut)",
+   "categories": {
+    "fittings_pvc": 24,
+    "conduit_pvc": 15,
+    "hdpe_innerduct": 5,
+    "conduit_emt": 4,
+    "conduit_rigid_imc": 2,
+    "fittings_emt": 1
+   },
+   "rfq_count": 68,
+   "confidence": "strong"
+  },
+  "versabar.com": {
+   "name": "Versabar Corp (Wesanco-ZSI)",
+   "categories": {
+    "strut_channel_hardware": 29,
+    "fasteners_anchors": 14
+   },
+   "rfq_count": 63,
+   "confidence": "strong+manual"
+  },
+  "cooper-electric.com": {
+   "name": "Cooper Electric Supply",
+   "categories": {
+    "building_wire": 23,
+    "mc_cable": 12,
+    "wiring_devices": 6,
+    "tape_misc_consumables": 3,
+    "low_voltage_cable": 2,
+    "fittings_rigid": 2,
+    "fittings_emt": 1,
+    "fittings_flex": 1
+   },
+   "rfq_count": 57,
+   "confidence": "strong+manual"
+  },
+  "lexnj.com": {
+   "name": "Lex Associates",
+   "categories": {
+    "fittings_pvc": 30,
+    "conduit_pvc": 17,
+    "conduit_emt": 4,
+    "fittings_emt": 2
+   },
+   "rfq_count": 54,
+   "confidence": "strong+manual"
+  },
+  "warshawinc.com": {
+   "name": "Warshaw Inc.",
+   "categories": {
+    "flexible_cord": 7,
+    "flex_conduit": 5,
+    "conduit_emt": 5,
+    "conduit_rigid_imc": 5,
+    "enclosures_nema": 3,
+    "strut_channel_hardware": 2,
+    "terminals_lugs_connectors": 1,
+    "boxes_metal": 0
+   },
+   "rfq_count": 50,
+   "confidence": "strong+manual"
+  },
+  "hubbell.com": {
+   "name": "Hubbell",
+   "categories": {
+    "wiring_devices": 19,
+    "terminals_lugs_connectors": 6,
+    "grounding": 3
+   },
+   "rfq_count": 39,
+   "confidence": "strong+manual"
+  },
+  "globeelec.com": {
+   "name": "Globe Electric Supply",
+   "categories": {
+    "circuit_breakers": 16,
+    "fittings_rigid": 5,
+    "boxes_metal": 3,
+    "enclosures_nema": 3,
+    "fittings_flex": 2,
+    "transformers": 2,
+    "fittings_emt": 1,
+    "lighting_controls": 1,
+    "lamps_led": 1,
+    "panelboards_loadcenters": 1
+   },
+   "rfq_count": 38,
+   "confidence": "strong+manual"
+  },
+  "ammoelectric.com": {
+   "name": "Ammo International",
+   "categories": {
+    "conduit_pvc": 13,
+    "conduit_emt": 8,
+    "boxes_pvc_nonmetallic": 7,
+    "fittings_pvc": 4,
+    "conduit_rigid_imc": 4,
+    "boxes_metal": 3,
+    "strut_channel_hardware": 2,
+    "fasteners_anchors": 2,
+    "fittings_emt": 2,
+    "grounding": 2,
+    "fittings_flex": 2
+   },
+   "rfq_count": 27,
+   "confidence": "strong+manual"
+  },
+  "rowe-sales.com": {
+   "name": "Rowe Sales",
+   "categories": {
+    "wiring_devices": 11,
+    "conduit_pvc": 9,
+    "boxes_metal": 8,
+    "building_wire": 4,
+    "mc_cable": 3,
+    "fittings_emt": 2,
+    "fittings_pvc": 2
+   },
+   "rfq_count": 25,
+   "confidence": "strong+manual"
+  },
+  "azwireandcable.com": {
+   "name": "AZ Wire & Cable",
+   "categories": {
+    "mc_cable": 13,
+    "building_wire": 5,
+    "low_voltage_cable": 3,
+    "flexible_cord": 2,
+    "medium_voltage_cable": 2
+   },
+   "rfq_count": 24,
+   "confidence": "strong"
+  },
+  "daminsales.com": {
+   "name": "Damin Sales",
+   "categories": {
+    "fittings_pvc": 9,
+    "low_voltage_cable": 6,
+    "fittings_flex": 5,
+    "lighting_fixtures": 3,
+    "lamps_led": 3,
+    "boxes_metal": 3
+   },
+   "rfq_count": 19,
+   "confidence": "strong+manual"
+  },
+  "tri-techsales.com": {
+   "name": "Tri-Tech Sales Associates",
+   "categories": {
+    "fuses": 16,
+    "tape_misc_consumables": 4,
+    "tools": 3
+   },
+   "rfq_count": 17,
+   "confidence": "strong+manual"
+  },
+  "omnicable.com": {
+   "name": "Omni Cable",
+   "categories": {
+    "mc_cable": 7,
+    "building_wire": 6,
+    "low_voltage_cable": 4
+   },
+   "rfq_count": 15,
+   "confidence": "strong+manual"
+  },
+  "sbdinc.com": {
+   "name": "Stanley Black & Decker",
+   "categories": {
+    "fasteners_anchors": 17,
+    "tools": 0
+   },
+   "rfq_count": 15,
+   "confidence": "strong+manual"
+  },
+  "radix-wire.com": {
+   "name": "Radix Wire & Cable",
+   "categories": {
+    "building_wire": 0
+   },
+   "rfq_count": 14,
+   "confidence": "manual"
+  },
+  "okonite.com": {
+   "name": "The Okonite Co.",
+   "categories": {
+    "building_wire": 4,
+    "medium_voltage_cable": 3
+   },
+   "rfq_count": 12,
+   "confidence": "strong"
+  },
+  "fsrinc.com": {
+   "name": "FSR Inc.",
+   "categories": {
+    "surface_raceway_floor_boxes": 14
+   },
+   "rfq_count": 11,
+   "confidence": "strong+manual"
+  },
+  "allfasteners.com": {
+   "name": "AllFasteners USA",
+   "categories": {
+    "fasteners_anchors": 17
+   },
+   "rfq_count": 10,
+   "confidence": "strong+manual"
+  },
+  "sepco-usa.com": {
+   "name": "SEPCO",
+   "categories": {
+    "fittings_rigid": 18,
+    "conduit_rigid_imc": 4,
+    "grounding": 3,
+    "fasteners_anchors": 3
+   },
+   "rfq_count": 9,
+   "confidence": "strong"
+  },
+  "leviton.com": {
+   "name": "Leviton",
+   "categories": {
+    "wiring_devices": 17,
+    "datacom_connectivity": 0
+   },
+   "rfq_count": 8,
+   "confidence": "strong+manual"
+  },
+  "allcurrent.com": {
+   "name": "All Current Electrical Sales",
+   "categories": {
+    "fittings_flex": 4,
+    "fittings_rigid": 3,
+    "fasteners_anchors": 2,
+    "strut_channel_hardware": 2
+   },
+   "rfq_count": 8,
+   "confidence": "strong"
+  },
+  "electriclighting.com": {
+   "name": "Electriclighting",
+   "categories": {
+    "lighting_fixtures": 2
+   },
+   "rfq_count": 8,
+   "confidence": "strong+manual"
+  },
+  "orbia.com": {
+   "name": "Orbia (Dura-Line)",
+   "categories": {
+    "hdpe_innerduct": 5
+   },
+   "rfq_count": 7,
+   "confidence": "strong+manual"
+  },
+  "bizzbrin.com": {
+   "name": "Bizzbrin",
+   "categories": {
+    "conduit_emt": 3,
+    "boxes_pvc_nonmetallic": 3
+   },
+   "rfq_count": 7,
+   "confidence": "strong"
+  },
+  "cableandconnections.com": {
+   "name": "Cable & Connections",
+   "categories": {
+    "datacom_connectivity": 4,
+    "low_voltage_cable": 3
+   },
+   "rfq_count": 6,
+   "confidence": "strong+manual"
+  },
+  "prioritywire.com": {
+   "name": "Priority Wire & Cable",
+   "categories": {
+    "building_wire": 20
+   },
+   "rfq_count": 6,
+   "confidence": "strong"
+  },
+  "harger.com": {
+   "name": "Harger Lightning & Grounding",
+   "categories": {
+    "grounding": 5,
+    "terminals_lugs_connectors": 0
+   },
+   "rfq_count": 6,
+   "confidence": "strong+manual"
+  },
+  "selectainc.com": {
+   "name": "Selecta Products",
+   "categories": {
+    "tape_misc_consumables": 3,
+    "terminals_lugs_connectors": 2,
+    "firestop_sealing": 2
+   },
+   "rfq_count": 6,
+   "confidence": "strong"
+  },
+  "remee.com": {
+   "name": "Remee Wire & Cable",
+   "categories": {
+    "low_voltage_cable": 5
+   },
+   "rfq_count": 5,
+   "confidence": "strong"
+  },
+  "barronltg.com": {
+   "name": "Barron Lighting Group",
+   "categories": {
+    "lighting_fixtures": 1
+   },
+   "rfq_count": 5,
+   "confidence": "strong"
+  },
+  "strancoinc.com": {
+   "name": "Strancoinc",
+   "categories": {
+    "tape_misc_consumables": 2
+   },
+   "rfq_count": 5,
+   "confidence": "strong+manual"
+  },
+  "ses95.com": {
+   "name": "Ses95",
+   "categories": {
+    "datacom_connectivity": 7,
+    "enclosures_nema": 2
+   },
+   "rfq_count": 4,
+   "confidence": "strong+manual"
+  },
+  "mulberrymetal.com": {
+   "name": "Mulberry Metal Products",
+   "categories": {
+    "wiring_devices": 2
+   },
+   "rfq_count": 4,
+   "confidence": "strong"
+  },
+  "louucci.com": {
+   "name": "Louucci",
+   "categories": {
+    "strut_channel_hardware": 0,
+    "cable_tray": 0
+   },
+   "rfq_count": 4,
+   "confidence": "manual"
+  },
+  "lutron.com": {
+   "name": "Lutron",
+   "categories": {
+    "lighting_controls": 12
+   },
+   "rfq_count": 4,
+   "confidence": "strong+manual"
+  },
+  "nova-anchor.com": {
+   "name": "Nova Anchor",
+   "categories": {
+    "fasteners_anchors": 1
+   },
+   "rfq_count": 3,
+   "confidence": "strong"
+  },
+  "rcr-llc.com": {
+   "name": "Rcr Llc",
+   "categories": {
+    "low_voltage_cable": 1
+   },
+   "rfq_count": 3,
+   "confidence": "strong"
+  },
+  "greaves-usa.com": {
+   "name": "Bekelly15@gmail",
+   "categories": {
+    "terminals_lugs_connectors": 2
+   },
+   "rfq_count": 5,
+   "confidence": "strong+manual",
+   "merged_from": [
+    "bekelly15@gmail.com"
+   ]
+  },
+  "lasallereps.com": {
+   "name": "LaSalle Representatives",
+   "categories": {
+    "transformers": 1
+   },
+   "rfq_count": 3,
+   "confidence": "strong+manual"
+  },
+  "encorelighting.com": {
+   "name": "Encore Lighting",
+   "categories": {
+    "lighting_fixtures": 2
+   },
+   "rfq_count": 3,
+   "confidence": "strong+manual"
+  },
+  "bna-rep.com": {
+   "name": "Bna Rep",
+   "categories": {
+    "hdpe_innerduct": 3
+   },
+   "rfq_count": 3,
+   "confidence": "strong+manual"
+  },
+  "amftgs.com": {
+   "name": "American Fittings",
+   "categories": {
+    "fittings_emt": 0
+   },
+   "rfq_count": 2,
+   "confidence": "brand-inferred"
+  },
+  "wesanco-zsi.com": {
+   "name": "Wesanco-ZSI",
+   "categories": {
+    "strut_channel_hardware": 0,
+    "fasteners_anchors": 0
+   },
+   "rfq_count": 2,
+   "confidence": "manual"
+  },
+  "illuminationsinc.com": {
+   "name": "Illuminations",
+   "categories": {
+    "lighting_fixtures": 1
+   },
+   "rfq_count": 2,
+   "confidence": "weak"
+  },
+  "mason-ind.com": {
+   "name": "Mason Industries",
+   "categories": {
+    "strut_channel_hardware": 2
+   },
+   "rfq_count": 2,
+   "confidence": "weak+manual"
+  },
+  "vico.nyc": {
+   "name": "Vico",
+   "categories": {
+    "firestop_sealing": 3
+   },
+   "rfq_count": 1,
+   "confidence": "weak+manual"
+  },
+  "arcasupply.com": {
+   "name": "Arcasupply",
+   "categories": {
+    "conduit_rigid_imc": 1
+   },
+   "rfq_count": 1,
+   "confidence": "weak"
+  },
+  "powers.com": {
+   "name": "Powers",
+   "categories": {
+    "fasteners_anchors": 0
+   },
+   "rfq_count": 1,
+   "confidence": "brand-inferred"
+  },
+  "kristechwire.com": {
+   "name": "Kris-Tech Wire",
+   "categories": {
+    "building_wire": 2
+   },
+   "rfq_count": 1,
+   "confidence": "weak"
+  },
+  "nabcous.com": {
+   "name": "Nabcous",
+   "categories": {
+    "fuses": 2
+   },
+   "rfq_count": 1,
+   "confidence": "weak+manual"
+  },
+  "fuseco.com": {
+   "name": "Fuseco",
+   "categories": {
+    "fuses": 1
+   },
+   "rfq_count": 1,
+   "confidence": "weak+manual"
+  },
+  "burndy.com": {
+   "name": "Burndy",
+   "categories": {
+    "terminals_lugs_connectors": 0,
+    "grounding": 0
+   },
+   "rfq_count": 1,
+   "confidence": "manual"
+  },
+  "idealtridon.com": {
+   "name": "Ideal Tridon",
+   "categories": {
+    "strut_channel_hardware": 1
+   },
+   "rfq_count": 1,
+   "confidence": "weak+manual"
+  },
+  "mutualscrew.com": {
+   "name": "Mutual Screw & Supply",
+   "categories": {
+    "fasteners_anchors": 8
+   },
+   "rfq_count": 1,
+   "confidence": "weak"
+  },
+  "duraline.com": {
+   "name": "Dura-Line",
+   "categories": {
+    "hdpe_innerduct": 0
+   },
+   "rfq_count": 1,
+   "confidence": "manual"
+  },
+  "ledvance.com": {
+   "name": "LEDVANCE",
+   "categories": {
+    "lamps_led": 0
+   },
+   "rfq_count": 1,
+   "confidence": "brand-inferred"
+  },
+  "satco.com": {
+   "name": "SATCO",
+   "categories": {
+    "lamps_led": 0
+   },
+   "rfq_count": 1,
+   "confidence": "brand-inferred"
+  },
+  "stifirestop.com": {
+   "name": "STI Firestop",
+   "categories": {
+    "firestop_sealing": 1
+   },
+   "rfq_count": 1,
+   "confidence": "weak+manual"
+  },
+  "pollartsales.com": {
+   "name": "Pollartsales",
+   "categories": {
+    "strut_channel_hardware": 1
+   },
+   "rfq_count": 1,
+   "confidence": "weak"
+  },
+  "twcablellc.com": {
+   "name": "TW Cable",
+   "categories": {
+    "building_wire": 0
+   },
+   "rfq_count": 1,
+   "confidence": "manual"
+  },
+  "rablighting.com": {
+   "name": "RAB Lighting",
+   "categories": {
+    "lighting_fixtures": 0
+   },
+   "rfq_count": 1,
+   "confidence": "brand-inferred"
+  },
+  "jwbcompany.net": {
+   "name": "Jwbcompany",
+   "categories": {
+    "enclosures_nema": 1
+   },
+   "rfq_count": 1,
+   "confidence": "weak+manual"
+  },
+  "lakecable.com": {
+   "name": "Lakecable",
+   "categories": {
+    "low_voltage_cable": 2
+   },
+   "rfq_count": 1,
+   "confidence": "weak"
+  },
+  "southwire.com": {
+   "name": "Southwire",
+   "categories": {
+    "building_wire": 0,
+    "mc_cable": 0,
+    "boxes_metal": 0,
+    "flexible_cord": 0
+   },
+   "rfq_count": 0,
+   "confidence": "manual",
+   "evidence": "PO P000018608; 'does south wire have any 52171-S or 72171-S with Eccentric KO's?'"
+  },
+  "morrisproducts.com": {
+   "name": "Morris Products",
+   "categories": {
+    "terminals_lugs_connectors": 0,
+    "wiring_devices": 0,
+    "tape_misc_consumables": 0,
+    "power_distribution_misc": 0
+   },
+   "rfq_count": 0,
+   "confidence": "manual",
+   "evidence": "POs P000019119/P000018815/P000018296; 'Do you make an 8 outlet power strip?'"
+  },
+  "cusicksales.com": {
+   "name": "Cusick Sales (rep agency)",
+   "categories": {},
+   "rfq_count": 0,
+   "confidence": "manual",
+   "evidence": "PO P000018289"
+  },
+  "udevices.com": {
+   "name": "Universal Devices",
+   "categories": {
+    "wiring_devices": 0
+   },
+   "rfq_count": 0,
+   "confidence": "manual",
+   "evidence": "Quote 0078546 paid by CC"
+  }
+ },
  "abbreviations": {
   "MILB": "Milbank",
   "HUBW": "Hubbell",
@@ -5322,6 +5999,353 @@
   "RGD": "rigid",
   "NIP": "nipple"
  },
- "vendor_overrides": {},
- "note": "Public copy: vendor_map and vendor_overrides are intentionally empty. The engine works without them; the Brain's resolver then relies on your own mined RFQ history."
+ "vendor_overrides": {
+  "customers_not_vendors": [
+   "witelectricny.com",
+   "vistaelectric.com",
+   "innercityelectric.com",
+   "rc3electric.com",
+   "lionops.net",
+   "gilbaneco.com",
+   "dep.nyc.gov",
+   "gothamlgt.com",
+   "bhphoto.com",
+   "ironbo.com"
+  ],
+  "merge": {
+   "brazill.coom": "brazill.com",
+   "brazillbrothers.com": "brazill.com",
+   "bekelly15@gmail.com": "greaves-usa.com"
+  },
+  "manual_vendors": {
+   "southwire.com": {
+    "name": "Southwire",
+    "categories": [
+     "building_wire",
+     "mc_cable",
+     "boxes_metal",
+     "flexible_cord"
+    ],
+    "evidence": "PO P000018608; 'does south wire have any 52171-S or 72171-S with Eccentric KO's?'"
+   },
+   "morrisproducts.com": {
+    "name": "Morris Products",
+    "categories": [
+     "terminals_lugs_connectors",
+     "wiring_devices",
+     "tape_misc_consumables",
+     "power_distribution_misc"
+    ],
+    "evidence": "POs P000019119/P000018815/P000018296; 'Do you make an 8 outlet power strip?'"
+   },
+   "cusicksales.com": {
+    "name": "Cusick Sales (rep agency)",
+    "categories": [],
+    "evidence": "PO P000018289"
+   },
+   "udevices.com": {
+    "name": "Universal Devices",
+    "categories": [
+     "wiring_devices"
+    ],
+    "evidence": "Quote 0078546 paid by CC"
+   }
+  },
+  "category_overrides": {
+   "burndy.com": {
+    "remove": [
+     "fasteners_anchors"
+    ],
+    "add": [
+     "grounding",
+     "terminals_lugs_connectors"
+    ]
+   },
+   "hubbell.com": {
+    "remove": [
+     "fasteners_anchors"
+    ],
+    "add": [
+     "grounding"
+    ]
+   },
+   "radix-wire.com": {
+    "remove": [
+     "low_voltage_cable",
+     "datacom_connectivity"
+    ],
+    "add": [
+     "building_wire"
+    ]
+   },
+   "tri-techsales.com": {
+    "remove": [
+     "terminals_lugs_connectors"
+    ],
+    "add": [
+     "fuses"
+    ]
+   },
+   "ses95.com": {
+    "remove": [
+     "tape_misc_consumables"
+    ],
+    "add": [
+     "enclosures_nema",
+     "datacom_connectivity"
+    ]
+   },
+   "lexnj.com": {
+    "remove": [
+     "wiring_devices"
+    ],
+    "add": [
+     "fittings_pvc"
+    ]
+   },
+   "orbia.com": {
+    "remove": [
+     "conduit_rigid_imc",
+     "fittings_rigid"
+    ],
+    "add": [
+     "hdpe_innerduct"
+    ]
+   },
+   "bna-rep.com": {
+    "remove": [
+     "conduit_rigid_imc"
+    ],
+    "add": [
+     "hdpe_innerduct"
+    ]
+   },
+   "duraline.com": {
+    "remove": [
+     "conduit_pvc"
+    ],
+    "add": [
+     "hdpe_innerduct"
+    ]
+   },
+   "allfasteners.com": {
+    "remove": [
+     "boxes_metal"
+    ],
+    "add": []
+   },
+   "versabar.com": {
+    "remove": [],
+    "add": [
+     "strut_channel_hardware"
+    ]
+   },
+   "idealtridon.com": {
+    "remove": [
+     "fasteners_anchors"
+    ],
+    "add": [
+     "strut_channel_hardware"
+    ]
+   },
+   "wesanco-zsi.com": {
+    "remove": [],
+    "add": [
+     "strut_channel_hardware",
+     "fasteners_anchors"
+    ]
+   },
+   "mason-ind.com": {
+    "remove": [
+     "fasteners_anchors"
+    ],
+    "add": [
+     "strut_channel_hardware"
+    ]
+   },
+   "ammoelectric.com": {
+    "remove": [
+     "fittings_rigid"
+    ],
+    "add": [
+     "boxes_pvc_nonmetallic"
+    ]
+   },
+   "rowe-sales.com": {
+    "remove": [
+     "fittings_rigid"
+    ],
+    "add": [
+     "boxes_metal"
+    ]
+   },
+   "daminsales.com": {
+    "remove": [
+     "fittings_rigid",
+     "building_wire"
+    ],
+    "add": []
+   },
+   "warshawinc.com": {
+    "remove": [
+     "grounding"
+    ],
+    "add": [
+     "boxes_metal",
+     "enclosures_nema"
+    ]
+   },
+   "cooper-electric.com": {
+    "remove": [
+     "tools"
+    ],
+    "add": [
+     "tape_misc_consumables"
+    ]
+   },
+   "theaenterprises.com": {
+    "remove": [
+     "fittings_pvc"
+    ],
+    "add": [
+     "fittings_rigid",
+     "conduit_rigid_imc"
+    ]
+   },
+   "globeelec.com": {
+    "remove": [
+     "lighting_fixtures"
+    ],
+    "add": []
+   },
+   "brazill.com": {
+    "remove": [
+     "conduit_rigid_imc"
+    ],
+    "add": [
+     "cable_tray",
+     "surface_raceway_floor_boxes"
+    ]
+   },
+   "louucci.com": {
+    "remove": [],
+    "add": [
+     "strut_channel_hardware",
+     "cable_tray"
+    ]
+   },
+   "lasallereps.com": {
+    "remove": [],
+    "add": [
+     "transformers"
+    ]
+   },
+   "jwbcompany.net": {
+    "remove": [],
+    "add": [
+     "enclosures_nema"
+    ]
+   },
+   "sbdinc.com": {
+    "remove": [],
+    "add": [
+     "tools"
+    ]
+   },
+   "harger.com": {
+    "remove": [],
+    "add": [
+     "terminals_lugs_connectors"
+    ]
+   },
+   "omnicable.com": {
+    "remove": [],
+    "add": [
+     "building_wire"
+    ]
+   },
+   "lutron.com": {
+    "remove": [],
+    "add": [
+     "lighting_controls"
+    ]
+   },
+   "leviton.com": {
+    "remove": [],
+    "add": [
+     "datacom_connectivity"
+    ]
+   },
+   "electriclighting.com": {
+    "remove": [],
+    "add": [
+     "lighting_fixtures"
+    ]
+   },
+   "encorelighting.com": {
+    "remove": [],
+    "add": [
+     "lighting_fixtures"
+    ]
+   },
+   "twcablellc.com": {
+    "remove": [],
+    "add": [
+     "building_wire"
+    ]
+   },
+   "strancoinc.com": {
+    "remove": [],
+    "add": [
+     "tape_misc_consumables"
+    ]
+   },
+   "vico.nyc": {
+    "remove": [],
+    "add": [
+     "firestop_sealing"
+    ]
+   },
+   "stifirestop.com": {
+    "remove": [
+     "tape_misc_consumables"
+    ],
+    "add": [
+     "firestop_sealing"
+    ]
+   },
+   "fsrinc.com": {
+    "remove": [
+     "boxes_metal"
+    ],
+    "add": [
+     "surface_raceway_floor_boxes"
+    ]
+   },
+   "cableandconnections.com": {
+    "remove": [],
+    "add": [
+     "datacom_connectivity"
+    ]
+   },
+   "greaves-usa.com": {
+    "remove": [],
+    "add": [
+     "terminals_lugs_connectors"
+    ]
+   },
+   "nabcous.com": {
+    "remove": [],
+    "add": [
+     "fuses"
+    ]
+   },
+   "fuseco.com": {
+    "remove": [],
+    "add": [
+     "fuses"
+    ]
+   }
+  }
+ }
 }

@@ -22,13 +22,18 @@ commitments (ship dates, quote expirations, callbacks) get queued from the mail
 itself. When a request or a reply can't be placed with confidence, the app puts
 up a short picker and asks, rather than guessing and filing it wrong.
 
+There is an Inbox Viewer inside the app: a live view of the chosen Outlook
+folders with the job and status next to each message, so grouping, claiming
+and replying happen without switching to Outlook. Attachments in its reading
+pane open on a click or drag straight onto an email.
+
 Triage runs through a local Ollama model when one is reachable. The heuristics
 carry the full load on their own when it isn't — the LLM is a refinement, not a
 dependency.
 
 ## How it's built
 
-Python and Tkinter, roughly 56K lines, deliberately in one file. For a
+Python and Tkinter, roughly 72K lines, deliberately in one file. For a
 one-developer production tool that runs a live sales desk, that buys real
 things: no deployment step, no dependency drift, and rollback is literally
 launching the previous file. Every release is a copy of the last one plus the

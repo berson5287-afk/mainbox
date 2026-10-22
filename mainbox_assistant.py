@@ -27,7 +27,10 @@ import json
 import os
 import uuid
 import time
+import threading
 from datetime import datetime, timedelta
+
+ENGINE_VERSION = "1.1.0"  # v4.3.16: MaINbox gates this module by ASSISTANT_MIN_VERSION; 1.1.0 (v4.3.44): activity file written off-thread, compact
 
 # -- Decision outcomes ---------------------------------------------------------
 AUTO   = "auto"     # confident enough -> execute automatically
@@ -197,6 +200,11 @@ class AssistantEngine:
         self.on_row_activate = None   # host sets this: double-click a log row -> edit/manage it
         self.open_email_cb = None     # host sets this: "Open email" jumps to the row in the app
         self.activity = []          # newest-first list of action records
+        # 1.1.0: the activity file is written on a short-lived non-daemon thread; the
+        # sequence guard keeps an older snapshot from landing after a newer one
+        self._save_lock = threading.Lock()
+        self._save_seq = 0
+        self._save_written_seq = 0
         self._load_config()
         self._load()
 
@@ -252,13 +260,36 @@ class AssistantEngine:
         self.activity = clean
 
     def _save(self):
+        """1.1.0 (MaINbox v4.3.44; live 9/24: a 31 MB activity file took 12 s to write
+        with indent=2 on the UI thread). Serialize NOW on the caller (the list may be
+        mutated right after), compact; write on a non-daemon thread so the interpreter
+        waits for it at exit. Never raises."""
         if not self.log_path:
             return
         try:
-            tmp = self.log_path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(self.activity[:2000], f, indent=2)
-            os.replace(tmp, self.log_path)
+            payload = json.dumps(self.activity[:2000], separators=(",", ":"), default=str)
+        except Exception:
+            return
+        try:
+            with self._save_lock:
+                self._save_seq += 1
+                seq = self._save_seq
+            threading.Thread(target=self._write_activity, args=(payload, seq),
+                             name="assistant-activity-save", daemon=False).start()
+        except Exception:
+            # thread start failed: fall back to the synchronous write
+            self._write_activity(payload, seq if "seq" in locals() else 0)
+
+    def _write_activity(self, payload, seq):
+        try:
+            with self._save_lock:
+                if seq < self._save_written_seq:
+                    return
+                tmp = self.log_path + ".tmp"
+                with open(tmp, "w", encoding="utf-8") as f:
+                    f.write(payload)
+                os.replace(tmp, self.log_path)
+                self._save_written_seq = seq
         except Exception:
             pass
 
