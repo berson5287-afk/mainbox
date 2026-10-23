@@ -10,13 +10,13 @@
 #
 # Author: Stephen Berson
 # Product: MaINbox
-# Version: v4.3.28
-# Last Updated: 2026-09-18
+# Version: v5.0.0
+# Last Updated: 2026-10-23
 # ============================================================
 
 # v4.3.22: outside reliability update (2026-09-18). v4.3.23: audited and corrected -- see APP_TITLE and MAINBOX_TEST_LOG.md.
 APP_NAME = "MaINbox"
-APP_VERSION = "v4.3.28"
+APP_VERSION = "v5.0.0"
 APP_AUTHOR = "Stephen Berson"
 APP_COPYRIGHT = "Copyright (c) 2026 Stephen Berson. All Rights Reserved."
 
@@ -117,7 +117,18 @@ try:
 except Exception:
     pythoncom = None
 
-APP_TITLE = "MaINbox v4.3.115 AI Assistant"  # v4.3.115 (2026-10-22, Steve: "work on the inbox viewer. It always stays on top of the windows ... whatever window is active takes the foreground ... ctrl+shift+l and whatever window is active when they do that will stay on top ... drag/drop the panes so the user can change the order ... a paper clip column ... drag/drop attachments from mainbox into an outlook email ... ctrl+f will start typing in the search"). ROOT CAUSE (always on top): open_inbox_viewer_window made the viewer transient to the main window, so Tk kept it above the main window whichever one was active. FIX: (1) the viewer is a plain Toplevel (own taskbar button; the active window comes to the front); NEW _toggle_active_window_topmost on Ctrl+Shift+L (bind_all, so it works in every MaINbox window) flips -topmost on the window that has the focus and marks its title "[on top]" (NEW _window_title_with_pin keeps the mark through the viewer's own title updates); pressing it again restores normal stacking. (2) NEW "attach" column (paper clip) in _inbox_viewer_column_specs; NEW _inbox_viewer_attach_flag (worker) reads PR_HASATTACH first and only then walks the attachments with outlook_attachment_is_inline, so signature images do not earn a clip (probe 10/22: 25 of the newest 80 Inbox mails have PR_HASATTACH set with nothing but inline images); the verdict is cached per EntryID (NEW _inbox_viewer_attach_cache_snapshot / _merge; the refresh and search workers take a copy and the done callback merges it back on the Tk thread) so the 2-minute tick does not re-walk attachments. (3) Split panes can be dragged by their header to a new position (NEW _inbox_viewer_pane_drag_press/_motion/_release, _inbox_viewer_move_pane: tk.PanedWindow paneconfigure after=, no rebuild); the order is saved as pane_order in mainbox_inbox_viewer.json and applied by NEW _inbox_viewer_apply_pane_order inside _inbox_viewer_pane_labels. (4) Attachment links in the reading pane are OLE drag sources (tkdnd via the installed tkinterdnd2, loaded lazily by NEW _inbox_viewer_dnd_ready on the first preview with attachments; on failure the links keep working and the log says so once): the preview worker pre-saves attachments up to 15 MB to the existing per-message temp folder (NEW _inbox_viewer_presave_attachments / _inbox_viewer_attachment_cache_path), <<DragInitCmd>> hands that path over as DND_Files (NEW _inbox_viewer_attachment_drag_init), a bigger attachment is saved on demand (NEW _inbox_viewer_prepare_attachment_for_drag) and the first drag is refused with a "preparing" note; click-to-open moved from ButtonPress to ButtonRelease (NEW _inbox_viewer_attachment_press/_release) so a drag never also opens the file. (5) Ctrl+F in the viewer focuses the search box with its text selected (NEW _inbox_viewer_focus_search). CONFINEMENT: setup_ui (two bind_all lines), open_inbox_viewer_window, _inbox_viewer_column_specs, _inbox_viewer_collect_work, _inbox_viewer_row_from_msg, _inbox_viewer_search_work, _inbox_viewer_refresh, _inbox_viewer_search_mailbox, _build_inbox_viewer_body, _inbox_viewer_pane_labels, _inbox_viewer_load_preview (worker pre-save + path cache), _inbox_viewer_set_preview, _render_inbox_viewer_rows (title mark); ADDED the methods named above. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43115.py (real extracted methods on a real withdrawn Tk root: pane move + order persistence, topmost toggle + title mark, Ctrl+F focus, attach flag on stub messages incl. the signature-image case and the cache, drag-init return shapes, tkdnd load + drag_source_register on a Label); the live drag into an Outlook compose window is NOT something a harness can do -- see MAINBOX_TEST_LOG.md.
+APP_TITLE = "MaINbox v5.0.0 AI Assistant"  # v5.0.0 (2026-10-23, Steve: "save this as version v5"). The v5 line is v4.3.126 (every window in the new look, the expand / collapse column, hover garbage can, viewer read state) plus the Due Follow-Ups popup keyboard flow: when the popup opens by itself the first follow-up is selected and focused; Esc snoozes the selection by the snooze dropdown's value (Custom date/time still asks), Delete cancels it -- both silent (the buttons keep their confirmations); after every action (keys or buttons) the next follow-up is selected (the first one when the acted row was first); when no due follow-up remains after an action the popup closes itself (never on open). Keys pressed while typing in the detail box stay there (_ui_is_editing). ops followup/due_popup_key_snooze, due_popup_key_cancel, due_popup_auto_closed. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff 4.3.126 -> 5.0.0 == {show_due_followups_popup}; harness_500_due_popup.py (real popup on a stub with three due follow-ups: first selected, Esc / Delete / button paths, next-selection, detail-box guard, auto-close) -- see MAINBOX_TEST_LOG.md.
+# v4.3.126 (2026-10-23, Steve). (1) Expand / collapse column in the main list: last in `columns` (every existing 10-value row stays valid) and shown just before Subject / job; each group header carries its arrow there (tree.set after the insert; the Subject text no longer carries it) and the heading arrow is the all-groups toggle (down while any group is open = click collapses all; right when all are collapsed = click expands all; _ui_toggle_all_groups_from_heading -> set_all_groups_collapsed); a single click on a header's arrow cell toggles that group (_ui_expand_cell_click); Choose visible email columns lists it as "Expand / collapse" and keeps it before Subject (_ui_column_display_order); the Groups pane shows the same arrow left of "Group" with the same heading command; _ui_sync_expand_headers keeps both arrows honest after every render and after a group is opened / closed in the Groups pane. (2) Sidebar: "Deleted" (trash icon; the short label fits the 152-px sidebar at Steve's font) under Groups opens Deleted History. (3) Low / Hidden view: hovering a row shows a garbage can left of the bell -- the ask-first app-only delete (delete_low_hidden_from_app); never shown in other views; ops ui/hover_trash_app_delete_low_view. (4) Inbox Viewer: opening an email (double-click / Open) marks it read in the viewer and in MaINbox at once (_inbox_viewer_opened_mark_read: viewer rows, outlook_unread + row tag + Groups pane + cache; Outlook's own flag flipped on a worker only if still unread; ops inbox_viewer/opened_mark_read). The saved main-list column widths are carried over to the new column key (expand=34) app-closed. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff 125 -> 126 == {setup_ui (big), render_email_rows, on_group_open_close, _ui_columns_menu, _ui_hover_row, _inbox_viewer_open_selected} + 6 added methods; harness_43126_ui.py (real setup_ui + real render_email_rows / toggles / chooser / hover / viewer mark-read on a stub) -- see MAINBOX_TEST_LOG.md.
+# v4.3.125 (2026-10-23). Fix on v4.3.124, found live ten minutes after it started: the title bar of the live main window was still white. Root cause: _install_window_dress (and the older _install_button_hover) guarded with a PROCESS-wide flag, but the category picker is its own tk.Tk() interpreter where apply_theme runs first; Tk class bindings are per interpreter, so the main window's tk.Tk() never received the <Map> hook (nor, since v4.3.121 or earlier, the classic-button hover bindings). Fix: the binding itself is the guard -- each installer asks bind_class for the existing script and installs only when its handler is not in it. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff 124 -> 125 == {_install_button_hover, _install_window_dress}; harness_43125_interp.py replays the boot (picker tk.Tk() + apply_theme, destroyed; main tk.Tk() withdrawn + apply_theme; a Toplevel; deiconify): both installers bound on the main interpreter, the root and the Toplevel title bars themed, hover bindings present; the live main window's caption pixels sampled after the restart -- see MAINBOX_TEST_LOG.md.
+# v4.3.124 (2026-10-23, Steve: "upgrade all the windows of mainbox to have the new look/feel ... change the title bar of every window as well"). (1) Every window: one class binding on <Map> (_install_window_dress, installed from apply_theme; the v4.3.111 placement-memory idiom) dresses the main window and every Toplevel as it shows -- the Windows title bar painted in the theme through the Desktop Window Manager (caption _BG2, text _FG, border _BORDER, light / dark glyphs by luminance; Windows 11 only, refused harmlessly elsewhere), large accent-coloured titles turned plain like the main title, classic LabelFrames turned into hairlined flat panels with dim section labels; the base Treeview heading style takes the main window's panel-coloured strip so every list matches; a colour-setting change repaints the open title bars too. Native message boxes / file dialogs are drawn by Windows and keep the system look. (2) The main window's shell on the workflow windows (looks only -- same variables, commands, bindings and handlers): shared helpers _ui_window_shell (title band), _ui_window_footer (footer from the bottom), _ui_list_panel (list panel, Mainbox.Treeview + gridded scrollbars), _ui_search_box and _ui_text_button (icon-less); applied to Sent Queue, Archived Groups, Deleted History, Follow-Up Queue, AI Triage Center, Sales Uncategorized Queue, Search, Quote Coverage and the Group members window, their actions as icon buttons with tooltips (Close kept where it existed). VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == apply_theme, apply_visual_settings_to_existing_widgets, the nine window methods, plus the added module helpers and the five _ui_ helpers; harness_43124_dress.py (real hook on a real Tk window: DWM accepted the colours, caption pixels sampled, labels / frames / popup / re-map checks) and harness_43124_windows.py (opens the nine real windows with sample data, screenshots them with their frame, checks the shell, every action still a button with a command, every button invokable without a NameError, Close closes) -- see MAINBOX_TEST_LOG.md. NOT run against the live app before this delivery; Steve's first open of each window is the live test.
+# v4.3.123 (2026-10-23, Steve). Built on the outside v4.3.122 UI build after a method-level review (hash diff: 122 changed __init__ minsize, _build_toolbar, apply_visual_settings_to_existing_widgets, configure_tree_tags, setup_ui and added the _ui_* shell; every handler it calls exists; harness_43123_ui.py renders the real setup_ui: all checks pass). (1) Delete key in the Low / Hidden view: hide_selected_emails_with_delete_key routes a Delete KEY press (keysym Delete, not the menu entry / Ctrl+Shift+H, not while typing in a text field) to delete_low_hidden_from_app -- the existing ask-first app-only delete (confirmation, follow-up review, Deleted History, undo); elsewhere the key still hides. ops ui/delete_key_app_delete_low_view. (2) Inbox Viewer takes the main window's look (looks only; same variables, bindings, handlers): title band with the search box + icon buttons with tooltips, a View bar for the three toggles, Mainbox.Treeview lists with gridded scrollbars (_ui_tree_scrollbars), mailbox panes and the reading pane as panels with the main window's section headers, footer status line. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == {hide_selected_emails_with_delete_key, open_inbox_viewer_window, _build_inbox_viewer_layout, _build_inbox_viewer_body, _inbox_viewer_make_tree}; harness_43123_delete.py (real handler, 7 cases) and harness_43123_viewer.py (real viewer on a Tk root, before / after screenshots, every binding / handler / variable checked) -- see MAINBOX_TEST_LOG.md.
+# v4.3.122 (outside UI build, 2026-10-23): UI modernization + additive shortcuts; existing workflow handlers retained.
+# v4.3.120 (2026-10-22 16:0x, Steve: "I forwarded Danny a OK TO BO with a PU DATE on it at 3:51pm a few minutes ago and still don't see a reminder created"). ROOT CAUSE: the v4.3.119 pass read INBOUND customer rows only, but the order block (ORDER / CSR / FACTORY / PU DATE) is typed by Steve into the customer's sheet and FORWARDED back ("FW: 1556-200" to danny@campbellanddawes.com 15:51:57 with 1556.xls, PU DATE: 10/23) -- the first copy that carries the date is OUR sent item; the inbound copy only comes with Danny's next reply, hours or days later (1556-195 worked only because his 11:40 "TY" copy carried the block). The Sent walk saw the item at 15:51:08 / 15:54:08 and nothing read its sheet. FIX: NEW _note_sent_po_sheet (Sent walk, Outlook worker, before the reply-intent branches so a closed-ack body cannot skip it): a My Sent / Sales Sent item (never ERP Copies) with an Excel attachment, addressed to an outside To recipient (SMTP resolved as make_sent_waiting_placeholder does), has its attachment text read through _attachment_quote_text_from_msg (cached by the sent item's EntryID, persisted; the coverage scans' integrity flags are restored afterwards) and is queued as a synthetic customer row (sent_sheet=True, sheet_text on the row, sender = the recipient, received_timestamp = SentOn) in _pending_sent_sheets; once per item per session, a failed read retried on the next walk; ops workflow/po_sheet_sent_queued. _run_po_sheet_date_pass drains that queue on EVERY tick (the 30-minute throttle governs only the walk over the loaded rows) and, for a forwarded sheet, takes the group and the customer's name from the customer's own row on the thread; the record carries from_sent. _fire_notice_reminder: a reminder that came from our forward opens THAT sent item (entry_id + store_id) unless the customer has since sent a newer sheet copy. CONFINEMENT: scan_recent_sent_waiting_trackers (one call), _run_po_sheet_date_pass, _fire_notice_reminder; ADDED _note_sent_po_sheet. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43120.py (the real helper on a fake Outlook item carrying the REAL 1556-200 sheet text from the 15:51 send, the real pass draining the queue, the real popup branch) -- see MAINBOX_TEST_LOG.md.
+# v4.3.119 (2026-10-22, Steve, group 1556-195: "the last email sent to me from Danny at 11:40am ... says OK TO BO on the top left, when it has that there that means I will have to keep track of the item(s) on the order and update him accordingly. Below where the Order, csr, factory, pu or ship date (pickup or shiP) and below that is where all the updates go. Can we please make it so that where the PU or ship date a follow up reminder will be created for 7am on that date and in the notes if there is any revised ship dates then auto create another reminder?"). WHAT THE SHEET LOOKS LIKE (33 cached sheets carry the row): the order block Steve types under the items -- "ORDER: P000021835 / CSR: ANTONIO / FACTORY: NJ / PU DATE: 10/23" -- then the dated "M/D XX | text" notes; a revised date shows up three ways on the real sheets: the date row edited in place ("SHIP DATE: 10/7, Line1-10/14 line5- 10/26"), our dated note ("10/14 SB | Line2- MTO item, ESD of 10/26 trying to move this along") and a continuation line under our note ("Line5- MTO item, revised ship date of 10/26"). FIX: NEW notice kind po_sheet_date (in _NOTICE_REMINDER_TYPES, so the one-minute tick fires it and the four automatic cancel paths leave it alone). NEW _po_sheet_date_notices(text, mine): the PU DATE: / SHIP DATE: row (every date on it, kind pu / ship) and, in OUR dated rows (initials = the sales category) or their continuation lines, a date in a clause with a ship / ESD / pickup / revised / moved / pushed / delay / ETA word and no past-tense word (shipped / arrived / received / delivered / picked up / cancel), kind note; the customer's rows never count ("please cancel the 1/2\" because of the 11/5 Ship date you provided"), nor a fraction with an inch mark; a sheet with no OK TO BO cell and no order block gives nothing (stock order). NEW _run_po_sheet_date_pass (every 30 min from _notice_reminder_tick, like the shipment pass): outside senders' rows of the last 30 days with an Excel attachment whose text is cached (the Excel segments only -- a quote PDF on the same e-mail is not the sheet), ONE reminder per (job, date) keyed job|date, due 07:00 on that date; a date that is today and past 07:00 fires in 2 minutes; an older date is remembered and skipped; records carry po, date, kind, src, order_no, csr, factory. _fire_notice_reminder: popup "Order date on the PO sheet" -- "<PO> -- PU DATE Fri 10/23 (today). ORDER P000021835, CSR ANTONIO, FACTORY NJ / The PO sheet is noted OK TO BO: check the order and update Danny on the sheet", the note's own line for a revised date, and the later date(s) the same job's sheet also carries; buttons Open the PO sheet e-mail (default, the newest customer sheet on the thread, as the invoice heads-up does) / Got it / Remind me in 1 hour. Ops: workflow/po_sheet_date_scheduled, po_sheet_date_shown, po_sheet_date_opened_sheet. Not changed: the v4.3.95 shipment_eta notice (arrival day, 08:00) still runs beside it. CONFINEMENT: _notice_reminder_tick (one call), _fire_notice_reminder (one branch), _NOTICE_REMINDER_TYPES; ADDED _po_sheet_date_notices, _run_po_sheet_date_pass and five class regexes. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43119.py (the REAL cached sheet text of 1556-195 11:40, of 1590-148's revised-line sheets and of a stock order, the real pass on a real row, the real popup branch with a captured popup) -- see MAINBOX_TEST_LOG.md.
+# v4.3.118 (2026-10-22, Steve: "I just right clicked Collin buonomo's email at 11:43am and did send rfq and when it first opened it did a pretty good job extracting. but then after I clicked send to mainbox, it had a list of all the same items over and over and NONE of the items i selected on the previous screen even got sent"). ROOT CAUSE (the run's own extraction log in the RFQ cache + the saved bodies): "Send Quote RFQ" on ONE email anchors to the email's existing group and then extract_materials_for_group reads the WHOLE job -- 12 of the 17 JFK Duct Bank emails: every reply's FULL body including the quoted chain (the original 5" FRE list parsed as a "plain typed list" 12 rows at a time, six times over), 20 inline signature images and three body .txt files queued into the SmartScan review window (the screen Steve corrected), and the VENDOR's own quote PDFs (Brazill Q_46708-B/C) pagewise-scanned as if they were the request. SmartScan sent back 56 rows, the chains added 72 more: 140 rows, 133 after the letterhead pass, and record_rfq_cache -> update_coverage_requested(replace_source=rfq_extraction) REPLACED the job's 13 original requested lines (tracked since 9/30, 18 vendor quote rows matched) with that list. Collin's own 7 PVC lines were in the pile and drowned. FIX: (1) extract_materials_for_group(_inner) take emails=; open_quote_intelligence_for_selected_email passes [email] (that email's own words and own attachments; a group-level Quote RFQ still reads the job). (2) NEW _rfq_body_text_for_extraction: the sender's OWN words (_fresh_reply_text) are read first and used when they carry a list (>= 2 rows by any body parser); only otherwise the full body, and then lines already read from an earlier email in the same run are dropped (the quoted chain is read once, not once per reply). (3) NEW _rfq_email_is_vendor_reply: in a group-wide scan a typed vendor's reply (its body, its attachments) is skipped -- their quote is never the request. (4) update_coverage_requested(source_ref=): a re-feed from one message replaces only the rows that message produced; rows from the job's other messages stay; a group-wide re-feed (no source_ref) replaces every extractor row as before. update_coverage_requested_from_rfq(source_ref=) passes it through; record_rfq_cache stores source_entry_id (set by the single-email path, cleared explicitly by the two group-level paths, kept by the window's own re-saves) and hands it to the ledger. (5) the single-email path uses the cached extractor state only when that cache was built from the SAME email (source_entry_id == entry_id) -- the group's 140-row cache would otherwise have reopened instantly. DATA (app closed, before the restart): the JFK Duct Bank ledger's 13 original lines restored from the 10/02 backup with their line_ids (auto_waiting_keys / check_keys still point at them), Collin's 7 PVC lines appended with source_ref = his EntryID, the group's RFQ cache record removed. CONFINEMENT: extract_materials_for_group, extract_materials_for_group_inner (scope, loop head: vendor skip + own-words body), update_coverage_requested, update_coverage_requested_from_rfq, record_rfq_cache, open_quote_intelligence_for_selected_email (cache gate, emails=[email], source_entry_id), the two group-level record_rfq_cache call sites (source_entry_id=""); ADDED _rfq_body_text_for_extraction, _rfq_email_is_vendor_reply. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43118.py (the three REAL saved bodies of the run through the real helper: Collin's own words give his 7 lines, the newest reply reads the chain once, the next reply adds nothing; the scoped replace on the repaired ledger; cache source_entry_id rules; the repair script dry-run) -- see MAINBOX_TEST_LOG.md.
+# v4.3.117 (2026-10-22, Steve: "This was not from stock this was quoted to me from inquiry@sbdinc.com on 10/21 at 2:27pm, quote coverage never picked it up as being quoted"). ROOT CAUSE (four blocks in a row, each proven on the real message with the real functions): (1) the SBD courtesy text "thank you for contacting us to request a quote ... please find your quote request attached" matched COVERAGE_OUTGOING_REQUEST_PHRASES, so _coverage_record_for_quote ruled the vendor's priced PDF an outgoing REQUEST and refused to link it; (2) the DEWALT quote PDF comes out one cell per line in SKU / description / qty / price / "$" / UOM / extended order, which neither columnar pattern stitches, so the lines parsed as "60 DAYS" and bare prices; (3) once parsed, the requested line "Undercut Anchors - CCU+ 3/4\" x 14\" SS 316" and the quote line "DFM1361300 ... CCU+ Preset SS316-C2 EXT 3/4\" X 14\"" share two agreeing sizes and the product words CCU / UNDERCUT but only ~0.3 Jaccard of distinctive tokens, so _coverage_distinctive_match_ok refused the pair (and the nine CCU+ accessory rows, rightly); (4) the quote sits on the vendor's OWN thread ("RE: Quote [ thread::... ]"), which the thread grouper put in a group of its own on 10/22, and the v4.1.9 group scoping then excluded every record bound to a different group. Our RFQ to the DEWALT rep went by Outlook on 10/20 (ledger auto-created from it) but recorded no line_vendor_sends, so the single-line lineage allowance could not help either. FIX: (a) a priced attachment from an external sender whose text also DELIVERS a quote ("your quote attached", "please find your quote") is never an outgoing request (gate override, logged); (b) NEW Pattern C in _coverage_reassemble_columnar_quote: catalog code / description / integer qty / price [/ "$"] [/ unit] [/ extended] [/ "$"] -> "QTY UNIT PART [label] DESC $PRICE", folding the label line that precedes the SKU ("DEWALT CCU UNDERCUT ANCHOR") into the description; (c) DIMENSION-PAIR tier: two agreeing explicit sizes plus a shared distinctive product word pass _coverage_distinctive_match_ok and score 3 in _coverage_edge_score (accessories share one size only and stay rejected); (d) a single-line hit now also qualifies when its tier is >= 3 and the sender is a typed Vendor (NEW _coverage_sender_is_vendor: Saved Senders or the row's type), still only when no other record has any hit; (e) a reply group that is a vendor-only thread with no ledger (NEW _coverage_vendor_only_thread_group) no longer scopes the link; (f) lineage is recorded for Outlook-sent RFQs too: _auto_create_coverage_for_sent_rfq_inner stamps line_vendor_sends for the recipient, update_coverage_waiting_from_request takes recipient= (the Sent walk passes the tracker's address) and stamps the lines it flipped, and NEW _coverage_lineage_lines_for_sender falls back from the exact address to the vendor DOMAIN (inquiry@ answering for the rep). CONFINEMENT: _coverage_record_for_quote, _coverage_reassemble_columnar_quote, _coverage_distinctive_match_ok, _coverage_edge_score, _auto_create_coverage_for_sent_rfq_inner, update_coverage_waiting_from_request, scan_recent_sent_waiting_trackers (one keyword argument); ADDED _coverage_lineage_lines_for_sender, _coverage_sender_is_vendor, _coverage_vendor_only_thread_group. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43117.py (the real SBD message + PDF text and the real ERT OCS ledger through the real link / flip / allocator: links, the CCU+ line Quoted, the SD6 wedge line still Waiting, accessories rejected, no other record hit; harness_43116 still 57/57 on the new file) -- see MAINBOX_TEST_LOG.md.
+# v4.3.116 (2026-10-22, Steve: "a lot of times when I am doing quotes I don't have to reach out to any vendors because I will have the items in stock ... Cancel Request button so it doesn't end up in quote coverage ... a setting if the user wants these to happen automatically or not ... if the request is complete then it should remove it from quote coverage but if only partial then leave it in ... if I am trying to get an item for better pricing or lead time then I may re-quote it so ... scan the body of the email ... so it knows to keep it open"). ROOT CAUSE: a request quoted straight from stock enters Quote Coverage at import like any other and nothing ever takes it out -- the ERP bid copy links the request row and archives the group (v4.3.39/85) while the ledger stays Outstanding until Dismiss is pressed (live: the 240826, 240826QUOTE and 10701 ledgers were all dismissed by hand after an ERP bid; 1556-195 and "PO# quote" are still open with every line matched to our own bid). FIX: (1) NEW _run_stock_quote_resolution_pass (Tk thread, 10-minute throttle, from the one-minute notice tick and the AutoPilot tail): for every ERP quote copy of the last 3 days with a real customer recipient and no final decision, once the inbox quote scan has read the bid into the group ledger (processed_sent_ids), NEW _stock_quote_bid_verdict calls the production allocator -- complete when every requested line has a candidate from the bid (quoted / partial / check: our OWN bid is the candidate) or a manual status, partial when a line is outstanding or still waiting on a vendor (measured 10/22: 4 of the 5 ledgered ERP-quoted groups are complete by this rule, the 240826QUOTE one is partial with 1 of 5 lines uncovered). Complete + no hold -> Automatic: NEW _resolve_stock_quote_records stamps stock_quote_resolved and dismisses through coverage_dismiss_threads (one save, rollback on failure); Ask me: NEW _ask_stock_quote_resolutions, one dialog listing every such request (checkbox each, View per group, Enter = Remove checked, Escape = Keep; kept copies are never asked again; skipped while a draft / loading window is up). Partial, unread bid and no-ledger copies are looked at again next pass; a copy older than 3 days retires. Every decision is stamped on the copy row (stock_quote_decision, saved only on change) and logged coverage/stock_quote_decision. (2) RE-QUOTE HOLD: NEW _STOCK_REQUOTE_RE ("better pricing", "lower price", "better lead time", "re-quote", "revised quote", "working on a better", "see if I can get a better", "price may come down", "revised pricing to follow" ...); NEW _stock_quote_requote_hold reads the copy body, the cached bid PDF text (ATTACHMENT_TEXT_CACHE) and a requote_pending stamp on the ledger; the Sent walk now stamps that (NEW _coverage_note_requote_intent, coverage lock, newest message wins) whenever OUR OWN reply words (_own_reply_text) carry the phrase -- the ERP email body is only "A PDF Bid Is Attached", the note lives in the bid or in the Outlook reply. A stamp made after (or within 15 min before) the bid holds; a later bid clears it by being newer. (3) MANUAL: "Quoted from stock (remove from Quote Coverage)" in the main-list right-click (NEW _mark_quoted_from_stock_for_selected, NEW _stock_quote_keys_for_emails) and in the group menu everywhere (NEW mark_group_quoted_from_stock: _ask_yes_no_view_group, Enter = Remove, View group). (4) SETTING coverage_stock_quote_mode auto | ask | off (default auto; Settings > Quote Coverage Intake Safety; load_mainbox_settings normalises it). CONFINEMENT (setup_ui untouched): changed load_mainbox_settings, open_settings_window (one radio row + save key), _autocleanup_after_autopilot, the one-minute notice tick, the Sent walk (one guarded block before the commitments scan), show_email_context_menu, build_group_actions_menu; ADDED the methods named above + _stock_quote_mode, _stock_quote_requote_phrase, _stock_quote_stamp. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43116.py (real methods: verdicts on the REAL 1556-195 / "PO# quote" / 240826QUOTE ledgers through the real allocator, the regex on 40 phrases, hold by bid text / sent stamp / newer bid, the pass in auto / ask / off with a stub dialog, stamps + logs, the manual action, the settings normalisation) -- see MAINBOX_TEST_LOG.md.
+# v4.3.115 (2026-10-22, Steve: "work on the inbox viewer. It always stays on top of the windows ... whatever window is active takes the foreground ... ctrl+shift+l and whatever window is active when they do that will stay on top ... drag/drop the panes so the user can change the order ... a paper clip column ... drag/drop attachments from mainbox into an outlook email ... ctrl+f will start typing in the search"). ROOT CAUSE (always on top): open_inbox_viewer_window made the viewer transient to the main window, so Tk kept it above the main window whichever one was active. FIX: (1) the viewer is a plain Toplevel (own taskbar button; the active window comes to the front); NEW _toggle_active_window_topmost on Ctrl+Shift+L (bind_all, so it works in every MaINbox window) flips -topmost on the window that has the focus and marks its title "[on top]" (NEW _window_title_with_pin keeps the mark through the viewer's own title updates); pressing it again restores normal stacking. (2) NEW "attach" column (paper clip) in _inbox_viewer_column_specs; NEW _inbox_viewer_attach_flag (worker) reads PR_HASATTACH first and only then walks the attachments with outlook_attachment_is_inline, so signature images do not earn a clip (probe 10/22: 25 of the newest 80 Inbox mails have PR_HASATTACH set with nothing but inline images); the verdict is cached per EntryID (NEW _inbox_viewer_attach_cache_snapshot / _merge; the refresh and search workers take a copy and the done callback merges it back on the Tk thread) so the 2-minute tick does not re-walk attachments. (3) Split panes can be dragged by their header to a new position (NEW _inbox_viewer_pane_drag_press/_motion/_release, _inbox_viewer_move_pane: tk.PanedWindow paneconfigure after=, no rebuild); the order is saved as pane_order in mainbox_inbox_viewer.json and applied by NEW _inbox_viewer_apply_pane_order inside _inbox_viewer_pane_labels. (4) Attachment links in the reading pane are OLE drag sources (tkdnd via the installed tkinterdnd2, loaded lazily by NEW _inbox_viewer_dnd_ready on the first preview with attachments; on failure the links keep working and the log says so once): the preview worker pre-saves attachments up to 15 MB to the existing per-message temp folder (NEW _inbox_viewer_presave_attachments / _inbox_viewer_attachment_cache_path), <<DragInitCmd>> hands that path over as DND_Files (NEW _inbox_viewer_attachment_drag_init), a bigger attachment is saved on demand (NEW _inbox_viewer_prepare_attachment_for_drag) and the first drag is refused with a "preparing" note; click-to-open moved from ButtonPress to ButtonRelease (NEW _inbox_viewer_attachment_press/_release) so a drag never also opens the file. (5) Ctrl+F in the viewer focuses the search box with its text selected (NEW _inbox_viewer_focus_search). CONFINEMENT: setup_ui (two bind_all lines), open_inbox_viewer_window, _inbox_viewer_column_specs, _inbox_viewer_collect_work, _inbox_viewer_row_from_msg, _inbox_viewer_search_work, _inbox_viewer_refresh, _inbox_viewer_search_mailbox, _build_inbox_viewer_body, _inbox_viewer_pane_labels, _inbox_viewer_load_preview (worker pre-save + path cache), _inbox_viewer_set_preview, _render_inbox_viewer_rows (title mark); ADDED the methods named above. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff == this set; harness_43115.py (real extracted methods on a real withdrawn Tk root: pane move + order persistence, topmost toggle + title mark, Ctrl+F focus, attach flag on stub messages incl. the signature-image case and the cache, drag-init return shapes, tkdnd load + drag_source_register on a Label); the live drag into an Outlook compose window is NOT something a harness can do -- see MAINBOX_TEST_LOG.md.
 # v4.3.114 (2026-10-21, Steve: "all Danny's orders that get processed, a copy sent to the sales email. Maybe we can just have it flag the ones with the excel files that backorders are being fulfilled on, that's really the only time he needs to be notified"). ROOT CAUSE: since v4.3.95 EVERY ERP invoice copy ("Invoice S100104803.001 PO# 1599-065") schedules a customer_delivery_notice reminder -- 8 "Invoices went out" popups on 10/21 (1599-065, 1575-096, 1575-095, 1582-366, 1603-002, 1598-175, 1590-158, 1586-254), 7 of them same-day stock orders the customer already had; only 1586-254 (PO sheet noted "OK TO BO", ORDER/FACTORY/SHIP DATE rows, lines delivered in parts) needed the note on the sheet. FIX: _queue_invoice_notice also records the invoice number; new _invoice_notice_warranted(po, inv) runs on the main thread before a reminder is created: warranted when the invoice is a later one on the order (.002 and up), the PO sheet on the thread (newest customer e-mail with an Excel attachment, text from the on-disk attachment cache -- never Outlook) is noted "OK TO BO" in its own cell (not the printed terms sentence every sheet carries) or carries ORDER: / FACTORY: / SHIP DATE: rows, or the group's sheet ledger still holds lines open; a sheet saying none of that is a stock order -> ops workflow/customer_delivery_notice_skipped and no reminder. No sheet on the thread, or sheet text not read yet -> kept as before. The reminder carries the reason and the popup shows it. Measured on the cache: 155 C&D sheets, 30 with the OK TO BO cell, 37 with factory rows; of the 14 sheets of 10/19-10/21 only 1586-254 qualifies. VERIFIED: ast + py_compile; XREF 0; small setup_ui identical; hash diff = {_queue_invoice_notice, _run_invoice_heads_up_pass, _fire_notice_reminder} + {_invoice_notice_warranted}; harness_43114.py (the real methods with the real cached sheet text for 1586-254 and 1599-065: v4.3.113 schedules both, v4.3.114 schedules 1586-254 only; .002 invoice, held ledger, unread sheet and no sheet still schedule; the terms sentence alone never matches) -- see MAINBOX_TEST_LOG.md.
 # Historical release notes: v4.3.21 (2026-09-17 evening, Steve: four groups "should be archived that are not" + "if a group is re-opened and there is a good cause for it to be re-closed mainbox asks the user"). ROOT CAUSE: the only every-member-closed sweep, _run_quote_completion_autocleanup, is called solely from _refresh_finalize_pass, i.e. the manual Refresh tail; _autopilot_apply_inbound mirrors the refresh apply but never runs it, so under AutoPilot finished groups lingered until the button was pressed (live 9/17: Apartment MCB's, P000020903, Randall Road BOM all-closed for hours/days; assistant Cleanup log silent since 9/14). Groups whose members are all gone (app-deleted rows, cleared sent placeholders) were skipped forever because get_emails_for_group sees only loaded rows (RE: Bid S100102673, GEAR / LIGHTING QUOTES). FIX: (1) _autopilot_apply_inbound runs the same sweep at the end of every apply (same setting guard inside). (2) NEW _group_members_all_retired: a group with memberships but no loaded rows is finished when every member is a cleared placeholder or a saved record that is app-deleted / Completed / Low -- archived, ops group/autocleanup_archived_empty. (3) RE-OPENED GROUPS ASK: NEW _group_reopen_state ("never" / "reopened" / "declined") reads reactivated_at (both auto-revive paths) and the new reopened_by_user_at stamp (Unarchive Selected). When a re-opened group is closed again the sweep no longer archives it silently: NEW _ask_reclose_reopened_groups shows ONE dialog listing every such group (checkbox each, all checked; Enter = Archive checked, Escape = Keep open); archived groups get the assistant Cleanup log entry + ops group/reopened_group_reclosed; unchecked / kept groups are stamped reclose_prompt_declined_at and are not asked again until a newer revive. The dialog is skipped (asked next pass) while a draft is open, a loading window is up, or the app is closing. Never-reopened groups archive silently as before. CONFINEMENT: _run_quote_completion_autocleanup, _autopilot_apply_inbound, open_archived_groups_window (its unarchive closure); ADDED _group_reopen_state, _group_members_all_retired, _ask_reclose_reopened_groups. VERIFIED: ast/py_compile; the retired timeout constant is still absent; small setup_ui byte-identical; method-hash diff == this set; harness on the extracted sweep + helpers with the live groups file (the three all-closed groups archive, the two member-less groups archive via the retired path, a group with an open row is untouched, a re-opened + closed group goes to the prompt list instead of archiving, a declined one is skipped, an empty group is left alone); live per MAINBOX_TEST_LOG.md v4.3.21. PREVIOUS -- v4.3.20 (2026-09-17, Steve: "do the fix" after the main-pane audit). ROOT CAUSE: an inbound email that joins a group ARCHIVED before it arrived is invisible (group_filter_allows_email hides archived-group members) unless reactivate_dormant_thread_if_needed wakes the group -- and on the live path that check runs ONCE, at import, with body="" (handle_new_email_after_import), so it decides on the subject alone; the body-aware re-check lived only in apply_ai_triage_to_email, which has no callers. Live: Roger/E-J "240636 - 3182 CHAFFEE AVE" (8/26, "Please provide a quote") and George/Verde "RE: Material list 6531" (8/20, "can you please provide a quote") sat Needs Reply inside archived groups for 3-4 weeks; Danny "1599-037" (9/16, xlsx, empty body) and Hatzel "RE: Material" (9/17) the same (harness on the extracted methods: subject-only -> not meaningful for all four; with the body two of four wake). FIX: NEW _surface_open_row_in_archived_group -- once a row's status is SETTLED, if it is open (New / Needs Reply / Waiting), not Low, not locked, not a placeholder, and its group was archived BEFORE the row was received, the group is revived (archived False, has_new True, reactivated_at, reactivation_reason; ops group/archived_group_revived_open_row). Wired at the three places a status settles: handle_new_email_after_import on the hard-decision return (a learned/role rule ends triage there -- exactly the E-J and Verde case), handle_new_email_after_import at its end when the rules already filed Needs Reply (the silent/bulk import path leaves the model verdict to the drip, which can be minutes away), and the start_ai_triage_for_emails worker after the verdict is written (marshalled to the Tk thread with root.after; the worker never touches groups/UI itself). Rows that were already open when the user archived the group are NOT touched (that archive was deliberate); a locked row is never moved. CONFINEMENT: handle_new_email_after_import, start_ai_triage_for_emails (worker closure); ADDED _surface_open_row_in_archived_group. VERIFIED: ast/py_compile; the retired timeout constant is still absent; small setup_ui byte-identical; method-hash diff == this set; harness on the extracted method with the four live rows (all four revive; a row received before the archive, a Completed row, a locked row and a placeholder do not); live per MAINBOX_TEST_LOG.md v4.3.20. DATA (same day, app closed): learned sender/domain/subject/follow-up rules for bkeith@benderelectric.com / benderelectric.com removed (a 0.68 sender rule from 7/17 parked every Bender RFQ forward at New/General and skipped the AI); the six open Bender rows and the two still-hidden rows requeued for triage. PREVIOUS -- v4.3.19 (2026-09-16, second outside audit of v4.3.16, Steve: "do what you feel will make mainbox the best it can be"). SHIPPED: F01 PO CASCADE SCOPE -- a coverage record of the same customer within 30 days seeded its group/lineage into the close set, and a tracker sent to that customer inside the window was cleared, with no proof it was the same job (Roger at E-J runs several jobs a week: one PO would have closed his other open requests). Now a record links only when it is in the seed groups, on the PO conversation, or shares a job token (digit-bearing token like 240950 / 6509-292 / HC-26318-00) with the PO subject/doc; the sent-to-customer tracker arm needs the same token; everything else is logged workflow/po_cascade_review_candidate and left alone. F02 STALE AI VERDICT -- the batch worker applied a model verdict without re-checking the row after the model call; a manual lock / status / urgency / category change or a cancel during the call is now detected by _ai_verdict_is_stale and the verdict is skipped (ops triage/stale_verdict_skipped). F03 FLUSH RACE -- flush_pending_async_saves wrote retained snapshots on the caller thread while the writer could write a newer job; retries now go back through the single writer (re-enqueued only when no newer job is pending or already on disk) and flush waits for the drain, so per-path ordering is one thread. F04 PERSISTENCE OUTCOMES -- request_cloud_bridge_backup refuses to write a backup request when the flush failed (ops persist/backup_refused_unsaved); coverage_set_item_status returns the save result and logs coverage/manual_status_save_failed. F06 UNITS/QUANTITY -- _coverage_qty_value parses fractions and mixed numbers ("1/2", "1 1/2", "1-1/2") and rejects a bare prefix ("1e3", "1/x" -> None) instead of reading 1; LF is a synonym of FT; a quote line with NO unit against a request with a known unit still allocates but lands at Check (uom_unknown; note "vendor line has no unit"). F07 SMARTSCAN DUPLICATES -- the pagewise cleanup called normalize_material_items with keep_duplicates=False, so two identical legitimate rows (page 1 and page 2) became one; it now keeps duplicates (the cleanup only removes header/footer rows). F10 LOCAL-ONLY POLICY -- loopback is decided with ipaddress.is_loopback (127.not-loopback.example is no longer "local"); force_local_ai now also blocks the Anthropic provider (ops ai/anthropic_blocked_by_policy). F11 HTML VIEW -- the formatted view wraps the message in a sandboxed srcdoc iframe under a no-network CSP (scripts, forms, navigation and remote images off). F13 TRACKER RECIPIENT -- the same-domain tier no longer applies to public mail domains (FREEMAIL_DOMAINS): two unrelated gmail senders never match each other. F14 SECRETS -- an empty value in a Settings save DELETES the stored key; a failed secrets write aborts the settings save (returns False) instead of blanking the key everywhere; the plaintext DPAPI fallback is logged (settings/secret_protection_failed). F15 (partial) -- on_close sets _closing; start_ai_task and run_outlook_worker refuse new work while closing. IMPROVEMENTS: /why reports all_quoted and all_resolved separately (fully_quoted kept as an alias of all_resolved); the coverage corpus records the automatic verdict computed WITHOUT the manual override; a Health button in the header opens a live panel (saves, mirror, ops log, backup, AI provider/policy, engines, bridge, scans) with Copy. DEFERRED (need design or a real-data harness): F05 quote revision model, F08/F09 extraction contract and page-keyed highlights (embedded scanner), F12 isolated diagnostic state (inject/purge is the documented test loop), F16 restore snapshot handoff (bridge module), F17 OCR under the Outlook lock, full staged close, service-layer split. CONFINEMENT: _po_close_cascade, start_ai_triage_for_emails, flush_pending_async_saves, request_cloud_bridge_backup, coverage_set_item_status, _coverage_qty_value, _COVERAGE_UOM_CANON, compute_coverage_for_record, _smartscan_cleanup_merged_material_rows, _remote_ai_base_secured, ask_anthropic_focused_triage, _inbox_viewer_view_html, _reply_sender_matches_tracker_recipient, save_mainbox_settings_file, _secret_protect, on_close, start_ai_task, run_outlook_worker, _maybe_start_diag_bridge (_cb_why), setup_ui (one Health button); ADDED _po_cascade_job_tokens, _ai_verdict_is_stale, _health_report_lines, open_health_window. VERIFIED: ast/py_compile; guards; small setup_ui byte-identical; method-hash diff == this set; harness (cascade fixture: job A closes, jobs B and C untouched; stale-verdict cases; writer-routed flush; qty parsing; recipient match; secrets delete/failed write; policy host checks); live per MAINBOX_TEST_LOG.md v4.3.19. PREVIOUS -- v4.3.18 (2026-09-16, live follow-up to v4.3.17 within the hour). One answered row ("Re: Bid S100102815", Steve replied "You got it, thanks!") still reverted to Needs Reply at the sent-tracker sweep (15:29:45, ops tracker/clear_kept_open reply=...30C30000). The reply the sweep matched is Lipari's 10:31 follow-up, a loaded row the app had already COMPLETED; v4.3.17 deliberately let a closed reply fall through to the intent test, and analyze_reply_intent read it as business_request, so the "unsure -> Needs Reply" default re-opened the answered row. FIX: after the closing-ack test, when Outlook says we replied to the tracker row and the clearing reply is a separate loaded row that is NOT open (Completed / Low / placeholder), keep the current Waiting status (ops tracker/clear_kept_waiting_replied_row why=user_replied_reply_closed). A closing ack still Completes; an open reply row was already handled by v4.3.17; unreplied rows are unchanged. CONFINEMENT: _status_after_tracker_clear only. VERIFIED: ast/py_compile; guards; small setup_ui byte-identical; hash diff == that one method; harness (replied + Completed non-closing reply -> keeps Waiting; replied + closing ack -> Completed; not replied + Completed reply -> Needs Reply as before); live per MAINBOX_TEST_LOG.md v4.3.18. PREVIOUS -- v4.3.17 (2026-09-16, Steve: "a ton of emails in the main window ... what should be happening"). ROOT CAUSE: ten rows Steve had already answered bounced between Waiting and Needs Reply all day (the tidy pass flipped the same rows "replied -> Waiting" at 11:37, 11:45, 11:52, 12:14 and 15:10). sweep_sent_waiting_trackers_against_loaded_replies treats EVERY Waiting-on-Customer/Vendor row as a tracker candidate; when a newer inbound message exists on the thread it clears the "tracker" and _status_after_tracker_clear defaults the answered row back to Needs Reply (ops tracker/clear_kept_open) -- even when that newer message is already loaded as its own open row carrying the ask, and in one case ("RE: 1590-110") when the "reply" was the row itself. The rules-change re-triage (13:50) and the AI verdict path did the same: a "request" verdict on a row with user_replied=True landed it in the reply queue again. FIX: (a) _status_after_tracker_clear keeps the current Waiting status when the clearing reply IS the tracker row, or when Outlook says we already replied to the tracker row and the newer inbound message is loaded as its own open row (ops tracker/clear_kept_waiting_replied_row, why=self|user_replied_reply_loaded); every other case is unchanged (closing ack -> Completed, vendor quote -> New, unsure -> Needs Reply + reassess). (b) NEW _clamp_status_for_replied_row: "Needs Reply" on a non-placeholder row with user_replied=True becomes Waiting on Vendor (durable type V) / Waiting on Customer -- the same flip build_email_data applies at import -- wired after the sent-RFQ clamp on the four automation paths that settle a status: quick_intent, ai_triage, ai_triage_batch, tracker_clear_flag (ops triage/replied_row_clamp). User edits never pass through these paths; a genuinely new inbound reply is a different row with its own flag and still shows Needs Reply. CONFINEMENT: _status_after_tracker_clear, apply_quick_sender_intent, apply_ai_triage_to_email, start_ai_triage_for_emails (batch clamp site), _flag_tracked_reply_by_intent; ADDED _clamp_status_for_replied_row. VERIFIED: ast/py_compile; guards; small setup_ui byte-identical; method-hash diff == this set; harness on the extracted methods (self-reply -> keeps Waiting; replied + loaded open reply -> keeps Waiting; replied + Completed reply -> unchanged intent path; not replied -> unchanged Needs Reply; clamp V/C/placeholder/other-status cases); live per MAINBOX_TEST_LOG.md v4.3.17. PREVIOUS -- v4.3.16 (2026-09-16, hardening pass from a second-opinion architectural audit; Steve: "apply what you agree with"). (1) ASYNC SAVE LOSS: _async_save_write_one swallowed a disk/mirror failure and the writer loop had already popped the job, so a failed status/cache write left the queue "drained" and on_close exited believing the data was on disk. Now the writer returns success; the loop retries once after 0.5 s; a second failure RETAINS the serialized snapshot in _ASYNC_SAVE_FAILED and appends a durable marker (mainbox_save_failures.json; ops persist/async_save_failed); flush_pending_async_saves re-attempts every retained snapshot synchronously (skipping one a newer successful write has superseded, via per-job sequence numbers) and returns True ONLY when nothing remains; on_close asks "Retry Save / Exit Anyway" (Enter = retry) while a save is still failing. (2) SECRETS OUT OF SYNCED SETTINGS: anthropic_api_key / stock_http_api_key now live in a machine-local DPAPI-protected file under MaINbox_DeviceGuard (mainbox_secrets.json; a "plain:" fallback only when DPAPI is unavailable) and are stripped from mainbox_settings.json on every write (save_mainbox_settings_file replaces the six direct save_json sites), so they no longer reach the SQLite mirror or the cloud-bridge backup; load_mainbox_settings overlays them in memory and migrates a legacy plaintext key out of the settings file on first load; the diag /settings callback redacts any key matching key/token/secret/password/credential. (3) DIAG COVERAGE TRUTH: /why and /audit judged "fully quoted" by 40-char description equality; both now call compute_coverage_for_record (the production allocator) and report per-status counts. (4) TRIAGE CORPUS: _focused_corpus_examples sorted OLDEST first within a rank despite its docstring -- now newest first; triage_corpus_log invalidates the corpus index after a user correction so the next triage sees it at once instead of up to 60 s later. (5) COVERAGE GATE FAILS CLOSED: _coverage_distinctive_match_ok returned True on an internal exception (permitting a match it could not evaluate); it now returns False and logs coverage/distinctive_gate_error, so the line stays Outstanding for review. (6) COVERAGE CORRECTION CORPUS: coverage_set_item_status appends the auto verdict (status, tier, allocation, note) and the user choice to mainbox_coverage_corpus.jsonl (append-only, bounded, never raises). (7) DIAG HEALTH: /state carries health {ops_log_healthy, ops_log_buffered, async_saves_pending/inflight/failed, db_mirror_pending, triage_corpus_bytes, save_failure_marker_entries}. (8) PLUG-IN GATES: mainbox_assistant exports ENGINE_VERSION and is gated by ASSISTANT_MIN_VERSION like the other engines; the diag bridge is gated by DIAG_BRIDGE_MIN_VERSION (too old -> not started, ops diag/bridge_too_old). NOT DONE on purpose: unknown-UOM -> Check (needs allocator plumbing and a real-data harness first). CONFINEMENT: _async_save_write_one, _async_save_loop, save_json_async, flush_pending_async_saves, load_mainbox_settings, on_close, triage_corpus_log, _focused_corpus_examples, _coverage_distinctive_match_ok, coverage_set_item_status, _maybe_start_diag_bridge (its _cb_state/_cb_why/_cb_settings/_cb_audit closures) and the six settings-save call sites (CategoryPicker.__init__ closure, commitment-mode save, color save, Settings save, auto-group save, save_settings); ADDED _secret_protect, _secret_unprotect, load_mainbox_secrets, save_mainbox_secrets, save_mainbox_settings_file, redact_secret_settings, _async_save_record_failure, _diag_health_snapshot, coverage_corpus_log. VERIFIED: ast/py_compile (app + mainbox_assistant); the retired timeout constant is still absent; small setup_ui byte-identical; method-hash diff == this set; harness on the extracted functions (forced write failure -> retained snapshot -> flush False -> repaired -> flush True; superseded snapshot skipped; corpus newest-first; secrets round-trip + migration + redaction; gate exception -> False; corpus line written); live per MAINBOX_TEST_LOG.md v4.3.16. PREVIOUS -- v4.3.15 (Steve, after the 9/15 window review of the 1 Fernbrook / Verde 6509 deal: "lets do these fixes"). FIVE FIXES. (1) COOPER-STYLE TRACKER CLEARING: a vendor whose bid system replies under a NEW subject and conversation ("Bid S063337089 PO# XHHW" answering our "XHHW P&A") never cleared its Waiting-on-Vendor tracker, because both clear paths matched by conversation id or normalized subject only (live: Doug/Cooper 9/14 and 8/25 both stuck). _vendor_bid_reply_matches_tracker adds two evidence arms, both requiring an ADDRESS-level sender match, a reply newer than the send and within 7 days, and no auto-reply: (a) the reply subject carries a PO#/Ref/Job token equal to the tracker subject with its RFQ words (P&A / quote / RFQ / pricing) stripped; (b) a typed vendor sends quote content with no question back while exactly ONE Waiting-on-Vendor tracker to that sender is open. Wired into clear_sent_waiting_placeholder_for_reply (import) and sweep_sent_waiting_trackers_against_loaded_replies (refresh), so already-loaded bids clear the stuck trackers on the next refresh; cleared_reason stays "matching_reply_imported" (the resurrect guard keys on it) and cleared_via records the arm. (2) PO-CLOSED GUARD: _complete_row_as_won now stamps won_closed_at (persisted through save_record / apply_saved_workflow_to_email); _row_is_won_closed is True until the user explicitly reopens (explicit_reopened_at newer). Live 9/15: George's PO row was won-closed 07:42, our own "Thanks for the order" reply re-activated it as a tracker 07:51 (activate_existing_email_after_sent_message treats any reply from a completed row as a reopen), his 07:54 follow-up cleared that tracker and requeued the row, and the triage worker wrote Claude's (correct for the text) "info" over the Completed status at 07:57 -> New. Now: our own sent reply never re-activates a won row (ops tracker/won_row_not_reactivated), _status_after_tracker_clear returns Completed for a won tracker row, and the worker restores Completed and skips (ops triage/won_closed_skipped). (3) DEAL-CLOSE CASCADE: _po_close_cascade runs after the returned-bid close and after _finish_po_award: open, unlocked rows linked to the PO customer by the PO conversation, by group membership, or by the coverage lineage (customer_email match within 30 days; original_request_entry_id / lineage.request_entry_id) are won-closed; placeholders in those groups, tracking those rows, on the PO conversation, or sent TO that customer inside the window are cleared (cleared_via=po_cascade); linked groups whose members are all closed are archived when the assistant's Auto-Archive is on (else the staged won Cleanup does it). Vendor RFQ legs that were never linked to the customer job (no token, no lineage -- the Fernbrook case) are deliberately NOT guessed; see the test log. (4) MODEL OVER PHRASE FLOOR: _focused_label_to_result used to force Needs Reply whenever the phrase engine had matched a request phrase ANYWHERE (subject, quoted chain). Live: "THANKS ALL GOOD LUCK", "$78.00 EACH, 2 WEEKS" and a pricing list all sat Needs Reply off "p&a" in the subject. The floor now holds only when a request phrase is in the sender's OWN words and those words are not a courtesy closer, or when the own words ask a question ("?"); otherwise the model's info/quote verdict stands (reason notes it, model_over_floor=True). (5) ATTACHED REQUEST: _focused_attached_request_verdict (rules-only, before the hard-decision gate) files a customer/unknown sender whose own words ask for a quote/pricing ("please send me a quote", "please quote the attached") with a document attachment (or "attached/below") as Needs Reply / Quote-Estimate -- a learned sender rule saying "New" (George at Verde, 0.72) had been a hard decision that kept the model away and left "Please send me a quote" + PDF at New twice. CONFINEMENT: _complete_row_as_won, _process_pending_po_congrats, _finish_po_award, activate_existing_email_after_sent_message, _status_after_tracker_clear, clear_sent_waiting_placeholder_for_reply, sweep_sent_waiting_trackers_against_loaded_replies, start_ai_triage_for_emails (+worker), save_record, apply_saved_workflow_to_email, _focused_label_to_result; ADDED _row_is_won_closed, _po_close_cascade, _vendor_bid_tracker_key, _open_vendor_tracker_count_for_sender, _vendor_bid_reply_matches_tracker, _focused_attached_request_verdict. VERIFIED: ast/py_compile; both guards; small setup_ui byte-identical; method-hash diff == intended set; harness on the real extracted methods with the live Fernbrook rows (see MAINBOX_TEST_LOG.md v4.3.15).
 APP_NAME = "MaINbox"
@@ -250,19 +261,23 @@ if AUTO_GROUP_ENGINE_AVAILABLE and _plugin_version_tuple(AUTO_GROUP_ENGINE_VERSI
 
 # ── UI Theme ──────────────────────────────────────────────────────────────────
 # Palette: dark slate background, steel-blue accents, warm off-white text.
-_BG        = "#15181e"   # main window background (deep slate)
-_BG2       = "#1c2027"   # slightly lighter panels / frames
-_BG3       = "#222831"   # labelframe interior, listbox bg, cards
-_ACCENT    = "#5b9dff"   # active / highlight blue
-_ACCENT2   = "#3d7fe0"   # button hover-like shade
-_BTN_BG    = "#2a313d"   # button face
+# v4.3.121 (Steve 10/22: "clean and upgrade the MaINbox UI"): the same dark slate family, one step deeper and
+# cooler so the panels, cards and hairlines read as distinct layers; a darker header band (_BG_HEADER); the
+# accent a touch more saturated. Every window inherits these through apply_theme's option database.
+_BG        = "#12151b"   # main window background (deep slate)
+_BG2       = "#191d25"   # slightly lighter panels / frames
+_BG3       = "#20252e"   # labelframe interior, listbox bg, cards
+_BG_HEADER = "#0d1015"   # v4.3.121: the title band at the top of the main window
+_ACCENT    = "#4f8ef7"   # active / highlight blue
+_ACCENT2   = "#3b74d6"   # button hover-like shade
+_BTN_BG    = "#262d38"   # button face
 _BTN_FG    = "#e4ecf7"   # button text
-_FG        = "#e6ecf4"   # primary text
-_FG_DIM    = "#8a98ad"   # secondary / muted text
-_SEL_BG    = "#2f4d7a"   # treeview selection
+_FG        = "#e8edf5"   # primary text
+_FG_DIM    = "#8a97ab"   # secondary / muted text
+_SEL_BG    = "#2b4a78"   # treeview selection
 _SEL_FG    = "#ffffff"
-_ENTRY_BG  = "#11141a"
-_BORDER    = "#2c343f"   # subtle hairline borders
+_ENTRY_BG  = "#0e1116"
+_BORDER    = "#2a323d"   # subtle hairline borders
 _FONT      = "Segoe UI"
 _FONT_SIZE = 9
 _FONT_WEIGHT = "normal"
@@ -327,12 +342,151 @@ def _install_button_hover(widget):
     (current and future windows) via a single class-level binding. ttk buttons
     already hover through style.map, so this targets the 'Button' widget class."""
     global _BUTTON_HOVER_INSTALLED
-    if _BUTTON_HOVER_INSTALLED:
-        return
+    # v4.3.125: guard per INTERPRETER, not per process. The category picker is its own tk.Tk() and apply_theme runs
+    # there first; class bindings do not carry over to the main window's tk.Tk(), so the old process-wide flag left
+    # the main window (and every window it opens) without the hover bindings. The binding itself is the guard.
     try:
+        if "_mainbox_btn_enter" in str(widget.bind_class("Button", "<Enter>")):
+            return
         widget.bind_class("Button", "<Enter>", _mainbox_btn_enter, add="+")
         widget.bind_class("Button", "<Leave>", _mainbox_btn_leave, add="+")
         _BUTTON_HOVER_INSTALLED = True
+    except Exception:
+        pass
+
+
+# ── v4.3.124: every window in the main window's look ─────────────────────────────────────────────────────
+# Steve 10/23 ("upgrade all the windows of mainbox to have the new look/feel ... change the title bar of every
+# window as well so it has the look/feel as the rest of mainbox"). Tk cannot draw a window's title bar --
+# Windows does -- but the Windows 11 Desktop Window Manager lets a window choose its caption, title-text and
+# border colours (DWMWA_CAPTION_COLOR 35, DWMWA_TEXT_COLOR 36, DWMWA_BORDER_COLOR 34, and
+# DWMWA_USE_IMMERSIVE_DARK_MODE 20 for light or dark close / minimise glyphs). One class binding on <Map>,
+# the v4.3.111 placement-memory idiom, covers the main window and every one of the ~77 Toplevels with no
+# per-window wiring: the title bar takes the header-band colour (_BG2) with the normal text colour, and the
+# window's own widgets get the touches the main window has (large accent-coloured titles become plain text
+# like the main title; section frames get the hairline the main window's panels have). Nothing about how a
+# window is built or what it does changes, and the hook runs again whenever a window is re-shown, so a
+# colour-setting change (which hides and re-shows every window) repaints the title bars too. Native message
+# boxes and file dialogs are drawn by Windows and are not Toplevels, so they keep the system look; on
+# Windows 10 the colour attributes are refused and the title bar stays as the system draws it.
+_WINDOW_DRESS_INSTALLED = False
+
+
+def _mainbox_colorref(color):
+    """'#rrggbb' -> the COLORREF (0x00bbggrr) the Desktop Window Manager takes; None for anything else."""
+    c = str(color or "").strip()
+    if len(c) != 7 or not c.startswith("#"):
+        return None
+    try:
+        r, g, b = int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16)
+    except ValueError:
+        return None
+    return r | (g << 8) | (b << 16)
+
+
+def _mainbox_color_is_dark(color):
+    v = _mainbox_colorref(color)
+    if v is None:
+        return True
+    r, g, b = v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF
+    return (0.299 * r + 0.587 * g + 0.114 * b) < 128
+
+
+def _mainbox_style_titlebar(win):
+    """Paint a Tk window's Windows title bar in the theme (caption _BG2, text _FG, border _BORDER).
+    Returns True when the Desktop Window Manager accepted the colours; False, with nothing changed,
+    anywhere else (another OS, Windows 10, an undecorated popup, a window that is gone)."""
+    if sys.platform != "win32":
+        return False
+    try:
+        if not win.winfo_exists() or win.overrideredirect():
+            return False
+    except Exception:
+        return False
+    try:
+        import ctypes
+        from ctypes import byref, c_int, c_uint32, sizeof
+        hwnd = ctypes.windll.user32.GetParent(int(win.winfo_id()))   # Tk's window sits inside the frame Windows decorates
+        if not hwnd:
+            return False
+        caption, text, border = _mainbox_colorref(_BG2), _mainbox_colorref(_FG), _mainbox_colorref(_BORDER)
+        if caption is None or text is None or border is None:
+            return False
+        dwm = ctypes.windll.dwmapi
+        dark = c_int(1 if _mainbox_color_is_dark(_BG2) else 0)
+        dwm.DwmSetWindowAttribute(hwnd, 20, byref(dark), sizeof(dark))        # DWMWA_USE_IMMERSIVE_DARK_MODE
+        ok = True
+        for attr, value in ((35, caption), (36, text), (34, border)):         # caption / text / border colour
+            v = c_uint32(value)
+            ok = (dwm.DwmSetWindowAttribute(hwnd, attr, byref(v), sizeof(v)) == 0) and ok
+        win._mainbox_titlebar = (_BG2, _FG, _BORDER) if ok else None
+        return ok
+    except Exception:
+        return False
+
+
+def _mainbox_dress_window(win):
+    """The main window's touches on an already-built window; idempotent, so it may run on every map."""
+    _mainbox_style_titlebar(win)
+    stack = [win]
+    seen = 0
+    while stack and seen < 5000:
+        parent = stack.pop()
+        try:
+            children = parent.winfo_children()
+        except Exception:
+            continue
+        for w in children:
+            seen += 1
+            if isinstance(w, tk.Toplevel):          # a nested window is dressed by its own <Map>
+                continue
+            stack.append(w)
+            try:
+                if isinstance(w, tk.Label):
+                    # a large bold title in the accent colour reads as the old look; the main window's
+                    # titles are plain text (size and weight stay as the window set them)
+                    if str(w.cget("fg")).lower() == _ACCENT.lower():
+                        actual = w.tk.call("font", "actual", w.cget("font"))
+                        opts = {str(k): v for k, v in zip(actual[0::2], actual[1::2])}
+                        if abs(int(opts.get("-size", 0))) >= 12 and str(opts.get("-weight", "")) == "bold":
+                            w.configure(fg=_FG)
+                elif isinstance(w, tk.LabelFrame):
+                    # a panel: the hairline the main window's panels have instead of Tk's groove (the option
+                    # database spells the class *LabelFrame* but Tk calls it Labelframe, so those entries never
+                    # applied), and a dim small bold section label when the window left the label at the default
+                    if int(w.cget("highlightthickness") or 0) == 0:
+                        w.configure(highlightthickness=1, highlightbackground=_BORDER, highlightcolor=_BORDER,
+                                    relief="flat")
+                        if str(w.cget("fg")).lower() == _FG.lower():
+                            w.configure(fg=_FG_DIM, font=(_FONT, max(8, _FONT_SIZE - 1), "bold"))
+            except Exception:
+                pass
+
+
+def _mainbox_dress_on_map(event):
+    win = getattr(event, "widget", None)
+    if isinstance(win, tk.Toplevel):
+        _mainbox_dress_window(win)
+
+
+def _mainbox_root_on_map(event):
+    win = getattr(event, "widget", None)
+    if isinstance(win, tk.Tk):
+        _mainbox_style_titlebar(win)
+
+
+def _install_window_dress(root):
+    """v4.3.124: one install covers the main window and every Toplevel this interpreter will ever map."""
+    global _WINDOW_DRESS_INSTALLED
+    # v4.3.125: guard per INTERPRETER (the binding itself), not per process -- see _install_button_hover. In
+    # v4.3.124 the process-wide flag was set by the category picker's interpreter, so the main window's interpreter
+    # never got the hook and no live window was dressed (caught by sampling the live title bar's pixels).
+    try:
+        if "_mainbox_dress_on_map" in str(root.bind_class("Toplevel", "<Map>")):
+            return
+        root.bind_class("Toplevel", "<Map>", _mainbox_dress_on_map, add="+")
+        root.bind_class("Tk", "<Map>", _mainbox_root_on_map, add="+")
+        _WINDOW_DRESS_INSTALLED = True
     except Exception:
         pass
 
@@ -341,6 +495,7 @@ def apply_theme(root):
     """Apply a consistent dark theme to a Tk root and all ttk widgets."""
     root.configure(bg=_BG)
     _install_button_hover(root)
+    _install_window_dress(root)   # v4.3.124: themed title bars + the main window's touches on every window
 
     style = ttk.Style(root)
     try:
@@ -368,16 +523,16 @@ def apply_theme(root):
     style.configure("Treeview",
         background=_BG3, foreground=_FG,
         fieldbackground=_BG3,
-        rowheight=22,
+        rowheight=24,   # v4.3.121: a little air between rows (was 22)
         borderwidth=0, relief="flat",
         font=(_FONT, _FONT_SIZE, _FONT_WEIGHT),
     )
     style.configure("Treeview.Heading",
-        background=_BG2, foreground=_FG_DIM,
-        font=(_FONT, max(8, _FONT_SIZE - 1), "bold"),
+        background=_BG2, foreground=_FG_DIM,   # v4.3.124: the main window's heading strip (panel colour) on every list
+        font=(_FONT, _FONT_SIZE, "bold"),
         relief="flat",
         borderwidth=0,
-        padding=(8, 4),
+        padding=(9, 7),
     )
     style.map("Treeview",
         background=[("selected", _SEL_BG)],
@@ -412,7 +567,7 @@ def apply_theme(root):
     style.configure("Vertical.TScrollbar",
         gripcount=0, background=_BTN_BG, troughcolor=_BG,
         bordercolor=_BG, arrowcolor=_FG_DIM,
-        lightcolor=_BG, darkcolor=_BG, width=12, relief="flat", arrowsize=12,
+        lightcolor=_BG, darkcolor=_BG, width=10, relief="flat", arrowsize=10,   # v4.3.121: slimmer
     )
     style.configure("Horizontal.TScrollbar",
         gripcount=0, background=_BTN_BG, troughcolor=_BG,
@@ -556,7 +711,10 @@ def apply_theme(root):
     root.option_add("*Button.relief",     "flat")
     root.option_add("*Button.borderWidth","0")
     root.option_add("*Button.padX",       "10")
-    root.option_add("*Button.highlightThickness", "0")
+    root.option_add("*Button.padY",       "2")                 # v4.3.121: a uniform button height everywhere
+    root.option_add("*Button.highlightThickness", "1")        # v4.3.121: 1-px hairline around every classic button
+    root.option_add("*Button.highlightBackground", _BORDER)   #   (the outlined look; a button that passes its own
+    root.option_add("*Button.highlightColor", _ACCENT)        #   highlightthickness keeps it); accent ring on focus
     root.option_add("*Button.cursor",     "hand2")
     root.option_add("*Label.Background",  _BG)
     root.option_add("*Label.Foreground",  _FG)
@@ -566,6 +724,7 @@ def apply_theme(root):
     root.option_add("*LabelFrame.Foreground", _FG_DIM)
     root.option_add("*LabelFrame.relief", "flat")
     root.option_add("*LabelFrame.borderWidth", "1")
+    root.option_add("*LabelFrame.Font", f"{{{_FONT}}} 8 bold")   # v4.3.121: small bold section labels by default
     root.option_add("*Checkbutton.Background", _BG)
     root.option_add("*Checkbutton.Foreground", _FG)
     root.option_add("*Checkbutton.activeBackground", _BG)
@@ -5073,6 +5232,8 @@ def default_mainbox_settings():
         # customer-request items may enter Quote Coverage.  Fail-safe import: if
         # the sibling engine is absent MaINbox launches and uses legacy behavior.
         "coverage_intake_engine_enabled": True,
+        # v4.3.116: a request our ERP quote covered in full leaves Quote Coverage: auto | ask | off
+        "coverage_stock_quote_mode": "auto",
         # v4.1.32 Auto-Group Engine plug-in. Precision-first unified scorer replaces
         # the weaker sequential business-key / learned / same-subject shortcuts while active.
         "auto_group_engine_enabled": True,
@@ -5364,6 +5525,8 @@ def load_mainbox_settings():
     merged["support_diagnostics_enabled"] = bool(merged.get("support_diagnostics_enabled", False))
     merged["remote_ai_allow_insecure_http"] = bool(merged.get("remote_ai_allow_insecure_http", False))
     merged["coverage_intake_engine_enabled"] = bool(merged.get("coverage_intake_engine_enabled", True))
+    _sqm = str(merged.get("coverage_stock_quote_mode", "auto") or "auto").strip().lower()   # v4.3.116
+    merged["coverage_stock_quote_mode"] = _sqm if _sqm in ("auto", "ask", "off") else "auto"
     merged["internal_domains"] = str(merged.get("internal_domains", "") or "").strip()
     return merged
 
@@ -15091,6 +15254,43 @@ def _coverage_reassemble_columnar_quote(text):
                 out.append(merged.strip())
                 i = j
                 continue
+            # v4.3.117 Pattern C -- code-first with the quantity AFTER the description (DEWALT /
+            # SBD anchor quotes): the table renders one cell per line as
+            #     [label]  SKU  DESCRIPTION  QTY  PRICE  "$"  UOM  EXTENDED  "$"
+            # Detect a catalog code followed by a prose line, an integer and a price; the
+            # label line just emitted before the SKU ("DEWALT CCU UNDERCUT ANCHOR") is folded
+            # into the description, since it carries the product words the request uses.
+            if (is_code(lines[i]) and i + 3 < n
+                    and not qty_re.match(lines[i + 1]) and not price_re.match(lines[i + 1]) and not is_code(lines[i + 1])
+                    and qty_re.match(lines[i + 2]) and price_re.match(lines[i + 3])):
+                part, desc_c, qty_c, price_c = lines[i], lines[i + 1], lines[i + 2], lines[i + 3]
+                label = ""
+                try:
+                    _prev = out[-1] if out else ""
+                    if (_prev and len(_prev) <= 60 and not _prev.endswith(":") and not is_code(_prev)
+                            and not qty_re.match(_prev) and not price_re.match(_prev) and not unit_re.match(_prev)
+                            and _prev.upper() not in ("SKU", "DESCRIPTION", "QTY", "PRICE", "UOM", "EXTENDED", "$",
+                                                      "REQUIRED PARTS", "REPLACEMENT PARTS", "AS NEEDED", "*PICK ONE*")
+                            and re.search(r"[A-Za-z]{3}", _prev)):
+                        label = out.pop()
+                except Exception:
+                    label = ""
+                j = i + 4
+                if j < n and lines[j] == "$":
+                    j += 1
+                unit_c = "EA"
+                if j < n and unit_re.match(lines[j]):
+                    unit_c = lines[j]
+                    j += 1
+                if j < n and price_re.match(lines[j]):
+                    j += 1                       # extended price
+                if j < n and lines[j] == "$":
+                    j += 1
+                merged = f"{qty_c} {unit_c} {part} " + (label + " " if label else "") + desc_c
+                merged += " $" + re.sub(r"[^0-9.]", "", price_c)
+                out.append(merged.strip())
+                i = j
+                continue
             # Pattern B -- part-first (e.g. Legrand 'Distributor Line Item' quotes). The table
             # renders one CELL per line in this order: line number / part code (sometimes with
             # the description merged onto the same line) / description line(s) / qty / unit /
@@ -15466,6 +15666,18 @@ def _coverage_distinctive_match_ok(req_item, quoted_item, common_tokens):
         if _sizes_agree:
             r_prod = {_t for _t in r_prod if not str(_t)[:1].isdigit()}
             q_prod = {_t for _t in q_prod if not str(_t)[:1].isdigit()}
+        # v4.3.117 DIMENSION-PAIR: two agreeing explicit sizes (3/4" x 14") plus a shared distinctive
+        # product word (CCU, UNDERCUT) identify the product even when the vendor's catalog prose
+        # (Preset SS316-C2 EXT) swamps the Jaccard test below. An accessory sharing ONE size only
+        # (the 3/4 setting sleeve, the 3/4 cutter blades) never reaches two.
+        try:
+            if len((_rf.get("size") or set()) & (_qf.get("size") or set())) >= 2:
+                _ra = {_t for _t in r_prod if not str(_t)[:1].isdigit()}
+                _qa = {_t for _t in q_prod if not str(_t)[:1].isdigit()}
+                if _ra & _qa:
+                    return True
+        except Exception:
+            pass
         if not r_prod or not q_prod:
             return True
         inter = len(r_prod & q_prod)
@@ -15507,6 +15719,15 @@ def _coverage_edge_score(_req, _q):
             return 3
         _rf3 = _coverage_spec_families((_req or {}).get("description", ""))
         _qf3 = _coverage_spec_families((_q or {}).get("description", ""))
+        # v4.3.117: dimension pair + shared distinctive product word = catalog grade (3)
+        try:
+            if len((_rf3.get("size") or set()) & (_qf3.get("size") or set())) >= 2:
+                _ra3 = {_t for _t in _coverage_distinctive_product_tokens(_rdn, set()) if not str(_t)[:1].isdigit()}
+                _qa3 = {_t for _t in _coverage_distinctive_product_tokens(_qdn, set()) if not str(_t)[:1].isdigit()}
+                if _ra3 & _qa3:
+                    return 3
+        except Exception:
+            pass
         if any(_rv and _qf3.get(_f) and (_rv & _qf3[_f]) for _f, _rv in _rf3.items()):
             return 2
     except Exception:
@@ -15548,6 +15769,29 @@ def _coverage_lineage_map(rec):
     except Exception:
         pass
     return out
+
+
+def _coverage_lineage_lines_for_sender(rec, sender_email):
+    """v4.3.117: the line_ids this sender was sent -- by exact address, else by the vendor's
+    DOMAIN (a quote desk such as inquiry@sbdinc.com answering an RFQ sent to the rep). Public
+    mail domains never match by domain."""
+    try:
+        addr = extract_email_address(str(sender_email or "")).lower() or str(sender_email or "").lower().strip()
+        if not addr:
+            return set()
+        lmap = _coverage_lineage_map(rec)
+        if addr in lmap:
+            return set(lmap.get(addr) or set())
+        dom = str(get_email_domain(addr) or "").lower()
+        if not dom or dom in COVERAGE_PUBLIC_EMAIL_DOMAINS:
+            return set()
+        out = set()
+        for v, lines in lmap.items():
+            if str(get_email_domain(v) or "").lower() == dom:
+                out.update(lines or set())
+        return out
+    except Exception:
+        return set()
 
 
 def _coverage_unique_line_hits(requested, quoted_items, common, lineage_lines=None):
@@ -16216,7 +16460,7 @@ class OutlookWorkflowMonitor:
         self.root.title(f"{APP_TITLE} - {selected_sales_category}")
         remember_window_geometry(self.root, "MaINbox Main Window", "1550x1050")
         try:
-            self.root.minsize(1450, 950)
+            self.root.minsize(1200, 760)
         except Exception:
             pass
         apply_theme(self.root)
@@ -21780,202 +22024,344 @@ class OutlookWorkflowMonitor:
         return None
 
     def setup_ui(self):
+        """v4.3.122: presentation shell; all business actions use existing handlers."""
         self._toolbar_frames = {}
-        top_frame = tk.Frame(self.root, bg=_BG2)
-        top_frame.pack(fill="x", padx=0, pady=0)
-        header_inner = tk.Frame(top_frame, bg=_BG2)
-        header_inner.pack(fill="x", padx=12, pady=8)
-        title_wrap = tk.Frame(header_inner, bg=_BG2)
-        title_wrap.pack(side="left")
-        tk.Label(title_wrap, text="MaINbox", font=("Segoe UI", 16, "bold"), fg=_FG, bg=_BG2).pack(side="left")
-        tk.Label(title_wrap, text="  AI Powered", font=("Segoe UI", 11), fg=_ACCENT, bg=_BG2).pack(side="left", padx=(2, 0))
-        try:
-            _ver = APP_TITLE.split("v", 1)[1].split(" ", 1)[0]
-        except Exception:
-            _ver = ""
-        if _ver:
-            badge = tk.Label(title_wrap, text=f"v{_ver}", font=("Segoe UI", 8, "bold"),
-                             fg=_ACCENT, bg=_BG3, padx=6, pady=1)
-            badge.pack(side="left", padx=10)
-        self.view_label = tk.Label(header_inner, text=f"Sales category: '{self.selected_sales_category}'", font=("Segoe UI", 10), fg=_FG_DIM, bg=_BG2)
-        self.view_label.pack(side="left", padx=20)
-        tk.Button(header_inner, text="Health", command=self.open_health_window,   # v4.3.19
-                  bg=_BTN_BG, fg=_BTN_FG, relief="flat", padx=12, pady=4,
-                  activebackground=_BG3, activeforeground=_ACCENT, cursor="hand2").pack(side="right", padx=6)
-        tk.Button(header_inner, text="Settings", command=self.open_settings_window,
-                  bg=_BTN_BG, fg=_BTN_FG, relief="flat", padx=12, pady=4,
-                  activebackground=_BG3, activeforeground=_ACCENT, cursor="hand2").pack(side="right", padx=6)
-        tk.Button(header_inner, text="\u21bb  Refresh", command=self.refresh_new_emails,
-                  bg=_ACCENT, fg="#ffffff", relief="flat", padx=14, pady=4,
-                  activebackground=_ACCENT2, activeforeground="#ffffff", cursor="hand2",
-                  font=("Segoe UI", _FONT_SIZE, "bold")).pack(side="right", padx=6)
-        # v4.2.81 (Steve): the "Quote Scan" header button removed -- it drove the
-        # June manual quote pipeline (possible-quotes window / mint / ack draft /
-        # extractor handoff), which automatic intake (v4.2.54-61) and the P&A group
-        # picker (v4.2.78-80) have superseded. mainbox_quote_pipeline_entry stays:
-        # its saved-senders functions are still used by typing and Settings.
-        tk.Frame(self.root, bg=_BORDER, height=1).pack(side="top", fill="x")
+        self._ui_commands = {}
+        self._ui_icons = {}
+        self._ui_roles = []
+        self._ui_nav_buttons = []
+        self._ui_nav_collapsed = False
+        self._ui_selection_key = ()
+        self._ui_inspector_open = False
+        self._ui_pane_visible = {"groups": True, "preview": True}
 
-        # --- Pinned bottom bars ---------------------------------------------------
-        # Packed side="bottom" BEFORE the expanding content_pane below, so when the
-        # window is short the PANES give up space instead of these scrolling off the
-        # bottom edge (the bug in the screenshot). status_frame packs first => it sits
-        # at the very bottom, with the action buttons just above it.
-        status_frame = tk.Frame(self.root, bg=_BG)
-        status_frame.pack(side="bottom", fill="x", padx=10, pady=4)
+        header = self._ui_frame(self.root, "panel")
+        header.pack(fill="x")
+        tk.Label(header, text="MaINbox", font=(_FONT, 19, "bold"),
+                 bg=_BG2, fg=_FG).pack(side="left", padx=(20, 22), pady=13)
+        self._ui_button(header, "search", "Search emails and jobs   Ctrl+F",
+                        self.open_search_window_hotkey, "Search MaINbox · Ctrl+F").pack(side="left", pady=10)
+        self._ui_button(header, "command", "", self._ui_open_command_palette,
+                        "Find any action · Ctrl+K").pack(side="left", padx=6)
+        self._ui_button(header, "more", "", self._ui_header_menu,
+                        "Workspace menu").pack(side="right", padx=(2, 14))
+        self._ui_button(header, "gear", "", self.open_settings_window,
+                        "Settings").pack(side="right", padx=2)
+        self._ui_health_button = self._ui_button(header, "activity", "", self._ui_open_status,
+                                                 "Health and connection details")
+        self._ui_health_button.pack(side="right", padx=2)
+        self._ui_button(header, "refresh", "", self.refresh_new_emails,
+                        "Refresh · F5 / Ctrl+R").pack(side="right", padx=2)
+        self._ui_followup_bell = self._ui_button(
+            header, "bell", "", self.open_followup_queue_window, "Follow-up queue")
+        self._ui_followup_bell.pack(side="right", padx=(4, 10))
+        self._ui_frame(self.root, "line", height=1).pack(fill="x")
+
+        # Original status variables remain the only source of operational status.
         self.connection_status_var = tk.StringVar(value="Outlook: connecting...")
-        self.auto_status_var = tk.StringVar(value=(f"AutoPilot: watching every {AUTO_REFRESH_SECONDS}s" if self.auto_refresh_enabled else "AutoPilot: off"))
+        self.auto_status_var = tk.StringVar(value=(f"AutoPilot: watching every {AUTO_REFRESH_SECONDS}s"
+                                                  if self.auto_refresh_enabled else "AutoPilot: off"))
         self.followup_status_var = tk.StringVar(value=f"Follow-ups: checking every {FOLLOWUP_CHECK_SECONDS}s")
         self.ai_status_var = tk.StringVar(value="AI: ready on demand")
         self.last_updated_var = tk.StringVar(value="Last updated: cache only")
-        self.coverage_status_var = tk.StringVar(value="Quote coverage: \u2014")  # v3.9.1 outstanding line-item counter
-        status_vars = [self.connection_status_var, self.auto_status_var, self.followup_status_var, self.ai_status_var, self.last_updated_var, self.coverage_status_var]
-        for idx, var in enumerate(status_vars):
-            tk.Label(status_frame, textvariable=var, anchor="w", fg=_FG_DIM, bg=_BG, font=(_FONT, 8)).pack(side="left", padx=5)
-            if idx < len(status_vars) - 1:
-                tk.Label(status_frame, text=" | ", fg=_FG_DIM, bg=_BG).pack(side="left")
+        self.coverage_status_var = tk.StringVar(value="Quote coverage: —")
+        self._ui_status_vars = [self.connection_status_var, self.auto_status_var,
+                                self.followup_status_var, self.ai_status_var,
+                                self.last_updated_var, self.coverage_status_var]
+        footer = self._ui_frame(self.root, "base")
+        footer.pack(side="bottom", fill="x", padx=14, pady=(4, 7))
+        self._ui_button(footer, "help", "", self._ui_shortcut_help,
+                        "Keyboard shortcuts · ?").pack(side="right")
+        self._ui_status_labels = []
+        for index in (0, 1, 3, 5, 4):
+            label = tk.Label(footer, bg=_BG, fg=_FG_DIM, cursor="hand2",
+                             font=(_FONT, max(8, _FONT_SIZE - 1)), padx=7, anchor="w")
+            label.pack(side="left")
+            label.bind("<Button-1>", lambda e, i=index: self.open_quote_coverage_window()
+                       if i == 5 else self._ui_open_status())
+            self._ui_tooltip(label, lambda i=index: self._ui_status_vars[i].get())
+            self._ui_status_labels.append((index, label))
+        for var in self._ui_status_vars:
+            var.trace_add("write", lambda *_: self._ui_update_status())
 
-        preview_action_frame = tk.Frame(self.root, bg=_BG)
-        preview_action_frame.pack(side="bottom", fill="x", padx=10, pady=(0, 6))
-        self._toolbar_frames["action"] = preview_action_frame
+        body = self._ui_frame(self.root, "base")
+        body.pack(fill="both", expand=True)
+        self._ui_sidebar = self._ui_frame(body, "panel", width=152)
+        self._ui_sidebar.pack(side="left", fill="y")
+        self._ui_sidebar.pack_propagate(False)
+        self._ui_button(self._ui_sidebar, "menu", "Navigation", self._ui_toggle_nav,
+                        "Collapse / expand navigation", nav=True).pack(fill="x", padx=8, pady=(10, 14))
+        for icon, label, command in (
+            ("home", "Workspace", self._ui_focus_workspace),
+            ("group", "Groups", lambda: self._ui_show_pane("groups")),
+            ("trash", "Deleted", self.open_deleted_history_window),   # v4.3.126 (Steve): Deleted History; short label fits the 152-px sidebar
+            ("bell", "Follow-ups", self.open_followup_queue_window),
+            ("quote", "Quotes", self.open_quote_coverage_window),
+        ):
+            btn = self._ui_button(self._ui_sidebar, icon, label, command, label, nav=True)
+            btn.pack(fill="x", padx=8, pady=3)
+        self._ui_frame(self._ui_sidebar, "line", height=1).pack(fill="x", padx=16, pady=12)
+        action_frame = self._ui_frame(self._ui_sidebar, "panel")
+        action_frame.pack(fill="x", padx=8)
+        self._toolbar_frames["action"] = action_frame
         self._build_toolbar("action")
 
-        # --- Resizable vertical panes: email list / groups / preview --------------
-        # A vertical PanedWindow whose three children drag-resize via the sashes.
-        # list_pane stretches into new space; groups & preview hold their size unless
-        # dragged. Minsizes keep each usable; the bars above/below are pinned, so a
-        # drag only moves these three regions.
-        content_pane = tk.PanedWindow(self.root, orient=tk.VERTICAL, sashrelief=tk.RAISED, sashwidth=6, bg=_BG, bd=0)
-        content_pane.pack(side="top", fill="both", expand=True)
+        self._ui_workspace = tk.PanedWindow(body, orient=tk.HORIZONTAL, bd=0,
+                                             sashwidth=6, bg=_BG, sashrelief="flat")
+        self._ui_workspace.pack(side="left", fill="both", expand=True, padx=(8, 10), pady=(6, 0))
+        center = self._ui_frame(self._ui_workspace, "base")
+        self._ui_workspace.add(center, minsize=440, stretch="always")
+        workspace_header = self._ui_frame(center, "base")
+        workspace_header.pack(fill="x", padx=6, pady=(3, 6))
+        self.view_label = tk.Label(workspace_header,
+                                   text=f"Sales category: '{self.selected_sales_category}'",
+                                   bg=_BG, fg=_FG_DIM, font=(_FONT, _FONT_SIZE), anchor="w")
+        for icon, cmd, tip in (
+            ("group", lambda: self._ui_toggle_pane("groups"), "Show / hide groups"),
+            ("preview", lambda: self._ui_toggle_pane("preview"), "Show / hide email preview"),
+            ("panel", self._ui_toggle_inspector, "Show / hide selection details"),
+            ("columns", self._ui_columns_menu, "Choose visible email columns"),
+        ):
+            self._ui_button(workspace_header, icon, "", cmd, tip).pack(side="right", padx=1)
+        self.view_label.pack(side="left", fill="x", expand=True)
 
-        list_pane = tk.Frame(content_pane, bg=_BG)
-        self.tree = ttk.Treeview(
-            list_pane,
-            columns=("source", "received", "sender", "type", "subject", "outlook_categories", "category", "urgency", "status", "followup"),
-            show="headings",
-            selectmode="extended"
-        )
-        columns = [
-            ("source", "Source", 95), ("received", "Received", 145), ("sender", "Sender", 190),
-            ("type", "Type", 55), ("subject", "Subject", 325), ("outlook_categories", "Outlook Categories", 190),
-            ("category", "Workflow Category", 150), ("urgency", "Urgency", 85),
-            ("status", "Status", 135), ("followup", "Follow Up", 150)
-        ]
-        for col, label, width in columns:
-            self.tree.heading(col, text=label)
-            self.tree.column(col, width=width)
-        self.tree.pack(fill="both", expand=True, padx=10, pady=5)
-        self.tree.bind("<<TreeviewSelect>>", self.on_email_select)
-        self.configure_tree_tags()
-
-        edit_frame = tk.LabelFrame(list_pane, text="Edit Selected Email(s)", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
-        edit_frame.pack(fill="x", padx=10, pady=5)
-        tk.Label(edit_frame, text="Workflow Category", bg=_BG2, fg=_FG).pack(side="left", padx=5)
-        self.category_var = tk.StringVar()
-        self.category_combo = ttk.Combobox(edit_frame, textvariable=self.category_var, values=CATEGORIES, state="readonly", width=24)
-        self.category_combo.pack(side="left", padx=5)
-        tk.Label(edit_frame, text="Urgency", bg=_BG2, fg=_FG).pack(side="left", padx=5)
-        self.urgency_var = tk.StringVar()
-        self.urgency_combo = ttk.Combobox(edit_frame, textvariable=self.urgency_var, values=URGENCY_LEVELS, state="readonly", width=14)
-        self.urgency_combo.pack(side="left", padx=5)
-        tk.Label(edit_frame, text="Status", bg=_BG2, fg=_FG).pack(side="left", padx=5)
-        self.status_var = tk.StringVar()
-        self.status_combo = ttk.Combobox(edit_frame, textvariable=self.status_var, values=STATUSES, state="readonly", width=22)
-        self.status_combo.pack(side="left", padx=5)
-        tk.Label(edit_frame, text="Type", bg=_BG2, fg=_FG).pack(side="left", padx=5)
-        self.email_type_var = tk.StringVar()
-        self.email_type_combo = ttk.Combobox(edit_frame, textvariable=self.email_type_var, values=EMAIL_TYPE_CODES, state="readonly", width=5)
-        self.email_type_combo.pack(side="left", padx=5)
-        # v3.9.22: dropdown edits are NO LONGER committed the instant a value is picked.
-        # They stage in the combo and are only written when "Apply / Save to Selected" is
-        # pressed. save_pending_selected_workflow_edits_before_refresh() still flushes a
-        # staged edit just before a Refresh, so a pending change is not lost (no snap-back).
-        edit_btns = tk.Frame(edit_frame, bg=_BG2)
-        edit_btns.pack(side="left", fill="x")
-        self._toolbar_frames["edit"] = edit_btns
-        self._build_toolbar("edit")
-        
-        filter_frame = tk.LabelFrame(list_pane, text="Filters", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
-        filter_frame.pack(fill="x", padx=10, pady=8)
+        filter_frame = self._ui_frame(center, "base")
+        filter_frame.pack(fill="x", padx=4, pady=(0, 8))
         self.filter_label_var = tk.StringVar(value="Current Filter: Show All")
         self._filter_buttons = {}
-        filter_btns = tk.Frame(filter_frame, bg=_BG2)
-        filter_btns.pack(side="left", fill="x")
-        self._toolbar_frames["filter"] = filter_btns
-        tk.Label(filter_frame, textvariable=self.filter_label_var, font=("Segoe UI", 10, "bold"), bg=_BG2, fg=_ACCENT).pack(side="right", padx=10)
+        self._toolbar_frames["filter"] = filter_frame
         self._build_toolbar("filter")
+        self.filter_label_var.trace_add("write", lambda *_: self._ui_sync_filters())
 
-        groups_frame = tk.LabelFrame(content_pane, text="Groups / Quote Jobs", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
+        self._ui_content = tk.PanedWindow(center, orient=tk.VERTICAL, bd=0,
+                                           sashwidth=7, bg=_BG, sashrelief="flat")
+        self._ui_content.pack(fill="both", expand=True)
+        list_frame = self._ui_frame(self._ui_content, "base")
+        tree_wrap = self._ui_frame(list_frame, "base")
+        tree_wrap.pack(fill="both", expand=True)
+        self.tree = ttk.Treeview(
+            tree_wrap, columns=("source", "received", "sender", "type", "subject", "outlook_categories",
+                                "category", "urgency", "status", "followup", "expand"),
+            displaycolumns=("received", "sender", "type", "expand", "subject", "urgency", "status", "followup"),
+            show="headings", selectmode="extended", height=10, style="Mainbox.Treeview")
+        for col, label, width, minimum in (
+            ("source", "Source", 92, 70), ("received", "Received", 134, 110),
+            ("sender", "Sender", 164, 110), ("type", "Type", 46, 40),
+            ("subject", "Subject / job", 330, 200), ("outlook_categories", "Outlook categories", 160, 110),
+            ("category", "Workflow category", 160, 110), ("urgency", "Urgency", 80, 65),
+            ("status", "Status", 150, 110), ("followup", "Follow-up", 134, 100),
+        ):
+            self.tree.heading(col, text=label)
+            self.tree.column(col, width=width, minwidth=minimum, stretch=(col == "subject"))
+        # v4.3.126 (Steve): the expand / collapse column. Each group header carries its arrow here (set with
+        # tree.set after the insert) and the heading itself is the all-groups toggle: pointing down while any group
+        # is open (click collapses all), pointing right when every group is collapsed (click expands all). It is
+        # LAST in `columns` so every existing 10-value row stays valid, and shown just before Subject / job; the
+        # column chooser lists it as "Expand / collapse". A single click on a header's arrow cell toggles that group.
+        self.tree.heading("expand", text="\u25bc", command=self._ui_toggle_all_groups_from_heading)
+        self.tree.column("expand", width=34, minwidth=28, anchor="center", stretch=False)
+        self.tree.bind("<Button-1>", self._ui_expand_cell_click, add="+")
+        self._ui_tree_scrollbars(tree_wrap, self.tree)
+        self.tree.bind("<<TreeviewSelect>>", self.on_email_select)
+        self.tree.bind("<<TreeviewSelect>>", self._ui_email_selected, add="+")
+        self._ui_hover_frame = self._ui_frame(self.tree, "panel")
+        # v4.3.126 (Steve): in the Low / Hidden view a garbage can appears left of the bell -- the same ask-first
+        # "Delete from MaINbox only" path as the Delete key there. _ui_hover_row packs it in that view only.
+        self._ui_hover_trash = self._ui_button(self._ui_hover_frame, "trash", "",
+                                               lambda: self._ui_hover_action(self._ui_hover_delete_low),
+                                               "Delete from MaINbox only (Low / Hidden)")
+        for icon, command, tip in (
+            ("bell", self.open_followup_window, "Follow-up"),
+            ("check", self._ui_complete_selected, "Mark completed"),
+            ("group", self._ui_assign_group, "Add / change group"),
+            ("more", self._ui_email_actions, "More email actions"),
+        ):
+            self._ui_button(self._ui_hover_frame, icon, "", lambda fn=command: self._ui_hover_action(fn),
+                            tip).pack(side="left")
+        self.tree.bind("<Motion>", self._ui_hover_row, add="+")
+        self.tree.bind("<Leave>", lambda e: self.tree.after(120, self._ui_hide_hover), add="+")
+        self.tree.bind("<Configure>", lambda e: self._ui_hover_frame.place_forget(), add="+")
+        self.configure_tree_tags()
+        self._ui_content.add(list_frame, minsize=170, stretch="always")
 
-        group_buttons = tk.Frame(groups_frame, bg=_BG2)
-        group_buttons.pack(side="left", fill="y", padx=5, pady=5)
+        # Keep the original groups tree and its selection / context-menu handlers.
+        groups_frame = self._ui_frame(self._ui_content, "panel")
+        group_header = self._ui_frame(groups_frame, "panel")
+        group_header.pack(fill="x", padx=10, pady=(7, 4))
+        tk.Label(group_header, text="Groups / quote jobs", bg=_BG2, fg=_FG,
+                 font=(_FONT, _FONT_SIZE, "bold")).pack(side="left")
+        self._ui_button(group_header, "close", "", lambda: self._ui_toggle_pane("groups"),
+                        "Hide groups").pack(side="right")
+        group_buttons = self._ui_frame(group_header, "panel")
+        group_buttons.pack(side="right", padx=5)
         self._toolbar_frames["group"] = group_buttons
         self._build_toolbar("group")
-
-        group_panes = tk.PanedWindow(
-            groups_frame,
-            orient=tk.HORIZONTAL,
-            sashrelief=tk.RAISED,
-            sashwidth=6,
-            bg=_BG2,
-            bd=0
-        )
-        group_panes.pack(side="left", fill="both", expand=True, padx=5, pady=5)
-
-        groups_tree_frame = tk.Frame(group_panes, bg=_BG2)
-        self.groups_tree = ttk.Treeview(groups_tree_frame, columns=("urgency", "count"), show="tree headings", height=9, selectmode="extended")   # v4.3.90: Ctrl/Shift multi-select for Merge Groups
-        self.groups_tree.heading("#0", text="Group")
+        group_tree_wrap = self._ui_frame(groups_frame, "panel")
+        group_tree_wrap.pack(fill="both", expand=True, padx=6, pady=(0, 5))
+        self.groups_tree = ttk.Treeview(group_tree_wrap, columns=("urgency", "count"),
+                                        show="tree headings", height=6, selectmode="extended",
+                                        style="Mainbox.Treeview")
+        self.groups_tree.heading("#0", text="\u25bc Group", anchor="w", command=self._ui_toggle_all_groups_from_heading)  # v4.3.126: arrow at the far left
         self.groups_tree.heading("urgency", text="Urgency")
-        self.groups_tree.heading("count", text="Emails")
-        self.groups_tree.column("#0", width=440)
-        self.groups_tree.column("urgency", width=90, anchor="center")
-        self.groups_tree.column("count", width=80, anchor="center")
-        self.groups_tree.pack(fill="both", expand=True, padx=0, pady=0)
-        self.groups_tree.tag_configure("group_new", background="#4a3800", foreground="#ffd966")
+        self.groups_tree.heading("count", text="Emails / received")
+        self.groups_tree.column("#0", width=480, minwidth=200)
+        self.groups_tree.column("urgency", width=90, minwidth=70, anchor="center", stretch=False)
+        self.groups_tree.column("count", width=140, minwidth=70, anchor="center", stretch=False)
+        self._ui_tree_scrollbars(group_tree_wrap, self.groups_tree)
         self.groups_tree.bind("<<TreeviewSelect>>", self.on_group_select)
+        self.groups_tree.bind("<<TreeviewSelect>>", self._ui_group_selected, add="+")
         self.groups_tree.bind("<<TreeviewOpen>>", self.on_group_open_close)
         self.groups_tree.bind("<<TreeviewClose>>", self.on_group_open_close)
         self.groups_tree.bind("<Double-1>", self.on_group_tree_double_click)
         self.groups_tree.bind("<Button-3>", self.show_group_context_menu)
-        # v2.4.1 SafeGroups: clicking a group only selects it / loads notes.
-        # Emails are added only by Add Selected button or Ctrl+A.
+        self._ui_content.add(groups_frame, minsize=100, height=220, stretch="never")
 
-        notes_frame = tk.LabelFrame(group_panes, text="Group Notes", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
+        preview_frame = self._ui_frame(self._ui_content, "panel")
+        preview_header = self._ui_frame(preview_frame, "panel")
+        preview_header.pack(fill="x", padx=10, pady=(5, 1))
+        tk.Label(preview_header, text="Email preview", bg=_BG2, fg=_FG,
+                 font=(_FONT, _FONT_SIZE, "bold")).pack(side="left")
+        self._ui_button(preview_header, "close", "", lambda: self._ui_toggle_pane("preview"),
+                        "Hide preview").pack(side="right")
+        self._ui_button(preview_header, "external", "", self.open_selected_email,
+                        "Open in Outlook · Enter").pack(side="right", padx=2)
+        self._ui_button(preview_header, "download", "Load body", self.load_selected_body_preview,
+                        "Load the selected email body").pack(side="right", padx=2)
+        self.preview_text = tk.Text(preview_frame, height=6, wrap="word", font=(_FONT, _FONT_SIZE),
+                                    bg=_BG3, fg=_FG, insertbackground=_FG, padx=12, pady=9,
+                                    selectbackground=_SEL_BG, selectforeground=_SEL_FG, bd=0,
+                                    relief="flat", highlightthickness=0)
+        preview_scroll = ttk.Scrollbar(preview_frame, command=self.preview_text.yview)
+        preview_scroll.pack(side="right", fill="y")
+        self.preview_text.configure(yscrollcommand=preview_scroll.set)
+        self.preview_text.pack(fill="both", expand=True, padx=(4, 0), pady=(2, 4))
+        self._ui_content.add(preview_frame, minsize=90, height=166, stretch="never")
+        self._ui_panes = {"groups": groups_frame, "preview": preview_frame}
+
+        self._ui_inspector = self._ui_frame(self._ui_workspace, "panel", width=320)
+        inspector_header = self._ui_frame(self._ui_inspector, "panel")
+        inspector_header.pack(fill="x", padx=12, pady=(10, 4))
+        self._ui_selection_title = tk.StringVar(value="Selection details")
+        tk.Label(inspector_header, textvariable=self._ui_selection_title, bg=_BG2, fg=_FG,
+                 font=(_FONT, _FONT_SIZE + 1, "bold"), anchor="w").pack(side="left", fill="x", expand=True)
+        self._ui_button(inspector_header, "close", "", self._ui_close_inspector,
+                        "Close details · Esc").pack(side="right")
+        self._ui_tabs = ttk.Notebook(self._ui_inspector)
+        self._ui_tabs.pack(fill="both", expand=True, padx=6, pady=(0, 6))
+        details = self._ui_frame(self._ui_tabs, "panel")
+        notes = self._ui_frame(self._ui_tabs, "panel")
+        followups = self._ui_frame(self._ui_tabs, "panel")
+        ai_tab = self._ui_frame(self._ui_tabs, "panel")
+        self._ui_tab_frames = {"Details": details, "Notes": notes, "Follow-ups": followups, "AI": ai_tab}
+        for label, frame in self._ui_tab_frames.items():
+            self._ui_tabs.add(frame, text=label)
+
+        # A scrollable selection form remains usable at large saved font sizes.
+        detail_canvas = tk.Canvas(details, bg=_BG2, highlightthickness=0, width=295)
+        self._ui_roles.append((detail_canvas, "panel"))
+        detail_scroll = ttk.Scrollbar(details, command=detail_canvas.yview)
+        detail_scroll.pack(side="right", fill="y")
+        detail_canvas.pack(fill="both", expand=True)
+        detail_canvas.configure(yscrollcommand=detail_scroll.set)
+        form = self._ui_frame(detail_canvas, "panel")
+        form_id = detail_canvas.create_window((0, 0), window=form, anchor="nw")
+        form.bind("<Configure>", lambda e: detail_canvas.configure(scrollregion=detail_canvas.bbox("all")))
+        detail_canvas.bind("<Configure>", lambda e: detail_canvas.itemconfigure(form_id, width=e.width))
+        self._ui_subject_var = tk.StringVar(value="Select an email to view its workflow.")
+        tk.Label(form, textvariable=self._ui_subject_var, wraplength=265, justify="left", anchor="w",
+                 bg=_BG2, fg=_FG, font=(_FONT, _FONT_SIZE, "bold")).pack(fill="x", padx=12, pady=(14, 5))
+        self._ui_sender_var = tk.StringVar()
+        tk.Label(form, textvariable=self._ui_sender_var, wraplength=265, justify="left", anchor="w",
+                 bg=_BG2, fg=_FG_DIM).pack(fill="x", padx=12, pady=(0, 10))
+        self.category_var = tk.StringVar()
+        self.urgency_var = tk.StringVar()
+        self.status_var = tk.StringVar()
+        self.email_type_var = tk.StringVar()
+        for label, attribute, variable, values in (
+            ("Workflow category", "category_combo", self.category_var, CATEGORIES),
+            ("Urgency", "urgency_combo", self.urgency_var, URGENCY_LEVELS),
+            ("Status", "status_combo", self.status_var, STATUSES),
+            ("Type   C · Customer   V · Vendor   E · Employee   M · Marketing",
+             "email_type_combo", self.email_type_var, EMAIL_TYPE_CODES),
+        ):
+            tk.Label(form, text=label, wraplength=270, justify="left", anchor="w", bg=_BG2,
+                     fg=_FG_DIM).pack(fill="x", padx=12, pady=(9, 4))
+            combo = ttk.Combobox(form, textvariable=variable, values=values, state="readonly", width=26)
+            combo.pack(fill="x", padx=12)
+            setattr(self, attribute, combo)
+        tk.Label(form, text="Changes are staged until Apply changes.\nCtrl+Enter applies the selected values.",
+                 bg=_BG2, fg=_FG_DIM, wraplength=265, justify="left").pack(fill="x", padx=12, pady=(12, 5))
+        edit_buttons = self._ui_frame(form, "panel")
+        edit_buttons.pack(fill="x", padx=10, pady=(4, 10))
+        self._toolbar_frames["edit"] = edit_buttons
+        self._build_toolbar("edit")
+        self._ui_button(form, "external", "Open in Outlook", self.open_selected_email,
+                        "Open selected email · Enter").pack(fill="x", padx=12, pady=3)
+        self._ui_button(form, "check", "Mark completed", self._ui_complete_selected,
+                        "Mark completed · Ctrl+Shift+D").pack(fill="x", padx=12, pady=3)
+        self._ui_button(form, "group", "Add / change group", self._ui_assign_group,
+                        "Choose a group · Ctrl+G").pack(fill="x", padx=12, pady=3)
+        self._ui_button(form, "more", "More email actions", self._ui_email_actions,
+                        "Email actions").pack(fill="x", padx=12, pady=(3, 14))
+
         self.group_notes_status_var = tk.StringVar(value="Select a group to edit notes.")
-        tk.Label(notes_frame, textvariable=self.group_notes_status_var, fg=_FG_DIM, anchor="w", bg=_BG2).pack(fill="x", padx=5, pady=(2, 0))
-        self.group_notes_text = tk.Text(notes_frame, height=10, width=42, wrap="word", font=("Segoe UI", 9), bg=_BG3, fg=_FG, insertbackground=_FG)
-        self.group_notes_text.pack(fill="both", expand=True, padx=5, pady=4)
-        notes_buttons = tk.Frame(notes_frame, bg=_BG2)
-        notes_buttons.pack(fill="x", padx=5, pady=(0, 4))
-        tk.Button(notes_buttons, text="Save Notes", command=self.save_selected_group_notes, width=12).pack(side="left", padx=2)
-        tk.Button(notes_buttons, text="Clear", command=self.clear_selected_group_notes, width=8).pack(side="left", padx=2)
+        tk.Label(notes, textvariable=self.group_notes_status_var, bg=_BG2, fg=_FG_DIM,
+                 wraplength=280, anchor="w", justify="left").pack(fill="x", padx=12, pady=12)
+        notes_buttons = self._ui_frame(notes, "panel")
+        notes_buttons.pack(side="bottom", fill="x", padx=10, pady=10)
+        self._ui_button(notes_buttons, "save", "Save notes", self.save_selected_group_notes,
+                        "Save group notes · Ctrl+S", primary=True).pack(side="left")
+        self._ui_button(notes_buttons, "trash", "", self.clear_selected_group_notes,
+                        "Clear group notes (asks for confirmation)").pack(side="right")
+        self.group_notes_text = tk.Text(notes, height=10, width=28, wrap="word", bg=_BG3, fg=_FG,
+                                        insertbackground=_FG, padx=10, pady=10,
+                                        font=(_FONT, _FONT_SIZE))
+        self.group_notes_text.pack(fill="both", expand=True, padx=10, pady=(0, 6))
+        self.group_notes_text.bind("<Control-s>", self._ui_save_notes_hotkey)
+        self.group_notes_text.bind("<Control-S>", self._ui_save_notes_hotkey)
 
-        followup_preview_frame = tk.LabelFrame(group_panes, text="Upcoming Follow-Ups", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
-        self.followup_preview_tree = ttk.Treeview(
-            followup_preview_frame,
-            columns=("due", "subject"),
-            show="headings",
-            height=5,
-            selectmode="browse"
-        )
+        followup_buttons = self._ui_frame(followups, "panel")
+        followup_buttons.pack(side="bottom", fill="x", padx=10, pady=10)
+        self._ui_button(followup_buttons, "bell", "Open queue", self.open_followup_queue_window,
+                        "Open the full follow-up queue").pack(side="left")
+        self._ui_button(followup_buttons, "clock", "Past due", self.open_past_due_followups,
+                        "Review past due follow-ups").pack(side="right")
+        followup_wrap = self._ui_frame(followups, "panel")
+        followup_wrap.pack(fill="both", expand=True, padx=6, pady=10)
+        self.followup_preview_tree = ttk.Treeview(followup_wrap, columns=("due", "subject"),
+                                                 show="headings", height=7, selectmode="browse",
+                                                 style="Mainbox.Treeview")
         self.followup_preview_tree.heading("due", text="Due")
         self.followup_preview_tree.heading("subject", text="Subject")
-        self.followup_preview_tree.column("due", width=110, anchor="center")
-        self.followup_preview_tree.column("subject", width=310)
-        self.followup_preview_tree.pack(fill="both", expand=True, padx=5, pady=(4, 2))
+        self.followup_preview_tree.column("due", width=120, minwidth=100, stretch=False)
+        self.followup_preview_tree.column("subject", width=260, minwidth=160)
+        self._ui_tree_scrollbars(followup_wrap, self.followup_preview_tree)
         self.followup_preview_tree.tag_configure("past_due", background="#4a2020", foreground="#ffaaaa")
         self.followup_preview_tree.tag_configure("due_soon", background="#4a3800", foreground="#ffd966")
         self.followup_preview_tree.tag_configure("upcoming", background=_BG3, foreground=_FG)
-        followup_preview_buttons = tk.Frame(followup_preview_frame, bg=_BG2)
-        followup_preview_buttons.pack(fill="x", padx=5, pady=(0, 4))
-        tk.Button(followup_preview_buttons, text="Open Follow-Up Queue", command=self.open_followup_queue_window, width=20).pack(side="left", padx=2)
-        tk.Button(followup_preview_buttons, text="Past Due Follow-Ups", command=self.open_past_due_followups, width=20).pack(side="left", padx=2)
 
-        group_panes.add(groups_tree_frame, minsize=220)
-        group_panes.add(notes_frame, minsize=220)
-        group_panes.add(followup_preview_frame, minsize=220)
+        tk.Label(ai_tab, text="Saved AI assessment", bg=_BG2, fg=_FG,
+                 font=(_FONT, _FONT_SIZE, "bold")).pack(anchor="w", padx=12, pady=(14, 8))
+        self._ui_ai_var = tk.StringVar(value="Select an email to view its saved AI assessment.")
+        ai_buttons = self._ui_frame(ai_tab, "panel")
+        ai_buttons.pack(side="bottom", fill="x", padx=12, pady=10)
+        for icon, label, command in (
+            ("spark", "Scan selected email", self.run_ai_scan_selected),
+            ("reply", "AI reply", self.create_ai_draft_reply),
+            ("quote", "Send quote RFQ", self.open_quote_intelligence_for_selected_email),
+            ("spark", "Group AI summary", self.generate_selected_group_summary),
+        ):
+            self._ui_button(ai_buttons, icon, label, command, label).pack(fill="x", pady=4)
+        self._ui_ai_text = tk.Text(ai_tab, wrap="word", width=28, height=8, bg=_BG3, fg=_FG_DIM,
+                                    padx=10, pady=10, font=(_FONT, _FONT_SIZE), state="disabled")
+        ai_scroll = ttk.Scrollbar(ai_tab, command=self._ui_ai_text.yview)
+        ai_scroll.pack(side="right", fill="y")
+        self._ui_ai_text.configure(yscrollcommand=ai_scroll.set)
+        self._ui_ai_text.pack(fill="both", expand=True, padx=(10, 0), pady=(0, 5))
+        self._ui_ai_var.trace_add("write", lambda *_: self._ui_update_ai_text())
+        self._ui_update_ai_text()
 
-        # v2.4.1 SafeGroups: drag/click-to-add disabled to prevent accidental group assignment.
+        # Existing bindings are retained verbatim; new shortcuts are installed separately.
         self.tree.bind("<Double-Button-1>", self.on_main_tree_double_click, add="+")
         self.tree.bind("<Double-1>", self.on_main_tree_double_click)
         self.tree.bind("<Button-3>", self.show_email_context_menu)
@@ -21990,7 +22376,7 @@ class OutlookWorkflowMonitor:
         self.root.bind("<Control-Z>", self.undo_last_action)
         self.root.bind("<Control-t>", self.cycle_selected_email_type_hotkey)
         self.root.bind("<Control-T>", self.cycle_selected_email_type_hotkey)
-        self.root.bind("<Control-m>", self.merge_selected_groups_hotkey)   # v4.3.90 (Ctrl+Shift+M stays the Marketing profile)
+        self.root.bind("<Control-m>", self.merge_selected_groups_hotkey)
         self.root.bind("<Control-M>", self.merge_selected_groups_hotkey)
         self.root.bind("<Control-Shift-V>", lambda event: self.apply_workflow_hotkey_profile("vendor"))
         self.root.bind("<Control-Shift-v>", lambda event: self.apply_workflow_hotkey_profile("vendor"))
@@ -22002,18 +22388,922 @@ class OutlookWorkflowMonitor:
         self.root.bind("<Control-Shift-m>", lambda event: self.apply_workflow_hotkey_profile("marketing"))
         self.root.bind("<Control-Shift-N>", lambda event: self.apply_workflow_hotkey_profile("normal"))
         self.root.bind("<Control-Shift-n>", lambda event: self.apply_workflow_hotkey_profile("normal"))
-        # v4.3.115: Ctrl+Shift+L pins / unpins whichever MaINbox window has the focus (bind_all = every Toplevel).
         self.root.bind_all("<Control-Shift-L>", self._toggle_active_window_topmost)
         self.root.bind_all("<Control-Shift-l>", self._toggle_active_window_topmost)
+        self._ui_install_shortcuts()
+        self._ui_roles.extend(((self._ui_workspace, "base"), (self._ui_content, "base")))
+        self._ui_retheme()
+        self._ui_update_status()
 
-        preview_frame = tk.LabelFrame(content_pane, text="Email Preview", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
-        self.preview_text = tk.Text(preview_frame, height=8, wrap="word", font=("Segoe UI", 10), bg=_BG3, fg=_FG, insertbackground=_FG, selectbackground=_SEL_BG, selectforeground=_SEL_FG, relief="flat", borderwidth=0)
-        self.preview_text.pack(fill="both", expand=True, padx=5, pady=5)
+        # Transient feedback only; Undo uses the existing application undo stack.
+        self._ui_toast_frame = self._ui_frame(self.root, "panel")
+        self._ui_toast_label = tk.Label(self._ui_toast_frame, bg=_BG2, fg=_FG, padx=14, pady=8)
+        self._ui_toast_label.pack(side="left")
+        self._ui_button(self._ui_toast_frame, "reply", "Undo", self._ui_toast_undo,
+                        "Undo the latest action · Ctrl+Z").pack(side="left", padx=(0, 5))
 
-        # Register the three drag-resizable panes (add order = top -> bottom).
-        content_pane.add(list_pane, minsize=240, stretch="always")
-        content_pane.add(groups_frame, minsize=130, stretch="never")
-        content_pane.add(preview_frame, minsize=90, stretch="never")
+    def _ui_frame(self, parent, role="base", **options):
+        colors = {"base": _BG, "panel": _BG2, "line": _BORDER}
+        frame = tk.Frame(parent, bg=colors[role], **options)
+        self._ui_roles.append((frame, role))
+        return frame
+
+    def _ui_icon(self, name, color=None):
+        """Small antialiased outline icons, drawn with Python/Tk only; no asset install."""
+        import math
+        import struct
+        import zlib
+        color = color or _FG_DIM
+        size = max(18, min(28, int(_FONT_SIZE * 1.7)))
+        key = (name, color, size)
+        if key in self._ui_icons:
+            return self._ui_icons[key]
+        paths = {
+            "search": [[(4, 10), (4, 7), (7, 4), (11, 4), (14, 7), (14, 11), (11, 14), (7, 14), (4, 11)], [(13, 13), (19, 19)]],
+            "menu": [[(4, 6), (20, 6)], [(4, 12), (20, 12)], [(4, 18), (20, 18)]],
+            "home": [[(3, 11), (12, 3), (21, 11)], [(5, 10), (5, 21), (10, 21), (10, 14), (14, 14), (14, 21), (19, 21), (19, 10)]],
+            "group": [[(3, 7), (10, 7), (12, 9), (21, 9), (21, 20), (3, 20), (3, 7)], [(5, 4), (11, 4), (13, 6), (20, 6)]],
+            "bell": [[(6, 10), (7, 6), (10, 4), (14, 4), (17, 6), (18, 10), (18, 15), (21, 18), (3, 18), (6, 15), (6, 10)], [(10, 21), (14, 21)], [(12, 2), (12, 4)]],
+            "quote": [[(5, 3), (15, 3), (20, 8), (20, 21), (5, 21), (5, 3)], [(15, 3), (15, 8), (20, 8)], [(8, 12), (16, 12)], [(8, 16), (14, 16)]],
+            "inbox": [[(3, 14), (6, 4), (18, 4), (21, 14), (21, 20), (3, 20), (3, 14), (8, 14), (10, 17), (14, 17), (16, 14), (21, 14)]],
+            "sent": [[(3, 3), (22, 11), (13, 14), (10, 22), (3, 3)], [(3, 3), (13, 14)]],
+            "spark": [[(12, 2), (15, 9), (22, 12), (15, 15), (12, 22), (9, 15), (2, 12), (9, 9), (12, 2)]],
+            "triage": [[(4, 6), (6, 8), (10, 3)], [(13, 6), (21, 6)], [(4, 15), (6, 17), (10, 12)], [(13, 15), (21, 15)], [(13, 20), (21, 20)]],
+            "activity": [[(2, 12), (6, 12), (9, 4), (13, 21), (17, 9), (19, 12), (22, 12)]],
+            "refresh": [[(19, 7), (16, 4), (9, 4), (5, 7), (3, 12), (5, 18), (10, 21), (16, 20), (20, 16)], [(19, 2), (19, 8), (13, 8)]],
+            "plus": [[(12, 4), (12, 20)], [(4, 12), (20, 12)]],
+            "close": [[(6, 6), (18, 18)], [(18, 6), (6, 18)]],
+            "check": [[(4, 12), (9, 17), (20, 6)]],
+            "clock": [[(12, 7), (12, 12), (16, 14)]],
+            "external": [[(14, 3), (21, 3), (21, 10)], [(11, 13), (21, 3)], [(10, 5), (4, 5), (4, 21), (20, 21), (20, 14)]],
+            "preview": [[(3, 4), (21, 4), (21, 20), (3, 20), (3, 4)], [(3, 14), (21, 14)]],
+            "panel": [[(3, 4), (21, 4), (21, 20), (3, 20), (3, 4)], [(15, 4), (15, 20)]],
+            "columns": [[(3, 4), (21, 4), (21, 20), (3, 20), (3, 4)], [(9, 4), (9, 20)], [(15, 4), (15, 20)]],
+            "filter": [[(3, 5), (21, 5), (14, 13), (14, 20), (10, 18), (10, 13), (3, 5)]],
+            "save": [[(4, 3), (17, 3), (21, 7), (21, 21), (3, 21), (3, 3), (4, 3)], [(7, 3), (7, 9), (16, 9), (16, 3)], [(7, 21), (7, 14), (17, 14), (17, 21)]],
+            "trash": [[(4, 6), (20, 6)], [(8, 6), (8, 3), (16, 3), (16, 6)], [(6, 6), (7, 21), (17, 21), (18, 6)], [(10, 10), (10, 17)], [(14, 10), (14, 17)]],
+            "download": [[(12, 3), (12, 16)], [(7, 11), (12, 16), (17, 11)], [(4, 17), (4, 21), (20, 21), (20, 17)]],
+            "reply": [[(10, 4), (3, 10), (10, 16)], [(3, 10), (14, 10), (19, 13), (21, 20)]],
+            "chevron": [[(8, 5), (15, 12), (8, 19)]],
+            "command": [[(7, 9), (7, 4), (3, 4), (3, 8), (20, 8), (20, 4), (16, 4), (16, 20), (20, 20), (20, 16), (3, 16), (3, 20), (7, 20), (7, 9)]],
+            "help": [[(8, 7), (9, 5), (14, 5), (16, 8), (15, 11), (12, 13), (12, 15)], [(12, 18), (12, 18.2)]],
+        }
+        shapes = list(paths.get(name, paths["more"] if "more" in paths else []))
+        if name in ("clock", "help"):
+            shapes.append([(12 + 10 * math.cos(i * math.pi / 24), 12 + 10 * math.sin(i * math.pi / 24)) for i in range(49)])
+        if name == "more":
+            shapes = [[(x, 11.8), (x, 12.2)] for x in (5, 12, 19)]
+        if name == "gear":
+            shapes = [[(12 + (10 if i % 4 in (1, 2) else 8) * math.cos(i * math.pi / 12),
+                         12 + (10 if i % 4 in (1, 2) else 8) * math.sin(i * math.pi / 12)) for i in range(25)],
+                      [(12 + 3.5 * math.cos(i * math.pi / 16), 12 + 3.5 * math.sin(i * math.pi / 16)) for i in range(33)]]
+        scale = 3
+        width = size * scale
+        pixels = bytearray(width * width)
+        factor = width / 24
+        radius = 0.85 * factor
+        for path in shapes:
+            for (ax, ay), (bx, by) in zip(path, path[1:]):
+                ax, ay, bx, by = ax * factor, ay * factor, bx * factor, by * factor
+                dx, dy = bx - ax, by - ay
+                length = dx * dx + dy * dy
+                for y in range(max(0, int(min(ay, by) - radius)), min(width, int(max(ay, by) + radius) + 2)):
+                    for x in range(max(0, int(min(ax, bx) - radius)), min(width, int(max(ax, bx) + radius) + 2)):
+                        t = max(0, min(1, ((x + 0.5 - ax) * dx + (y + 0.5 - ay) * dy) / length)) if length else 0
+                        if (x + 0.5 - ax - t * dx) ** 2 + (y + 0.5 - ay - t * dy) ** 2 <= radius ** 2:
+                            pixels[y * width + x] = 255
+        rgb = tuple(v // 256 for v in self.root.winfo_rgb(color))
+        raw = bytearray()
+        for y in range(size):
+            raw.append(0)
+            for x in range(size):
+                alpha = sum(pixels[(y * scale + sy) * width + x * scale + sx]
+                            for sy in range(scale) for sx in range(scale)) // (scale * scale)
+                raw.extend((*rgb, alpha))
+        def chunk(kind, data):
+            return struct.pack("!I", len(data)) + kind + data + struct.pack("!I", zlib.crc32(kind + data) & 0xffffffff)
+        png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack("!2I5B", size, size, 8, 6, 0, 0, 0))
+               + chunk(b"IDAT", zlib.compress(bytes(raw))) + chunk(b"IEND", b""))
+        result = tk.PhotoImage(master=self.root, data=base64.b64encode(png).decode("ascii"))
+        self._ui_icons[key] = result
+        return result
+
+    def _ui_button(self, parent, icon, label, command, tooltip="", primary=False, nav=False):
+        btn = tk.Button(parent, text=("  " + label if label else ""), command=command,
+                         compound="left", image=self._ui_icon(icon, "#ffffff" if primary else _FG_DIM),
+                         bg=_ACCENT if primary else _BG2, fg="#ffffff" if primary else _FG,
+                         activebackground=_ACCENT2 if primary else _BG3, activeforeground=_FG,
+                         relief="flat", bd=0, highlightthickness=1, highlightbackground=_BG2,
+                         highlightcolor=_ACCENT, padx=9, pady=7, anchor="w" if label else "center",
+                         font=(_FONT, _FONT_SIZE), cursor="hand2", takefocus=True)
+        btn._ui_icon_name, btn._ui_primary, btn._ui_label = icon, primary, label
+        self._ui_roles.append((btn, "button"))
+        self._ui_tooltip(btn, tooltip or label)
+        if nav:
+            self._ui_nav_buttons.append(btn)
+        return btn
+
+    def _ui_tooltip(self, widget, message):
+        widget._ui_tip_message = message
+        state = {"after": None, "window": None}
+        def hide(event=None):
+            if state["after"] is not None:
+                try:
+                    widget.after_cancel(state["after"])
+                except tk.TclError:
+                    pass
+                state["after"] = None
+            if state["window"] is not None:
+                try:
+                    state["window"].destroy()
+                except tk.TclError:
+                    pass
+                state["window"] = None
+        def show():
+            state["after"] = None
+            if not widget.winfo_exists():
+                return
+            content = widget._ui_tip_message
+            content = content() if callable(content) else content
+            if not content:
+                return
+            tip = tk.Toplevel(widget)
+            state["window"] = tip
+            tip.overrideredirect(True)
+            tk.Label(tip, text=content, bg=_BG3, fg=_FG, padx=10, pady=6,
+                     wraplength=420, justify="left", relief="solid", bd=1,
+                     font=(_FONT, _FONT_SIZE)).pack()
+            tip.update_idletasks()
+            x = min(widget.winfo_rootx(), widget.winfo_screenwidth() - tip.winfo_reqwidth() - 10)
+            y = min(widget.winfo_rooty() + widget.winfo_height() + 5,
+                    widget.winfo_screenheight() - tip.winfo_reqheight() - 10)
+            tip.geometry(f"+{max(0, x)}+{max(0, y)}")
+        widget.bind("<Enter>", lambda e: (hide(), state.update(after=widget.after(550, show))), add="+")
+        for sequence in ("<Leave>", "<ButtonPress>", "<Destroy>"):
+            widget.bind(sequence, hide, add="+")
+
+    def _ui_tree_scrollbars(self, frame, tree):
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
+        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
+        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
+
+    # v4.3.124 (Steve 10/23: "upgrade all the windows of mainbox to have the new look/feel"): the main window's
+    # shell for a Toplevel, in four pieces the workflow windows share. Looks only -- a window keeps its own
+    # variables, commands, bindings and handlers; these only decide where the same widgets sit and how they look.
+    def _ui_window_shell(self, win, title=None, subtitle=None, subtitle_var=None, title_var=None):
+        """The main window's title band on a Toplevel: panel colour, the 19-pt title (or a title variable), an
+        optional dim subtitle (text or variable), a hairline under it. Returns the band so the caller packs its own
+        _ui_button icons on the right."""
+        for name, empty in (("_ui_icons", {}), ("_ui_roles", []), ("_ui_nav_buttons", [])):
+            if not isinstance(getattr(self, name, None), type(empty)):
+                setattr(self, name, empty)
+        try:
+            self._ui_roles = [(w, r) for w, r in self._ui_roles if w.winfo_exists()]
+        except Exception:
+            self._ui_roles = []
+        band = self._ui_frame(win, "panel")
+        band.pack(fill="x")
+        opts = {"textvariable": title_var} if title_var is not None else {"text": str(title or "")}
+        tk.Label(band, font=(_FONT, 19, "bold"), bg=_BG2, fg=_FG, **opts).pack(side="left", padx=(20, 14), pady=13)
+        if subtitle_var is not None or subtitle:
+            opts = {"textvariable": subtitle_var} if subtitle_var is not None else {"text": str(subtitle)}
+            tk.Label(band, bg=_BG2, fg=_FG_DIM, font=(_FONT, _FONT_SIZE), **opts).pack(side="left", padx=(0, 10))
+        self._ui_frame(win, "line", height=1).pack(fill="x")
+        return band
+
+    def _ui_window_footer(self, win, textvariable=None, text=""):
+        """The main window's footer line (hairline + dim status text), packed from the BOTTOM before the content so
+        a short window shortens the content instead of pushing the status line off (the v4.3.121 lesson)."""
+        opts = {"textvariable": textvariable} if textvariable is not None else {"text": text}
+        label = tk.Label(win, bg=_BG, fg=_FG_DIM, anchor="w", padx=7, font=(_FONT, max(8, _FONT_SIZE - 1)), **opts)
+        label.pack(side="bottom", fill="x", padx=14, pady=(4, 7))
+        self._ui_frame(win, "line", height=1).pack(side="bottom", fill="x")
+        return label
+
+    def _ui_list_panel(self, parent, title=None, **pack_options):
+        """A panel (the main window's Groups / Email preview look) holding one list: an optional bold section
+        title row, then the list area. Returns the list area -- create the Treeview with it as parent and grid it
+        in with _ui_tree_scrollbars; the panel and the title row hang on it as _ui_panel / _ui_header."""
+        panel = self._ui_frame(parent, "panel")
+        options = {"fill": "both", "expand": True, "padx": 14, "pady": (8, 6)}
+        options.update(pack_options)
+        panel.pack(**options)
+        header = None
+        if title:
+            header = self._ui_frame(panel, "panel")
+            header.pack(fill="x", padx=10, pady=(7, 4))
+            tk.Label(header, text=title, bg=_BG2, fg=_FG, font=(_FONT, _FONT_SIZE, "bold")).pack(side="left")
+        area = self._ui_frame(panel, "panel")
+        area.pack(fill="both", expand=True, padx=6, pady=(0 if title else 6, 6))
+        area._ui_panel, area._ui_header = panel, header
+        return area
+
+    def _ui_text_button(self, parent, label, command, tooltip="", primary=False):
+        """_ui_button without an icon, for rows that cannot fit icon buttons (same face, hover and retheme)."""
+        btn = self._ui_button(parent, "check", label, command, tooltip, primary=primary)
+        btn.configure(image="", compound="none", text=label, padx=10)
+        btn._ui_icon_name = None
+        return btn
+
+    def _ui_search_box(self, parent, variable, hint="", width=30):
+        """The main window's search box (icon, flat entry on a hairlined field) in a Toplevel's title band.
+        Returns the Entry; the caller binds it and keeps its variable."""
+        box = tk.Frame(parent, bg=_BG3, highlightthickness=1, highlightbackground=_BORDER, highlightcolor=_ACCENT)
+        box.pack(side="left", pady=10)
+        tk.Label(box, image=self._ui_icon("search"), bg=_BG3).pack(side="left", padx=(8, 0))
+        ent = tk.Entry(box, textvariable=variable, width=width, bg=_BG3, fg=_FG, insertbackground=_FG,
+                       relief="flat", bd=0, highlightthickness=0, font=(_FONT, _FONT_SIZE))
+        ent.pack(side="left", ipady=6, padx=(4, 8))
+        if hint:
+            self._ui_tooltip(ent, hint)
+        return ent
+
+    def _build_toolbar(self, key):
+        """Present the unchanged manifest as primary actions plus overflow menus.
+
+        Instantiate every original button, even menu-only actions: dynamic PO counts,
+        saved visibility/order and original Tcl command callbacks keep working.
+        """
+        frame = self._toolbar_frames.get(key)
+        if frame is None or not frame.winfo_exists():
+            return
+        for child in frame.winfo_children():
+            child.destroy()
+        if key == "filter":
+            self._filter_buttons = {}
+        for command_id in [k for k, v in self._ui_commands.items() if v[0] == key]:
+            self._ui_commands.pop(command_id, None)
+        primary_ids = {
+            "group": {"new_group", "quote_coverage"},
+            "edit": {"apply_save", "setup_followup"},
+            "filter": {"filter_all", "filter_needs_reply", "filter_waiting_customer", "filter_waiting_vendor"},
+            "action": {"inbox_viewer", "ai_triage", "assistant", "sales_uncat", "sent_queue"},
+        }
+        short = {"new_group": "New", "quote_coverage": "Coverage", "apply_save": "Apply changes",
+                 "setup_followup": "Follow-up", "filter_all": "All", "filter_needs_reply": "Needs reply",
+                 "filter_waiting_customer": "Customer", "filter_waiting_vendor": "Vendor",
+                 "inbox_viewer": "Inbox viewer", "ai_triage": "AI triage", "assistant": "Assistant",
+                 "sales_uncat": "Uncategorized", "sent_queue": "Sent queue"}
+        icons = {"new_group": "plus", "quote_coverage": "quote", "apply_save": "check",
+                 "setup_followup": "bell", "inbox_viewer": "inbox", "ai_triage": "triage",
+                 "assistant": "spark", "sales_uncat": "inbox", "sent_queue": "sent"}
+        overflow = []
+        for spec, visible in self._merged_button_order(key, self._main_button_specs().get(key, [])):
+            btn = spec["make"](frame)
+            bid = spec["id"]
+            self._ui_commands[bid] = (key, spec["label"], btn)
+            if not visible:
+                continue
+            if bid not in primary_ids[key]:
+                overflow.append((spec["label"], btn))
+                continue
+            label = short.get(bid, spec["label"])
+            icon = icons.get(bid)
+            btn.configure(text=("  " if icon else "") + label, width=0, padx=8, pady=7,
+                          bg=_ACCENT if bid == "apply_save" else _BG2,
+                          fg="#ffffff" if bid == "apply_save" else _FG,
+                          activebackground=_BG3, activeforeground=_FG, anchor="w",
+                          relief="flat", bd=0, highlightthickness=1, highlightbackground=_BG2,
+                          highlightcolor=_ACCENT, font=(_FONT, _FONT_SIZE), takefocus=True)
+            if icon:
+                btn.configure(image=self._ui_icon(icon, "#ffffff" if bid == "apply_save" else _FG_DIM), compound="left")
+            btn._ui_icon_name, btn._ui_primary, btn._ui_label = icon, bid == "apply_save", label
+            if bid == "apply_save":
+                btn.configure(command=self._ui_apply_staged)
+            self._ui_roles.append((btn, "button"))
+            self._ui_tooltip(btn, spec["label"])
+            if key == "action":
+                self._ui_nav_buttons.append(btn)
+                btn.pack(fill="x", pady=3)
+            elif key == "edit":
+                btn.pack(fill="x", pady=4)
+            else:
+                btn.pack(side="left", padx=2)
+        if overflow:
+            self._ui_button(frame, "filter" if key == "filter" else "more",
+                            "More views" if key == "filter" else ("More tools" if key == "action" else ""),
+                            lambda rows=overflow: self._ui_manifest_menu(rows),
+                            "More views and list actions" if key == "filter" else "More actions",
+                            nav=(key == "action")).pack(
+                                **({"fill": "x", "pady": 8} if key in ("action", "edit") else {"side": "left", "padx": 3}))
+        if key == "filter":
+            self._ui_sync_filters()
+        if key == "action":
+            self._ui_apply_nav_state()
+
+    def _ui_popup(self, menu):
+        old_menu = getattr(self, "_ui_posted_menu", None)
+        if old_menu is not None and old_menu.winfo_exists():
+            old_menu.destroy()
+        self._ui_posted_menu = menu
+        try:
+            x, y = self.root.winfo_pointerxy()
+            focus = self.root.focus_get()
+            if focus is not None and isinstance(focus, tk.Button):
+                x, y = focus.winfo_rootx(), focus.winfo_rooty() + focus.winfo_height()
+            menu.tk_popup(x, y)
+        finally:
+            menu.grab_release()
+
+    def _ui_manifest_menu(self, rows):
+        menu = tk.Menu(self.root, tearoff=0, bg=_BG3, fg=_FG,
+                       activebackground=_SEL_BG, activeforeground=_SEL_FG)
+        for label, btn in rows:
+            if btn.winfo_exists():
+                text = btn.cget("text") if label == "PO Review" else label
+                menu.add_command(label=text, command=btn.invoke, state=btn.cget("state"))
+        self._ui_popup(menu)
+
+    def _ui_sync_filters(self):
+        if not hasattr(self, "_filter_buttons"):
+            return
+        self._refresh_filter_button_styles()
+        # Menu-only active views remain clearly named above the table by view_label.
+
+    def _ui_toggle_nav(self):
+        self._ui_nav_collapsed = not self._ui_nav_collapsed
+        self._ui_apply_nav_state()
+
+    def _ui_apply_nav_state(self):
+        self._ui_sidebar.configure(width=58 if self._ui_nav_collapsed else 152)
+        self._ui_nav_buttons = [b for b in self._ui_nav_buttons if b.winfo_exists()]
+        for btn in self._ui_nav_buttons:
+            btn.configure(text="" if self._ui_nav_collapsed else "  " + btn._ui_label,
+                          anchor="center" if self._ui_nav_collapsed else "w")
+
+    def _ui_toggle_pane(self, name):
+        visible = not self._ui_pane_visible[name]
+        self._ui_pane_visible[name] = visible
+        self._ui_content.paneconfigure(self._ui_panes[name], hide=not visible)
+
+    def _ui_show_pane(self, name):
+        if not self._ui_pane_visible[name]:
+            self._ui_toggle_pane(name)
+        if name == "groups":
+            self.groups_tree.focus_set()
+
+    def _ui_focus_workspace(self):
+        self.tree.focus_set()
+
+    def _ui_show_inspector(self, tab=None):
+        if not self._ui_inspector_open:
+            self._ui_workspace.add(self._ui_inspector, minsize=300, width=320, stretch="never")
+            self._ui_inspector_open = True
+        if tab:
+            self._ui_tabs.select(self._ui_tab_frames[tab])
+
+    def _ui_close_inspector(self):
+        if self._ui_inspector_open:
+            self._ui_workspace.forget(self._ui_inspector)
+            self._ui_inspector_open = False
+
+    def _ui_toggle_inspector(self):
+        if self._ui_inspector_open:
+            self._ui_close_inspector()
+        else:
+            self._ui_show_inspector()
+
+    def _ui_email_selected(self, event=None):
+        emails = self.get_selected_emails(show_warning=False)
+        key = tuple(e.get("entry_id", "") for e in emails)
+        changed = key != self._ui_selection_key
+        self._ui_selection_key = key
+        for combo in (self.category_combo, self.urgency_combo, self.status_combo, self.email_type_combo):
+            combo.configure(state="readonly" if emails else "disabled")
+        if not emails:
+            self._ui_subject_var.set("Select an email to view its workflow.")
+            self._ui_sender_var.set("")
+            self._ui_selection_title.set("Selection details")
+            self._ui_ai_var.set("Select an email to view its saved AI assessment.")
+            return
+        first = emails[0]
+        self._ui_selection_title.set("Email details" if len(emails) == 1 else f"{len(emails)} emails selected")
+        self._ui_subject_var.set(first.get("subject", "") if len(emails) == 1 else f"Edit {len(emails)} selected emails")
+        self._ui_sender_var.set(f"{first.get('sender', '')}\n{first.get('received', '')}\n"
+                                f"Outlook categories: {first.get('outlook_categories', '') or 'None'}")
+        assessment = str(first.get("ai_triage_reason") or "No saved AI assessment. Use Scan selected email to run the existing AI scan.")
+        self._ui_ai_var.set(assessment)
+        if changed:
+            self._ui_show_inspector("Details")
+
+    def _ui_group_selected(self, event=None):
+        if self.root.focus_get() is self.groups_tree:
+            selected = self.groups_tree.selection()
+            if selected and str(selected[0]).startswith(("group:", "member:")):
+                self._ui_show_inspector("Notes")
+
+    def _ui_update_ai_text(self):
+        self._ui_ai_text.configure(state="normal")
+        self._ui_ai_text.delete("1.0", tk.END)
+        self._ui_ai_text.insert(tk.END, self._ui_ai_var.get())
+        self._ui_ai_text.configure(state="disabled")
+
+    def _ui_update_status(self):
+        if not hasattr(self, "_ui_status_labels"):
+            return
+        texts = [v.get() for v in self._ui_status_vars]
+        for index, label in self._ui_status_labels:
+            text = texts[index]
+            if index == 0:
+                short = "● Outlook connected" if "connected" in text.lower() and "disconnected" not in text.lower() else "○ " + text
+            elif index == 1:
+                short = text.replace("AutoPilot: watching every ", "AutoPilot · ").replace("AutoPilot: ", "AutoPilot · ")
+            elif index == 3:
+                lower = text.lower()
+                short = "AI · ready" if "ready" in lower else ("AI · attention" if any(s in lower for s in ("error", "fail", "offline", "disabled")) else text[:32])
+            elif index == 5:
+                match = re.search(r"(\d+) item", text)
+                short = ("Quotes · " + match.group(1) + " outstanding") if match else ("Quotes · covered" if "all requested" in text else "Quotes")
+                if "review" in text.lower() or "notice" in text.lower():
+                    short += " · review"
+            else:
+                short = text.replace("Last updated: ", "Updated · ").split(" — ", 1)[0][:31]
+            label.configure(text=short, bg=_BG, fg=("#75bd9c" if index == 0 and short.startswith("●")
+                                                   else ("#d49b5c" if index == 0 else _FG_DIM)))
+        due = re.search(r"(\d+)\s+due", texts[2])
+        self._ui_followup_bell.configure(text="  " + due.group(1) if due and int(due.group(1)) else "")
+        self._ui_followup_bell._ui_tip_message = texts[2] + "\nOpen follow-up queue"
+        attention = any(term in texts[0].lower() for term in ("disconnected", "error", "fail"))
+        attention = attention or any(term in texts[3].lower() for term in ("error", "fail", "offline"))
+        attention = attention or any(term in texts[5].lower() for term in ("review", "notice"))
+        self._ui_health_button.configure(image=self._ui_icon("activity", "#d49b5c" if attention else _FG_DIM))
+
+    def _ui_header_menu(self):
+        menu = tk.Menu(self.root, tearoff=0)
+        for label, command in (
+            ("Search emails / jobs     Ctrl+F", self.open_search_window_hotkey),
+            ("Find an action     Ctrl+K", self._ui_open_command_palette),
+            ("Keyboard shortcuts     ?", self._ui_shortcut_help),
+            ("Change Sales category…", self.change_category),
+            ("Full update…", self.open_update_window),
+            ("Customize actions…", self.open_button_editor),
+            ("Health / About", self._ui_open_status),
+        ):
+            menu.add_command(label=label, command=command)
+        self._ui_popup(menu)
+
+    def _ui_column_display_order(self):
+        """v4.3.126: the main list's columns in DISPLAY order -- "expand" is last in `columns` (so every 10-value
+        row stays valid) but is shown just before Subject / job."""
+        all_cols = [str(c) for c in (self.tree.cget("columns") or ())]
+        cols = [c for c in all_cols if c != "expand"]
+        if "expand" in all_cols:
+            cols.insert(cols.index("subject") if "subject" in cols else 0, "expand")
+        return cols
+
+    def _ui_sync_expand_headers(self):
+        """v4.3.126 (Steve): the expand / collapse arrows in the main list's "expand" heading and left of "Group"
+        in the Groups pane follow the groups -- pointing down while any group is open (a click collapses all),
+        pointing right when every group is collapsed (a click expands all). Archived groups are not rendered and
+        do not count."""
+        any_open = True
+        try:
+            any_open = any(not g.get("collapsed", False) for g in (self.groups_data.get("groups", []) or [])
+                           if isinstance(g, dict) and not g.get("archived", False))
+        except Exception:
+            pass
+        symbol = "\u25bc" if any_open else "\u25b6"
+        try:
+            if "expand" in [str(c) for c in (self.tree.cget("columns") or ())]:
+                self.tree.heading("expand", text=symbol)
+        except Exception:
+            pass
+        try:
+            if hasattr(self, "groups_tree"):
+                self.groups_tree.heading("#0", text=symbol + " Group")
+        except Exception:
+            pass
+        self._ui_expand_any_open = any_open
+
+    def _ui_toggle_all_groups_from_heading(self):
+        """v4.3.126: a click on either heading arrow -- collapse every group while any is open, else expand all
+        (set_all_groups_collapsed re-renders both panes; render_email_rows re-syncs the arrows)."""
+        any_open = True
+        try:
+            any_open = any(not g.get("collapsed", False) for g in (self.groups_data.get("groups", []) or [])
+                           if isinstance(g, dict) and not g.get("archived", False))
+        except Exception:
+            pass
+        try:
+            ops_log("ui", "expand_heading_toggle", collapse=bool(any_open))
+        except Exception:
+            pass
+        self.set_all_groups_collapsed(bool(any_open))
+
+    def _ui_expand_cell_click(self, event):
+        """v4.3.126: a single click on a group header's arrow cell toggles that one group (as the Groups pane
+        does); any other click is left to the list."""
+        try:
+            if self.tree.identify_region(event.x, event.y) != "cell":
+                return None
+            if str(self.tree.column(self.tree.identify_column(event.x), "id")) != "expand":
+                return None
+            iid = self.tree.identify_row(event.y)
+        except Exception:
+            return None
+        if not iid or not str(iid).startswith("groupheader:"):
+            return None
+        self.toggle_group_from_main_tree(str(iid).split(":", 1)[1])
+        return "break"
+
+    def _ui_hover_delete_low(self):
+        """v4.3.126 (Steve): the hover garbage can in the Low / Hidden view -- the same ask-first app-only delete
+        (confirmation, follow-up review, Deleted History, undo) as the Delete key there. Outlook is never touched."""
+        try:
+            ops_log("ui", "hover_trash_app_delete_low_view",
+                    count=len(self.get_selected_emails(show_warning=False) or []))
+        except Exception:
+            pass
+        self.delete_low_hidden_from_app()
+
+    def _ui_columns_menu(self):
+        menu = tk.Menu(self.root, tearoff=0)
+        columns = self._ui_column_display_order()   # v4.3.126: expand sits before Subject in the display
+        visible = list(self.tree.cget("displaycolumns"))
+        if visible == ["#all"]:
+            visible = list(columns)
+        variables = []
+        for col in columns:
+            var = tk.BooleanVar(value=col in visible)
+            variables.append(var)
+            def change(c=col, v=var):
+                current = list(self.tree.cget("displaycolumns"))
+                if current == ["#all"]:
+                    current = list(columns)
+                chosen = set(current)
+                chosen.add(c) if v.get() else chosen.discard(c)
+                self.tree.configure(displaycolumns=tuple(x for x in columns if x in chosen) or ("subject",))
+            menu.add_checkbutton(label=("Expand / collapse" if col == "expand" else self.tree.heading(col, "text")),
+                                 variable=var, command=change)
+        self._ui_popup(menu)
+
+    def _ui_email_actions(self):
+        menu = tk.Menu(self.root, tearoff=0)
+        status_menu = tk.Menu(menu, tearoff=0)
+        for status in STATUSES:
+            status_menu.add_command(label=status, command=lambda s=status: self.set_selected_status_from_menu(s))
+        menu.add_cascade(label="Set status", menu=status_menu)
+        for label, command in (
+            ("Follow-up…     Ctrl+Shift+F", self.open_followup_window),
+            ("Cancel follow-ups…", self.cancel_selected_followups),
+            ("Load body", self.load_selected_body_preview),
+            ("AI reply", self.create_ai_draft_reply),
+            ("Scan selected with AI", self.run_ai_scan_selected),
+            ("Send quote RFQ", self.open_quote_intelligence_for_selected_email),
+            ("Scan dates for reminders", self.scan_selected_email_for_reminders),
+            ("Quoted from stock", self._mark_quoted_from_stock_for_selected),
+            ("Mark as read", lambda: self._mark_selected_read(True)),
+            ("Mark as unread", lambda: self._mark_selected_read(False)),
+            ("Low / Hidden…     Ctrl+Shift+H", self.hide_selected_emails_with_delete_key),
+        ):
+            menu.add_command(label=label, command=command)
+        self._ui_popup(menu)
+
+    def _ui_open_status(self):
+        existing = getattr(self, "_ui_status_window", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            return
+        win = tk.Toplevel(self.root)
+        self._ui_status_window = win
+        win.title("MaINbox · Status and About")
+        win.geometry("620x440")
+        win.transient(self.root)
+        tk.Label(win, text=APP_TITLE, font=(_FONT, 15, "bold"), bg=_BG,
+                 fg=_FG).pack(anchor="w", padx=20, pady=(20, 14))
+        for var in self._ui_status_vars:
+            tk.Label(win, textvariable=var, bg=_BG, fg=_FG_DIM, wraplength=570,
+                     justify="left", anchor="w").pack(fill="x", padx=20, pady=7)
+        self._ui_button(win, "activity", "Open full health report", self.open_health_window,
+                        "Detailed health report").pack(anchor="w", padx=20, pady=15)
+        win.bind("<Escape>", lambda e: win.destroy())
+
+    def _ui_is_editing(self, event=None):
+        widget = getattr(event, "widget", None) or self.root.focus_get()
+        if widget in (self.category_combo, self.urgency_combo, self.status_combo, self.email_type_combo):
+            return False
+        return widget is not None and widget.winfo_class() in (
+            "Text", "Entry", "TEntry", "TCombobox", "Combobox", "Spinbox", "TSpinbox", "Listbox")
+
+    def _ui_install_shortcuts(self):
+        bindings = {
+            "<Control-k>": self._ui_open_command_palette, "<Control-K>": self._ui_open_command_palette,
+            "<Control-r>": self.refresh_hotkey, "<Control-R>": self.refresh_hotkey,
+            "<Control-Shift-F>": self.open_followup_window, "<Control-Shift-f>": self.open_followup_window,
+            "<Control-Shift-D>": self._ui_complete_selected, "<Control-Shift-d>": self._ui_complete_selected,
+            "<Control-Shift-H>": self.hide_selected_emails_with_delete_key, "<Control-Shift-h>": self.hide_selected_emails_with_delete_key,
+            "<Control-g>": self._ui_assign_group, "<Control-G>": self._ui_assign_group,
+            "<Control-Return>": self._ui_apply_staged,
+        }
+        for sequence, callback in bindings.items():
+            def dispatch(event, fn=callback):
+                # A shortcut must not act on an old email selection while typing notes.
+                if self._ui_is_editing(event) and fn not in (self._ui_open_command_palette, self.refresh_hotkey):
+                    return None
+                fn()
+                return "break"
+            self.root.bind(sequence, dispatch, add="+")
+            self.root.bind_class("MaINbox122Shortcuts", sequence, dispatch)
+        def add_tag(widget):
+            # Intercept Ctrl+K before Text's native delete-to-end-of-line binding.
+            # Restrict the tag to the main workspace; existing dialogs retain their bindings.
+            tags = widget.bindtags()
+            widget.bindtags(("MaINbox122Shortcuts",) + tuple(t for t in tags if t != "MaINbox122Shortcuts"))
+            for child in widget.winfo_children():
+                if not isinstance(child, tk.Toplevel):
+                    add_tag(child)
+        add_tag(self.root)
+        for tree in (self.tree, self.groups_tree):
+            tree.bind("<Return>", self._ui_tree_enter, add="+")
+        self.root.bind("<Key-slash>", self._ui_search_key, add="+")
+        self.root.bind("<Key-question>", self._ui_help_key, add="+")
+        self.root.bind("<Escape>", self._ui_escape, add="+")
+
+    def _ui_tree_enter(self, event):
+        if event.widget is self.groups_tree:
+            self.on_group_tree_double_click(event)
+        else:
+            selected = self.tree.selection()
+            if selected and str(selected[0]).startswith("groupheader:"):
+                self.toggle_group_from_main_tree(str(selected[0]).split(":", 1)[1])
+            elif selected:
+                self.open_selected_email()
+        return "break"
+
+    def _ui_search_key(self, event):
+        if not self._ui_is_editing(event):
+            return self.open_search_window_hotkey()
+
+    def _ui_help_key(self, event):
+        if not self._ui_is_editing(event):
+            self._ui_shortcut_help()
+            return "break"
+
+    def _ui_escape(self, event):
+        if self._ui_is_editing(event):
+            return None
+        self._ui_close_inspector()
+        self.tree.selection_remove(self.tree.selection())
+        self.groups_tree.selection_remove(self.groups_tree.selection())
+        self.tree.focus_set()
+        return "break"
+
+    def _ui_complete_selected(self):
+        before = (getattr(self, "undo_stack", None) or [None])[-1]
+        self.set_selected_status_from_menu("Completed")
+        if (getattr(self, "undo_stack", None) or [None])[-1] is not before:
+            self._ui_show_toast("Status updated")
+
+    def _ui_apply_staged(self):
+        result = self.save_selected_changes()
+        if result:
+            self._ui_show_toast("Changes applied")
+        return result
+
+    def _ui_show_toast(self, message):
+        if not hasattr(self, "_ui_toast_frame"):
+            return
+        timer = getattr(self, "_ui_toast_timer", None)
+        if timer is not None:
+            self.root.after_cancel(timer)
+        self._ui_toast_label.configure(text=message)
+        self._ui_toast_frame.place(relx=0.5, rely=1, y=-46, anchor="s")
+        self._ui_toast_frame.lift()
+        self._ui_toast_timer = self.root.after(4000, self._ui_toast_frame.place_forget)
+
+    def _ui_toast_undo(self):
+        self._ui_toast_frame.place_forget()
+        return self.undo_last_action()
+
+    def _ui_assign_group(self):
+        if self.root.focus_get() is self.groups_tree:
+            selected = self.groups_tree.selection()
+            if selected and str(selected[0]).startswith("member:"):
+                return self.move_group_member_to_another_group()
+        emails = self.get_selected_emails()
+        if not emails:
+            return
+        group_id = self.choose_group_for_move(title="Add / Change Group",
+                                               prompt="Choose the group for the selected email(s):", button="Assign")
+        if group_id:
+            self.assign_emails_to_group(emails, group_id)
+
+    def _ui_save_notes_hotkey(self, event=None):
+        self.save_selected_group_notes()
+        return "break"
+
+    def _ui_hover_row(self, event):
+        iid = self.tree.identify_row(event.y)
+        if not iid or str(iid).startswith("groupheader:"):
+            self._ui_hover_frame.place_forget()
+            return
+        rect = self.tree.bbox(iid)
+        if not rect:
+            return
+        self._ui_hover_iid = iid
+        trash = getattr(self, "_ui_hover_trash", None)   # v4.3.126: left of the bell in the Low / Hidden view only
+        if trash is not None:
+            try:
+                want = str(getattr(self, "active_filter", "all") or "") == "low"
+                shown = bool(trash.winfo_manager())
+                if want and not shown:
+                    others = [w for w in self._ui_hover_frame.winfo_children() if w is not trash and w.winfo_manager()]
+                    if others:
+                        trash.pack(side="left", before=others[0])
+                    else:
+                        trash.pack(side="left")
+                elif shown and not want:
+                    trash.pack_forget()
+            except Exception:
+                pass
+        self._ui_hover_frame.place(relx=1, x=-2, y=rect[1], height=rect[3], anchor="ne")
+
+    def _ui_hide_hover(self):
+        widget = self.root.winfo_containing(*self.root.winfo_pointerxy())
+        while widget is not None:
+            if widget in (self.tree, self._ui_hover_frame):
+                return
+            widget = getattr(widget, "master", None)
+        self._ui_hover_frame.place_forget()
+
+    def _ui_hover_action(self, command):
+        iid = getattr(self, "_ui_hover_iid", "")
+        if not iid or not self.tree.exists(iid):
+            self._ui_hover_frame.place_forget()
+            return
+        if iid not in self.tree.selection():
+            self.tree.selection_set(iid)
+            self.tree.focus(iid)
+            self.on_email_select()
+        self.tree.focus_set()
+        self._ui_hover_frame.place_forget()
+        command()
+
+    def _ui_shortcut_help(self):
+        existing = getattr(self, "_ui_help_window", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            return
+        win = tk.Toplevel(self.root)
+        self._ui_help_window = win
+        win.title("MaINbox · Keyboard shortcuts")
+        win.geometry("700x680")
+        win.transient(self.root)
+        tk.Label(win, text="Keyboard shortcuts", font=(_FONT, 17, "bold"),
+                 bg=_BG, fg=_FG).pack(anchor="w", padx=20, pady=(18, 10))
+        tree = ttk.Treeview(win, columns=("key", "action"), show="headings", height=20)
+        tree.heading("key", text="Shortcut")
+        tree.heading("action", text="Action")
+        tree.column("key", width=190, stretch=False)
+        tree.column("action", width=430)
+        tree.pack(fill="both", expand=True, padx=20, pady=8)
+        for key, action in (
+            ("Ctrl+F / /", "Search emails and jobs (existing Ctrl+F preserved)"),
+            ("Ctrl+K", "Find and run an action"), ("F5 / Ctrl+R", "Refresh"),
+            ("Enter", "Open email in Outlook / expand selected group"),
+            ("Ctrl+Shift+F", "Set / edit follow-up"), ("Ctrl+Shift+D", "Mark completed (existing review)"),
+            ("Delete / Ctrl+Shift+H", "Completed + Low / Hidden (existing review)"),
+            ("Ctrl+G", "Choose group for selected email(s)"),
+            ("Ctrl+A / Alt+A", "Add email(s) to selected group (existing)"),
+            ("Ctrl+M", "Merge selected groups (existing)"), ("Ctrl+T", "Cycle email type (existing)"),
+            ("Ctrl+Z", "Undo last action (existing)"), ("Ctrl+Shift+V", "Vendor profile (existing)"),
+            ("Ctrl+Shift+C", "Customer profile (existing)"), ("Ctrl+Shift+E", "Employee profile (existing)"),
+            ("Ctrl+Shift+M", "Marketing profile (existing)"), ("Ctrl+Shift+N", "Normal / reset profile (existing)"),
+            ("Ctrl+Shift+L", "Pin / unpin active MaINbox window (existing)"),
+            ("Ctrl+Enter", "Apply staged workflow fields"), ("Ctrl+S in notes", "Save selected group's notes"),
+            ("Esc", "Close details and clear selection"), ("?", "Show this shortcut guide"),
+        ):
+            tree.insert("", "end", values=(key, action))
+        tk.Label(win, text="New email actions ignore ordinary typing fields. Ctrl+F keeps its existing behavior.",
+                 bg=_BG, fg=_FG_DIM, wraplength=650).pack(padx=20, pady=(4, 12))
+        win.bind("<Escape>", lambda e: win.destroy())
+
+    def _ui_open_command_palette(self):
+        existing = getattr(self, "_ui_palette", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            self._ui_palette_entry.focus_set()
+            return
+        win = tk.Toplevel(self.root)
+        self._ui_palette = win
+        origin = self.root.focus_get()
+        win.title("MaINbox · Find an action")
+        win.geometry("660x460")
+        win.transient(self.root)
+        tk.Label(win, text="Find an action", bg=_BG, fg=_FG, font=(_FONT, 16, "bold")).pack(
+            anchor="w", padx=18, pady=(16, 8))
+        query = tk.StringVar()
+        entry = ttk.Entry(win, textvariable=query, font=(_FONT, _FONT_SIZE + 2))
+        self._ui_palette_entry = entry
+        entry.pack(fill="x", padx=18, pady=(0, 10))
+        results = tk.Listbox(win, bg=_BG3, fg=_FG, selectbackground=_SEL_BG,
+                             selectforeground=_SEL_FG, activestyle="none", exportselection=False)
+        results.pack(fill="both", expand=True, padx=18)
+        tk.Label(win, text="Type to filter · ↑ / ↓ to choose · Enter to run · Esc to close",
+                 bg=_BG, fg=_FG_DIM).pack(padx=18, pady=12)
+        commands = [
+            ("Search emails / jobs  ·  Ctrl+F", self.open_search_window_hotkey),
+            ("Refresh  ·  F5 / Ctrl+R", self.refresh_new_emails),
+            ("Settings", self.open_settings_window), ("Health / About", self._ui_open_status),
+            ("Full update", self.open_update_window), ("Change Sales category", self.change_category),
+            ("Follow-up queue", self.open_followup_queue_window), ("Past due follow-ups", self.open_past_due_followups),
+            ("Add / change group  ·  Ctrl+G", self._ui_assign_group),
+            ("Mark completed  ·  Ctrl+Shift+D", self._ui_complete_selected),
+            ("Low / Hidden  ·  Ctrl+Shift+H", self.hide_selected_emails_with_delete_key),
+            ("Undo last action  ·  Ctrl+Z", self.undo_last_action),
+            ("Show / hide groups", lambda: self._ui_toggle_pane("groups")),
+            ("Show / hide preview", lambda: self._ui_toggle_pane("preview")),
+            ("Show / hide selection details", self._ui_toggle_inspector),
+            ("Customize actions", self.open_button_editor), ("Keyboard shortcuts", self._ui_shortcut_help),
+        ]
+        for command_id, (section, label, button) in self._ui_commands.items():
+            if button.winfo_exists():
+                commands.append((f"{section.title()} · {label}", lambda bid=command_id: self._ui_invoke_command(bid)))
+        shown = []
+        def filter_commands(*_):
+            words = query.get().casefold().split()
+            shown[:] = [(label, fn) for label, fn in commands if all(w in label.casefold() for w in words)]
+            results.delete(0, tk.END)
+            for label, _ in shown:
+                results.insert(tk.END, label)
+            if shown:
+                results.selection_set(0)
+        def move(delta):
+            if shown:
+                current = results.curselection()
+                index = max(0, min(len(shown) - 1, (current[0] if current else 0) + delta))
+                results.selection_clear(0, tk.END)
+                results.selection_set(index)
+                results.see(index)
+            return "break"
+        def run(event=None):
+            selected = results.curselection()
+            if not selected or not shown:
+                return "break"
+            fn = shown[selected[0]][1]
+            win.destroy()
+            (origin if origin is not None and origin.winfo_exists() else self.root).focus_set()
+            self.root.after_idle(fn)
+            return "break"
+        query.trace_add("write", filter_commands)
+        entry.bind("<Down>", lambda e: move(1))
+        entry.bind("<Up>", lambda e: move(-1))
+        win.bind("<Return>", run)
+        results.bind("<Double-1>", run)
+        win.bind("<Escape>", lambda e: win.destroy())
+        filter_commands()
+        entry.focus_set()
+
+    def _ui_invoke_command(self, command_id):
+        record = self._ui_commands.get(command_id)
+        if record is not None and record[2].winfo_exists():
+            return record[2].invoke()
+
+    def _ui_retheme(self):
+        """Restore UI roles after the existing global light/dark/font refresh."""
+        if not hasattr(self, "_ui_roles"):
+            return
+        style = ttk.Style(self.root)
+        style.configure("Mainbox.Treeview", background=_BG3, fieldbackground=_BG3, foreground=_FG,
+                        rowheight=max(30, _FONT_SIZE * 2 + 12), borderwidth=0, font=(_FONT, _FONT_SIZE))
+        style.configure("Mainbox.Treeview.Heading", background=_BG2, foreground=_FG_DIM,
+                        padding=(9, 9), font=(_FONT, _FONT_SIZE, "bold"))
+        style.map("Mainbox.Treeview", background=[("selected", _SEL_BG)], foreground=[("selected", _SEL_FG)])
+        for widget, role in list(self._ui_roles):
+            if not widget.winfo_exists():
+                continue
+            if role == "button":
+                primary = widget._ui_primary
+                base = _ACCENT if primary else _BG2
+                widget._mainbox_orig_bg = base
+                widget._mainbox_hovering = False
+                opts = dict(bg=base, fg="#ffffff" if primary else _FG,
+                            activebackground=_ACCENT2 if primary else _BG3,
+                            activeforeground="#ffffff" if primary else _FG,
+                            highlightbackground=_BG2, highlightcolor=_ACCENT, font=(_FONT, _FONT_SIZE))
+                if widget._ui_icon_name:
+                    opts["image"] = self._ui_icon(widget._ui_icon_name, "#ffffff" if primary else _FG_DIM)
+                widget.configure(**opts)
+            else:
+                widget.configure(bg={"base": _BG, "panel": _BG2, "line": _BORDER}[role])
+                for child in widget.winfo_children():
+                    if isinstance(child, tk.Label):
+                        if not hasattr(child, "_ui_dim"):
+                            child._ui_dim = child.cget("fg") == _FG_DIM
+                        child.configure(bg=widget.cget("bg"), fg=_FG_DIM if child._ui_dim else _FG)
+        self._ui_roles = [(w, r) for w, r in self._ui_roles if w.winfo_exists()]
+        self.tree.configure(style="Mainbox.Treeview")
+        self.groups_tree.configure(style="Mainbox.Treeview")
+        self.followup_preview_tree.configure(style="Mainbox.Treeview")
+        tint = _mainbox_mix(self.root, _ACCENT, _BG3, 0.88)
+        self.groups_tree.tag_configure("group_new", background=tint, foreground=_ACCENT)
+        self._ui_update_status()
+        self._ui_sync_filters()
 
 
     # ===================== Customizable main-screen buttons =====================
@@ -22177,44 +23467,6 @@ class OutlookWorkflowMonitor:
                 seen.add(s["id"])
         return result
 
-    def _build_toolbar(self, key):
-        """(Re)render one button bar from the manifest + saved layout. Safe to call
-        again any time (e.g. after the Edit Buttons dialog saves) -- it clears and
-        rebuilds only that bar's buttons; the frame itself stays put."""
-        frame = self._toolbar_frames.get(key) if isinstance(getattr(self, "_toolbar_frames", None), dict) else None
-        if not frame:
-            return
-        try:
-            if not frame.winfo_exists():
-                return
-        except Exception:
-            return
-        for child in frame.winfo_children():
-            child.destroy()
-        if key == "filter":
-            self._filter_buttons = {}
-        specs = self._main_button_specs().get(key, [])
-        vertical = (key == "group")
-        last_section = None
-        for spec, visible in self._merged_button_order(key, specs):
-            if not visible:
-                continue
-            if vertical and last_section is not None and spec.get("section") != last_section:
-                tk.Frame(frame, bg=_BORDER, height=1).pack(fill="x", padx=6, pady=(5, 4))
-            try:
-                btn = spec["make"](frame)
-            except Exception:
-                continue
-            if vertical:
-                btn.pack(anchor="w", pady=2)
-            else:
-                btn.pack(side="left", padx=spec.get("pad", 5), pady=spec.get("pady", 0))
-            last_section = spec.get("section")
-        if key == "filter":
-            try:
-                self._refresh_filter_button_styles()
-            except Exception:
-                pass
 
     def open_button_editor(self):
         """Settings -> Visual Settings -> Edit Buttons. Tick to show / untick to hide
@@ -22678,13 +23930,11 @@ class OutlookWorkflowMonitor:
         """One viewer Treeview with scrollbars, columns, highlight tags and
         bindings. Used for the single view and for every split pane."""
         col_ids = [s["id"] for s in self._inbox_viewer_column_specs()]
-        tree = ttk.Treeview(parent, columns=col_ids, show="headings", selectmode="extended")
-        vsb = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
-        hsb = ttk.Scrollbar(parent, orient="horizontal", command=tree.xview)
-        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-        vsb.pack(side="right", fill="y")
-        hsb.pack(side="bottom", fill="x")
-        tree.pack(side="left", fill="both", expand=True)
+        tree = ttk.Treeview(parent, columns=col_ids, show="headings", selectmode="extended", height=6,
+                            style="Mainbox.Treeview")   # v4.3.123: the main window's list style; 6 requested rows
+                                                        # (the pane fills the space) so split panes never ask
+                                                        # for more height than the window has
+        self._ui_tree_scrollbars(parent, tree)   # v4.3.123: gridded scrollbars, as the main window's lists
         self._apply_inbox_viewer_columns(tree)
         # Own-category rows get a tinted background (the Outlook-side "my
         # emails" cue Steve works from); unread stays bold like Outlook.
@@ -23194,22 +24444,22 @@ class OutlookWorkflowMonitor:
         labels = list(pane_labels) if pane_labels else self._inbox_viewer_pane_labels()
         if not labels:
             labels = ["Inbox"]
-        paned = tk.PanedWindow(area, orient="vertical", sashwidth=6, bg=_BORDER,
+        paned = tk.PanedWindow(area, orient="vertical", sashwidth=7, bg=_BG,   # v4.3.123: as the main window's panes
                                bd=0, sashrelief="flat", opaqueresize=True)
         paned.pack(fill="both", expand=True)
         self._inbox_viewer_paned = paned
         for label in labels:
-            pane = tk.Frame(paned, bg=_BG)
+            pane = tk.Frame(paned, bg=_BG2)   # v4.3.123: a panel per mailbox, header like "Groups / quote jobs"
             header_var = tk.StringVar(value=label)
             hdr = tk.Label(pane, textvariable=header_var, font=(_FONT, _FONT_SIZE, "bold"),
-                           fg=_ACCENT, bg=_BG2, anchor="w", padx=8)
+                           fg=_FG, bg=_BG2, anchor="w", padx=10, pady=5)
             hdr.pack(fill="x")
             # v4.3.115: drag a pane by its header to change the pane order (saved as pane_order).
             hdr.bind("<ButtonPress-1>", lambda e, l=label: self._inbox_viewer_pane_drag_press(e, l))
             hdr.bind("<B1-Motion>", self._inbox_viewer_pane_drag_motion)
             hdr.bind("<ButtonRelease-1>", self._inbox_viewer_pane_drag_release)
-            holder = tk.Frame(pane, bg=_BG)
-            holder.pack(fill="both", expand=True)
+            holder = tk.Frame(pane, bg=_BG2)
+            holder.pack(fill="both", expand=True, padx=6, pady=(0, 5))
             self._inbox_viewer_pane_headers[label] = header_var
             self._inbox_viewer_trees.append((label, self._inbox_viewer_make_tree(holder)))
             self._inbox_viewer_pane_frames.append((label, pane))
@@ -23648,28 +24898,29 @@ class OutlookWorkflowMonitor:
             area.pack(fill="both", expand=True)
             self._inbox_viewer_pane_area = area
             return
-        hp = tk.PanedWindow(holder, orient="horizontal", sashwidth=6, bg=_BORDER,
+        hp = tk.PanedWindow(holder, orient="horizontal", sashwidth=6, bg=_BG,   # v4.3.123: flat sash on the window colour
                             bd=0, sashrelief="flat", opaqueresize=True)
         hp.pack(fill="both", expand=True)
         area = tk.Frame(hp, bg=_BG)
         hp.add(area, minsize=420)
         right = tk.Frame(hp, bg=_BG2)
         header_var = tk.StringVar(value="Select an email to preview it")
-        tk.Label(right, textvariable=header_var, bg=_BG2, fg=_ACCENT, anchor="w",
+        tk.Label(right, textvariable=header_var, bg=_BG2, fg=_FG, anchor="w",   # v4.3.123: panel header, as "Email preview"
                  justify="left", wraplength=420, font=(_FONT, _FONT_SIZE, "bold"),
-                 padx=8, pady=6).pack(fill="x")
+                 padx=12, pady=8).pack(fill="x")
         # v4.2.43: clickable attachment links live between header and body.
         attach_frame = tk.Frame(right, bg=_BG2)
         attach_frame.pack(fill="x")
         self._inbox_viewer_attach_frame = attach_frame
         body_holder = tk.Frame(right, bg=_BG2)
         body_holder.pack(fill="both", expand=True)
-        txt = tk.Text(body_holder, bg=_BG3, fg=_FG, wrap="word", relief="flat",
-                      font=(_FONT, _FONT_SIZE), state="disabled", padx=8, pady=6)
+        txt = tk.Text(body_holder, bg=_BG3, fg=_FG, wrap="word", relief="flat", bd=0, highlightthickness=0,
+                      font=(_FONT, _FONT_SIZE), state="disabled", padx=12, pady=9,   # v4.3.123: main preview padding
+                      selectbackground=_SEL_BG, selectforeground=_SEL_FG)
         sb = ttk.Scrollbar(body_holder, orient="vertical", command=txt.yview)
         txt.configure(yscrollcommand=sb.set)
         sb.pack(side="right", fill="y")
-        txt.pack(side="left", fill="both", expand=True)
+        txt.pack(side="left", fill="both", expand=True, padx=(6, 0), pady=(2, 6))
         hp.add(right, minsize=260)
         self._inbox_viewer_pane_area = area
         self._inbox_viewer_preview_text = txt
@@ -24471,68 +25722,85 @@ class OutlookWorkflowMonitor:
         win.bind("<Control-f>", self._inbox_viewer_focus_search)
         win.bind("<Control-F>", self._inbox_viewer_focus_search)
 
-        top = tk.Frame(win, bg=_BG)
-        top.pack(fill="x", padx=10, pady=(10, 4))
-        tk.Label(top, text="Inbox Viewer", font=(_FONT, 15, "bold"), fg=_ACCENT, bg=_BG).pack(side="left")
-        self._inbox_viewer_split_var = tk.BooleanVar(
-            value=bool(self._load_inbox_viewer_config().get("split_panes", False)))
-        tk.Checkbutton(top, text="Split panes", variable=self._inbox_viewer_split_var,
-                       command=self._inbox_viewer_toggle_split, bg=_BG, fg=_FG,
-                       selectcolor=_BG3, activebackground=_BG).pack(side="left", padx=(16, 0))
-        # v4.2.39: Sales-inbox "Unclaimed" view -- only rows that are the
-        # user's, uncategorized, or tagged with neutral categories (Canals).
-        self._inbox_viewer_unclaimed_var = tk.BooleanVar(
-            value=bool(self._load_inbox_viewer_config().get("unclaimed_only", False)))
-        tk.Checkbutton(top, text="Unclaimed", variable=self._inbox_viewer_unclaimed_var,
-                       command=self._inbox_viewer_toggle_unclaimed, bg=_BG, fg=_FG,
-                       selectcolor=_BG3, activebackground=_BG).pack(side="left", padx=(10, 0))
-        # v4.2.42: optional Outlook-style reading pane on the right.
-        self._inbox_viewer_reading_var = tk.BooleanVar(
-            value=bool(self._load_inbox_viewer_config().get("reading_pane", False)))
-        tk.Checkbutton(top, text="Reading pane", variable=self._inbox_viewer_reading_var,
-                       command=self._inbox_viewer_toggle_reading_pane, bg=_BG, fg=_FG,
-                       selectcolor=_BG3, activebackground=_BG).pack(side="left", padx=(10, 0))
-        tk.Button(top, text="Settings", width=9,
-                  command=self.open_inbox_viewer_settings).pack(side="right", padx=3)
-        tk.Button(top, text="Refresh", width=9,
-                  command=self._inbox_viewer_refresh).pack(side="right", padx=3)
-        tk.Button(top, text="Load more", width=9,
-                  command=self._inbox_viewer_load_more).pack(side="right", padx=3)
-        tk.Button(top, text="New Email", width=10,
-                  command=self._inbox_viewer_new_email).pack(side="right", padx=3)
+        # v4.3.123 (Steve: "I would love it if the inbox viewer UI can look just like the main window's"): the
+        # same shell as the v4.3.122 main window -- a title band with the search box and icon buttons (tooltips),
+        # a view bar for the three toggles, Mainbox.Treeview lists with gridded scrollbars, the reading pane as a
+        # panel and a footer status line. Same variables, bindings and handlers as before; only the look changed.
+        try:
+            self._ui_roles = [(_w, _r) for _w, _r in (getattr(self, "_ui_roles", None) or []) if _w.winfo_exists()]
+        except Exception:
+            pass
+        top = tk.Frame(win, bg=_BG2)
+        top.pack(fill="x")
+        tk.Label(top, text="Inbox Viewer", font=(_FONT, 19, "bold"), bg=_BG2, fg=_FG).pack(side="left", padx=(20, 22), pady=13)
         # v4.2.103: search. Typing filters the loaded rows instantly; Enter (or
         # the button) asks Outlook itself, across the selected folders.
         self._inbox_viewer_search_var = tk.StringVar(value="")
         self._inbox_viewer_search_body_var = tk.BooleanVar(
             value=bool(self._load_inbox_viewer_config().get("search_body", False)))
-        sbox = tk.Frame(top, bg=_BG)
-        sbox.pack(side="left", padx=(18, 0))
-        tk.Label(sbox, text="Search", bg=_BG, fg=_FG_DIM).pack(side="left", padx=(0, 4))
-        ent = tk.Entry(sbox, textvariable=self._inbox_viewer_search_var, width=28,
-                       bg=_ENTRY_BG, fg=_FG, insertbackground=_FG, relief="flat")
-        ent.pack(side="left", ipady=3)
+        sbox = tk.Frame(top, bg=_BG3, highlightthickness=1, highlightbackground=_BORDER, highlightcolor=_ACCENT)
+        sbox.pack(side="left", pady=10)
+        tk.Label(sbox, image=self._ui_icon("search"), bg=_BG3).pack(side="left", padx=(8, 0))
+        ent = tk.Entry(sbox, textvariable=self._inbox_viewer_search_var, width=30,
+                       bg=_BG3, fg=_FG, insertbackground=_FG, relief="flat", bd=0, highlightthickness=0,
+                       font=(_FONT, _FONT_SIZE))
+        ent.pack(side="left", ipady=6, padx=(4, 8))
         ent.bind("<KeyRelease>", lambda e: self._inbox_viewer_filter_changed())
         ent.bind("<Return>", lambda e: self._inbox_viewer_search_mailbox())
         ent.bind("<Escape>", lambda e: self._inbox_viewer_search_clear())
         self._inbox_viewer_search_entry = ent
-        tk.Button(sbox, text="Search mailbox", command=self._inbox_viewer_search_mailbox).pack(side="left", padx=(4, 0))
-        tk.Checkbutton(sbox, text="in body", variable=self._inbox_viewer_search_body_var,
+        self._ui_button(top, "search", "Search mailbox", self._inbox_viewer_search_mailbox,
+                        "Ask Outlook itself, across the selected folders \u00b7 Enter").pack(side="left", padx=(6, 0))
+        tk.Checkbutton(top, text="in body", variable=self._inbox_viewer_search_body_var,
                        command=lambda: self._save_inbox_viewer_config(
                            {"search_body": bool(self._inbox_viewer_search_body_var.get())}),
-                       bg=_BG, fg=_FG, selectcolor=_BG3, activebackground=_BG).pack(side="left", padx=(4, 0))
-        tk.Button(sbox, text="Clear", command=self._inbox_viewer_search_clear).pack(side="left", padx=(4, 0))
+                       bg=_BG2, fg=_FG_DIM, selectcolor=_BG3, activebackground=_BG2, activeforeground=_FG,
+                       highlightthickness=0, bd=0).pack(side="left", padx=(6, 0))
+        self._ui_button(top, "close", "", self._inbox_viewer_search_clear,
+                        "Clear the search \u00b7 Esc").pack(side="left", padx=2)
         self._inbox_viewer_search_mode = None
         self._inbox_viewer_extra_limit = 0
+        self._ui_button(top, "gear", "", self.open_inbox_viewer_settings,
+                        "Inbox Viewer settings (folders, columns)").pack(side="right", padx=(2, 14))
+        self._ui_button(top, "refresh", "", self._inbox_viewer_refresh,
+                        "Refresh").pack(side="right", padx=2)
+        self._ui_button(top, "download", "Load more", self._inbox_viewer_load_more,
+                        "Load more emails from the selected folders").pack(side="right", padx=2)
+        self._ui_button(top, "plus", "New email", self._inbox_viewer_new_email,
+                        "New Outlook email").pack(side="right", padx=(4, 6))
+        tk.Frame(win, bg=_BORDER, height=1).pack(fill="x")
+        bar = tk.Frame(win, bg=_BG)
+        bar.pack(fill="x", padx=14, pady=(8, 4))
+        tk.Label(bar, text="View", bg=_BG, fg=_FG_DIM).pack(side="left", padx=(0, 10))
+        self._inbox_viewer_split_var = tk.BooleanVar(
+            value=bool(self._load_inbox_viewer_config().get("split_panes", False)))
+        # v4.2.39: Sales-inbox "Unclaimed" view -- only rows that are the
+        # user's, uncategorized, or tagged with neutral categories (Canals).
+        self._inbox_viewer_unclaimed_var = tk.BooleanVar(
+            value=bool(self._load_inbox_viewer_config().get("unclaimed_only", False)))
+        # v4.2.42: optional Outlook-style reading pane on the right.
+        self._inbox_viewer_reading_var = tk.BooleanVar(
+            value=bool(self._load_inbox_viewer_config().get("reading_pane", False)))
+        for _text, _var, _cmd in (("Split panes", self._inbox_viewer_split_var, self._inbox_viewer_toggle_split),
+                                  ("Unclaimed", self._inbox_viewer_unclaimed_var, self._inbox_viewer_toggle_unclaimed),
+                                  ("Reading pane", self._inbox_viewer_reading_var, self._inbox_viewer_toggle_reading_pane)):
+            tk.Checkbutton(bar, text=_text, variable=_var, command=_cmd, bg=_BG, fg=_FG, selectcolor=_BG3,
+                           activebackground=_BG, activeforeground=_FG, highlightthickness=0, bd=0,
+                           padx=4).pack(side="left", padx=(0, 12))
+
+        # v4.3.123: the footer packs from the BOTTOM before the expanding content, so a short window shortens the
+        # lists instead of pushing the status line off the window (same rule as the main window's bars).
+        status_var = tk.StringVar(value="Loading...")
+        self._inbox_viewer_status_var = status_var
+        tk.Label(win, textvariable=status_var, bg=_BG, fg=_FG_DIM, anchor="w", padx=7,
+                 font=(_FONT, max(8, _FONT_SIZE - 1))).pack(side="bottom", fill="x", padx=14, pady=(4, 7))
+        tk.Frame(win, bg=_BORDER, height=1).pack(side="bottom", fill="x")   # hairline over the footer, as on the main window
 
         holder = tk.Frame(win, bg=_BG)
-        holder.pack(fill="both", expand=True, padx=10, pady=(0, 4))
+        holder.pack(fill="both", expand=True, padx=14, pady=(0, 4))
         self._inbox_viewer_layout_holder = holder
         self._build_inbox_viewer_layout()
         self._build_inbox_viewer_body()
-
-        status_var = tk.StringVar(value="Loading...")
-        self._inbox_viewer_status_var = status_var
-        tk.Label(win, textvariable=status_var, bg=_BG, fg=_FG_DIM, anchor="w").pack(fill="x", padx=12, pady=(0, 8))
 
         self._inbox_viewer_rows = []
         self._inbox_viewer_sort = ("received", True)
@@ -24821,6 +26089,87 @@ class OutlookWorkflowMonitor:
         except Exception as e:
             messagebox.showerror("Open Error", f"Could not open email.\n\n{e}",
                                  parent=getattr(self, "_inbox_viewer_win", None) or self.root)
+            return
+        try:
+            self._inbox_viewer_opened_mark_read(row)   # v4.3.126
+        except Exception:
+            pass
+
+    def _inbox_viewer_opened_mark_read(self, row):
+        """v4.3.126 (Steve: "in the inbox viewer if you double click to open an email it stays as unread in
+        mainbox"): opening an email in Outlook marks it read THERE, but the viewer row and the MaINbox row kept
+        their unread marks until the next fetch / AutoPilot sweep. Mirror the read state at once -- the viewer
+        row(s) for that email (bold off on re-render), the MaINbox row (outlook_unread off, row tag refreshed in
+        place, Groups pane re-rendered, cache saved) -- and, on a worker, flip Outlook's own UnRead flag only if
+        Outlook still shows it unread, so the next scan agrees. EntryID first, Message-ID fallback."""
+        eid = str((row or {}).get("entry_id", "") or "")
+        mid = str((row or {}).get("message_id", "") or "")
+        if not eid:
+            return
+        viewer_changed = 0
+        for r in getattr(self, "_inbox_viewer_rows", None) or []:
+            if not isinstance(r, dict):
+                continue
+            if str(r.get("entry_id", "") or "") == eid or (mid and str(r.get("message_id", "") or "") == mid):
+                if r.get("unread"):
+                    r["unread"] = False
+                    viewer_changed += 1
+        if viewer_changed:
+            try:
+                self._render_inbox_viewer_rows()
+            except Exception:
+                pass
+        main_changed = []
+        for e in getattr(self, "emails", []) or []:
+            if not isinstance(e, dict):
+                continue
+            if str(e.get("entry_id", "") or "") == eid or (mid and str(e.get("internet_message_id", "") or "") == mid):
+                if e.get("outlook_unread"):
+                    e["outlook_unread"] = False
+                    main_changed.append(e)
+        for e in main_changed:
+            try:
+                if self.tree.exists(e["entry_id"]):
+                    self.tree.item(e["entry_id"], tags=(self.get_row_tag(e),))
+            except Exception:
+                pass
+        if main_changed:
+            try:
+                self.render_group_rows()
+            except Exception:
+                pass
+            try:
+                self.save_cached_state()
+            except Exception:
+                pass
+        store_id = str((row or {}).get("store_id", "") or "")
+
+        def work(outlook, namespace):
+            msg = namespace.GetItemFromID(eid, store_id) if store_id else namespace.GetItemFromID(eid)
+            if bool(getattr(msg, "UnRead", False)):
+                msg.UnRead = False
+                msg.Save()
+                return True
+            return False
+
+        def done(flipped):
+            try:
+                ops_log("inbox_viewer", "opened_mark_read", flipped_outlook=bool(flipped),
+                        viewer_rows=viewer_changed, mainbox_rows=len(main_changed))
+            except Exception:
+                pass
+
+        def error(exc):
+            try:
+                ops_log("inbox_viewer", "opened_mark_read_failed", err=str(exc)[:120],
+                        viewer_rows=viewer_changed, mainbox_rows=len(main_changed))
+            except Exception:
+                pass
+
+        try:
+            self.run_outlook_worker(work, on_done=done, on_error=error, label="inbox-viewer-openread")
+        except Exception:
+            pass
 
     def _inbox_viewer_compose(self, mode):
         """v4.2.37 Phase 3, per the locked decision: open Outlook PREFILLED and
@@ -26121,7 +27470,7 @@ class OutlookWorkflowMonitor:
 
     def record_rfq_cache(self, group_id, materials=None, vendors=None, ocr_details=None, used_ai=False,
                          quote_text="", group=None, emails=None, customer_hint="", requested_records=None,
-                         subject="", body=""):
+                         subject="", body="", source_entry_id=None):
         """Save the full RFQ extractor working state for fast reopen and future quote documentation."""
         try:
             key = self.get_rfq_cache_key(group_id)
@@ -26157,9 +27506,13 @@ class OutlookWorkflowMonitor:
                     "single_email_rfq": bool(group.get("single_email_rfq")),
                 }
 
+            # v4.3.118: which ONE email this extractor state came from ("Send Quote RFQ" on an email);
+            # None keeps the stored value (the window's own re-saves), "" clears it (a group-wide scan).
+            _sid = str(old.get("source_entry_id", "") or "") if source_entry_id is None else str(source_entry_id or "")
             rec = dict(old)
             rec.update({
                 "group_id": group_id,
+                "source_entry_id": _sid,
                 "group": group_snapshot or old.get("group", {}),
                 "emails": email_snapshot or old.get("emails", []),
                 "materials": normalize_material_items(materials if materials is not None else old.get("materials", [])),
@@ -26183,6 +27536,7 @@ class OutlookWorkflowMonitor:
                     rec.get("materials", []),
                     group=group or rec.get("group"),
                     emails=emails if emails else rec.get("emails", []),
+                    source_ref=str(rec.get("source_entry_id", "") or ""),   # v4.3.118
                 )
             except Exception:
                 pass
@@ -26951,6 +28305,341 @@ class OutlookWorkflowMonitor:
             pass
         return n
 
+    # v4.3.119 (Steve 10/22, 1556-195: "when it has [OK TO BO] there that means I will have to keep track of the item(s)
+    # on the order and update him accordingly. Below where the Order, csr, factory, pu or ship date ... and below that is
+    # where all the updates go. Can we please make it so that where the PU or ship date a follow up reminder will be
+    # created for 7am on that date and in the notes if there is any revised ship dates then auto create another
+    # reminder?"): the PU DATE: / SHIP DATE: row of the order block on Danny's sheet, every date it carries ("SHIP
+    # DATE: 10/7, Line1-10/14 line5- 10/26" after an in-place revision), and a date in OUR dated notes below it that
+    # sits next to a ship / ESD / pickup / revised word ("Line5- MTO item, revised ship date of 10/26", "ESD of
+    # 10/26"), each -> ONE po_sheet_date reminder at 07:00 on that date. The customer's own rows ("please cancel the
+    # 1/2\" because of the 11/5 Ship date you provided") never count, nor does a past-tense row ("Confirmed Shipped
+    # 10/14"), a delivery note of ours ("Will deliver 10/8") or a fraction with an inch mark (1/2").
+    _PO_SHEET_DATE_ROW_RE = re.compile(r"(?im)^[ \t]*(?:[^|\n]*\|[ \t]*)*((?:p/?u|pick\s*-?\s*up|ship(?:ping)?|est(?:imated)?\.?\s*ship|esd)\s*date)\s*[:=]\s*(.*)$")
+    _PO_SHEET_ORDER_META_RE = re.compile(r"(?i)^[ \t]*(?:[^|\n]*\|[ \t]*)*(order|csr|factory)\s*[:=]\s*([^|\n]{1,40})")
+    _PO_SHEET_NOTE_DATE_KEY_RE = re.compile(r"(?i)\b(?:ship\w*|esd|e\.s\.d\.?|p/?u|pick\s*-?\s*up|pickup|revis\w*|resched\w*|new\s+date|moved|pushed|delay\w*|eta)\b")
+    _PO_SHEET_NOTE_DONE_RE = re.compile(r"(?i)\b(?:shipped|arrived|received|delivered|picked\s+up|cancel\w*)\b")
+    _PO_SHEET_DATE_TOKEN_RE = re.compile(r"(?<![\d/])(\d{1,2}/\d{1,2}(?:/\d{2,4})?)(?![\d/])(?![ \t]*(?:\"|\u201d|''|in\b|inch))")
+
+    def _po_sheet_date_notices(self, text, mine):
+        """v4.3.119: read one PO sheet's text (the " | "-joined cell rendering) for the dates Steve must act on.
+        Returns [{"date", "kind", "src", "order"}] in sheet order -- kind "pu" / "ship" for the order block's date row
+        (every date on it), "note" for a date in one of OUR dated rows (initials in `mine`) or its continuation line.
+        A sheet neither noted "OK TO BO" in a cell of its own nor carrying an ORDER: / FACTORY: / date row is a stock
+        order and gives nothing. Never raises."""
+        out = []
+        try:
+            t = str(text or "")
+            if not t.strip():
+                return out
+            if not (self._PO_SHEET_OK_TO_BO_CELL_RE.search(t) or self._PO_SHEET_FACTORY_META_RE.search(t)
+                    or self._PO_SHEET_DATE_ROW_RE.search(t)):
+                return out
+            mine = {str(x or "").strip().upper() for x in (mine or ()) if str(x or "").strip()}
+            ref = datetime.now().date()
+            order = {}
+            who = None
+            seen = set()
+
+            def _dates(frag):
+                res = []
+                for m in self._PO_SHEET_DATE_TOKEN_RE.finditer(str(frag or "")):
+                    d = self._ship_parse_date(m.group(1), ref)
+                    if d and d not in res:
+                        res.append(d)
+                return res
+
+            def _add(d, kind, src):
+                if d.isoformat() in seen:
+                    return   # one entry per date: the order block's row wins over a note repeating it
+                seen.add(d.isoformat())
+                out.append({"date": d, "kind": kind, "src": str(src or "").strip()[:160], "order": dict(order)})
+            for raw in t.replace("\r", "").split("\n"):
+                ln = raw.strip()
+                if not ln or ln.startswith("--- "):
+                    continue
+                md = self._PO_SHEET_DATE_ROW_RE.match(ln)
+                if md:
+                    who = None
+                    label = md.group(1).strip().lower()
+                    kind = "pu" if (label.startswith("p") or label.startswith("pick")) else "ship"
+                    for d in _dates(md.group(2)):
+                        _add(d, kind, "%s: %s" % (md.group(1).strip().upper(), md.group(2).strip()))
+                    continue
+                mo = self._PO_SHEET_ORDER_META_RE.match(ln)
+                if mo:
+                    who = None
+                    key = mo.group(1).strip().lower()
+                    if key == "order" and order.get("order"):
+                        order = {}   # a second order block on the same sheet starts over
+                    order[key] = mo.group(2).strip()[:40]
+                    continue
+                ml = _PO_SHEET_LOG_ROW_RE.match(ln)
+                if ml:
+                    who = ml.group(2).upper()
+                    body = ml.group(3)
+                elif who is not None and not _PO_SHEET_TERMS_RE.match(ln) and not _PO_SHEET_META_RE.match(ln) \
+                        and not _PO_SHEET_ITEM_ROW_RE.match(ln) and not _PO_SHEET_QTY_HEADER_RE.search(ln):
+                    body = ln   # a continuation line of the row above ("Line5- MTO item, revised ship date of 10/26")
+                else:
+                    who = None
+                    continue
+                if who not in mine:
+                    continue
+                clauses = [c for c in _PO_SHEET_CLAUSE_SPLIT_RE.split(body) if c and c.strip()] or [body]
+                for c in clauses:
+                    if not self._PO_SHEET_NOTE_DATE_KEY_RE.search(c) or self._PO_SHEET_NOTE_DONE_RE.search(c):
+                        continue
+                    for d in _dates(c):
+                        _add(d, "note", body)
+        except Exception:
+            pass
+        return out
+
+    def _note_sent_po_sheet(self, msg, subject, to, sent_on, sent_entry_id, folder_label=""):
+        """v4.3.120 (Steve 10/22 15:51, "FW: 1556-200" to Danny with 1556.xls: "I forwarded Danny a OK TO BO with a PU
+        DATE on it ... and still don't see a reminder created"): the order block is typed by Steve into the customer's
+        sheet and FORWARDED back -- so the first copy that carries PU DATE / SHIP DATE is OUR sent item, hours before
+        the customer's next reply brings it inbound. Sent walk (Outlook worker): a sent item from My Sent / Sales Sent
+        with an Excel attachment, addressed to an outside recipient, has its attachment text read through the cached
+        extractor (keyed by the sent item's EntryID, persisted) and is queued as a synthetic customer row for
+        _run_po_sheet_date_pass, which drains the queue on the next one-minute tick. Once per item per session; a
+        failed read is retried on the next walk. Never raises; returns True when queued."""
+        try:
+            sent_entry_id = str(sent_entry_id or "")
+            if not sent_entry_id or str(folder_label or "") == "ERP Copies":
+                return False
+            seen = getattr(self, "_sent_sheet_seen", None)
+            if not isinstance(seen, set):
+                seen = set()
+                self._sent_sheet_seen = seen
+            if sent_entry_id in seen:
+                return False
+            try:
+                atts = msg.Attachments
+                count = int(getattr(atts, "Count", 0) or 0)
+            except Exception:
+                count = 0
+            if count <= 0:
+                seen.add(sent_entry_id)
+                return False
+            names = []
+            for i in range(1, count + 1):
+                try:
+                    names.append(str(getattr(atts.Item(i), "FileName", "") or "").strip())
+                except Exception:
+                    continue
+            if not any(re.search(r"(?i)\.xls[xm]?$", n) for n in names):
+                seen.add(sent_entry_id)
+                return False
+            # the To recipients' SMTP addresses, resolved as make_sent_waiting_placeholder does
+            smtps = []
+            try:
+                for _rcp in msg.Recipients:
+                    try:
+                        try:
+                            if int(getattr(_rcp, "Type", 1) or 1) != 1:   # olTo only
+                                continue
+                        except Exception:
+                            pass
+                        _addr = ""
+                        try:
+                            _addr = str(_rcp.PropertyAccessor.GetProperty(
+                                "http://schemas.microsoft.com/mapi/proptag/0x39FE001F") or "")
+                        except Exception:
+                            _addr = ""
+                        if "@" not in _addr:
+                            try:
+                                _raw = str(getattr(_rcp, "Address", "") or "")
+                                if "@" in _raw and not _raw.lower().startswith("/o="):
+                                    _addr = _raw
+                            except Exception:
+                                pass
+                        _addr = extract_email_address(_addr).lower()
+                        if _addr and "@" in _addr and _addr not in smtps:
+                            smtps.append(_addr)
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+            if not smtps:
+                _t = extract_email_address(str(to or "")).lower()
+                if "@" in _t:
+                    smtps.append(_t)
+            outside = [a for a in smtps if not self._erp_sender_is_own_domain({"sender_email": a})]
+            if not outside:
+                seen.add(sent_entry_id)
+                return False
+            # the attachment text through the cached extractor; its per-message integrity flags belong to the
+            # coverage scans, so they are put back afterwards
+            _saved = (getattr(self, "_vendor_attach_last_failed", False), list(getattr(self, "_vendor_attach_failed_names", []) or []),
+                      getattr(self, "_vendor_attach_last_skipped", False), getattr(self, "_vendor_attach_last_result", None))
+            try:
+                text = self._attachment_quote_text_from_msg(msg)
+            finally:
+                try:
+                    (self._vendor_attach_last_failed, self._vendor_attach_failed_names,
+                     self._vendor_attach_last_skipped, self._vendor_attach_last_result) = _saved
+                except Exception:
+                    pass
+            text = str(text or "")
+            if not text.strip():
+                return False   # not marked seen: retried on the next walk
+            seen.add(sent_entry_id)
+            try:
+                store_id = str(getattr(getattr(msg, "Parent", None), "StoreID", "") or "")
+            except Exception:
+                store_id = ""
+            try:
+                cid = str(getattr(msg, "ConversationID", "") or "")
+            except Exception:
+                cid = ""
+            disp = str(to or "").split(";")[0].strip()
+            row = {"entry_id": sent_entry_id, "store_id": store_id, "conversation_id": cid, "subject": str(subject or ""),
+                   "sender": disp or outside[0], "sender_email": outside[0], "resolved_sender_smtp": outside[0],
+                   "received_timestamp": (float(sent_on.timestamp()) if sent_on is not None else datetime.now().timestamp()),
+                   "attachment_names": "; ".join(n for n in names if n), "email_type": "C", "sent_sheet": True,
+                   "sheet_text": text[:20000]}
+            q = getattr(self, "_pending_sent_sheets", None)
+            if not isinstance(q, list):
+                q = []
+                self._pending_sent_sheets = q
+            q.append(row)
+            try:
+                ops_log("workflow", "po_sheet_sent_queued", subj=str(subject or "")[:40], to=outside[0][:40],
+                        eid=sent_entry_id[-16:], chars=len(text))
+            except Exception:
+                pass
+            return True
+        except Exception:
+            return False
+
+    def _run_po_sheet_date_pass(self, force=False):
+        """v4.3.119: every 30 minutes (from the one-minute notice tick), the customer sheets loaded in the last 30 days
+        -- an outside sender's row with an Excel attachment whose text is in the attachment cache -- get ONE
+        po_sheet_date reminder per (job, date), due 07:00 on that date (a date that is today and already past 07:00
+        fires in two minutes; an older date is remembered and skipped). Our initials are the sales category. Main
+        thread, no Outlook. Returns the number scheduled."""
+        n = 0
+        try:
+            now = datetime.now()
+            last = float(getattr(self, "_po_sheet_date_pass_last_at", 0) or 0)
+            # v4.3.120: sheets we forwarded (queued by the Sent walk) are read on the very next tick
+            pending = []
+            _q = getattr(self, "_pending_sent_sheets", None)
+            if isinstance(_q, list) and _q:
+                pending, _q[:] = list(_q), []
+            full = bool(force) or (now.timestamp() - last) >= 1800
+            if not full and not pending:
+                return 0
+            rows = list(pending)
+            if full:
+                self._po_sheet_date_pass_last_at = now.timestamp()
+                rows = list(getattr(self, "emails", []) or []) + rows
+            cutoff = now.timestamp() - 30 * 86400
+            known = set()
+            for it in (getattr(self, "scenario_reminders", []) or []):
+                if isinstance(it, dict) and it.get("type") == "po_sheet_date":
+                    known.add(str(it.get("notice_key", "") or ""))
+            _mine = str(getattr(self, "selected_sales_category", "") or "").strip().upper()
+            mine = {_mine} if re.fullmatch(r"[A-Z]{2,3}", _mine) else set()
+            cache = getattr(self, "_attachment_text_cache", None)
+            if cache is None:
+                cache = self._attachment_text_cache = self._load_attachment_text_cache()
+            added = False
+            for e in rows:
+                try:
+                    if not isinstance(e, dict) or e.get("is_sent_waiting_placeholder") or e.get("app_deleted"):
+                        continue
+                    if float(e.get("received_timestamp", 0) or 0) < cutoff:
+                        continue
+                    if not re.search(r"\.xlsx?\b|\.xlsm\b", str(e.get("attachment_names", "") or "").lower()):
+                        continue
+                    addr = extract_email_address(str(e.get("resolved_sender_smtp") or e.get("sender_email") or "")).lower()
+                    if "@" not in addr or self._erp_sender_is_own_domain({"sender_email": addr}):
+                        continue
+                    if normalize_email_type_code(e.get("email_type")) in ("V", "M", "E"):
+                        continue
+                    from_sent = bool(e.get("sent_sheet"))   # v4.3.120: a sheet we forwarded (text travels with the row)
+                    v = str(e.get("sheet_text", "") or "") if from_sent else None
+                    if not v:
+                        v = cache.get(str(e.get("entry_id", "") or "")) if isinstance(cache, dict) else None
+                    if isinstance(v, (list, tuple)):
+                        v = "\n".join(str(x) for x in v)
+                    text = str(v or "")
+                    if not text.strip():
+                        continue
+                    # only the Excel attachment(s): a quote PDF on the same e-mail is not the sheet
+                    parts = re.split(r"(?m)^--- Attachment: (.+?) ---[ \t]*$", text)
+                    sheet_text = ""
+                    if len(parts) >= 3:
+                        for i in range(1, len(parts) - 1, 2):
+                            if re.search(r"(?i)\.xls[xm]?\s*$", parts[i].strip()):
+                                sheet_text += parts[i + 1] + "\n"
+                    else:
+                        sheet_text = text
+                    notices = self._po_sheet_date_notices(sheet_text, mine)
+                    if not notices:
+                        continue
+                    ok_to_bo = bool(self._PO_SHEET_OK_TO_BO_CELL_RE.search(sheet_text))
+                    token = self._ship_job_token(e)
+                    po = str(e.get("subject", "") or "").strip()
+                    po = re.sub(r"(?i)^(?:re|fw|fwd)\s*:\s*", "", po).strip()[:60] or token
+                    gid = self.get_group_id_for_email(str(e.get("entry_id", "") or ""))
+                    who = str(e.get("sender", "") or e.get("sender_email", "") or "")
+                    if from_sent:
+                        # v4.3.120: the customer's own row on the thread gives the group and the name
+                        try:
+                            cust = self._customer_sheet_row_for_job(po) or self._customer_row_for_job(po)
+                            if isinstance(cust, dict):
+                                gid = gid or self.get_group_id_for_email(str(cust.get("entry_id", "") or ""))
+                                who = str(cust.get("sender", "") or who)
+                        except Exception:
+                            pass
+                    for nt in notices:
+                        d = nt["date"]
+                        key = "%s|%s" % (token.lower(), d.isoformat())
+                        if key in known:
+                            continue
+                        if d < now.date():
+                            known.add(key)
+                            continue   # already gone by
+                        if (d - now.date()).days > 180:
+                            known.add(key)
+                            continue   # not a date on this order
+                        due = datetime.combine(d, datetime.min.time()).replace(hour=7)
+                        if due < now:
+                            due = now + timedelta(minutes=2)
+                        od = nt.get("order") or {}
+                        label = {"pu": "PU DATE", "ship": "SHIP DATE"}.get(nt["kind"], "revised date")
+                        self.scenario_reminders.append({
+                            "type": "po_sheet_date", "entry_id": str(e.get("entry_id", "") or ""), "store_id": e.get("store_id", ""),
+                            "conversation_id": e.get("conversation_id", ""), "group_id": gid,
+                            "subject": str(e.get("subject", "") or ""), "sender": who, "from_sent": from_sent,
+                            "created_at": now.isoformat(), "due_at": due.isoformat(), "baseline_received_timestamp": e.get("received_timestamp", 0),
+                            "notice_key": key, "job": token, "po": po, "date": d.isoformat(), "kind": nt["kind"], "src": nt.get("src", ""),
+                            "order_no": str(od.get("order", "") or ""), "csr": str(od.get("csr", "") or ""), "factory": str(od.get("factory", "") or ""),
+                            "ok_to_bo": ok_to_bo, "note": "%s %s on the PO sheet for %s" % (label, d.strftime("%m/%d"), po),
+                            "completed": False, "cancelled": False,
+                        })
+                        known.add(key); n += 1; added = True
+                        try:
+                            ops_log("workflow", "po_sheet_date_scheduled", po=po[:30], date=d.isoformat(), kind=nt["kind"],
+                                    due=due.isoformat(), src=str(nt.get("src", "") or "")[:60], eid=str(e.get("entry_id", "") or "")[-16:],
+                                    from_sent=from_sent)
+                        except Exception:
+                            pass
+                except Exception:
+                    continue
+            if added:
+                try:
+                    self.save_scenario_reminders()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        return n
+
     _ERP_INVOICE_SUBJECT_RE = re.compile(r"(?i)^\s*:?\s*invoice\s+S?\d{5,}(?:\.\d+)?\s+PO#\s*(.+?)\s*$")
 
     def _queue_invoice_notice(self, subject, to, sent_on):
@@ -27166,7 +28855,7 @@ class OutlookWorkflowMonitor:
             pass
         return n
 
-    _NOTICE_REMINDER_TYPES = ("shipment_eta", "customer_delivery_notice", "process_po")
+    _NOTICE_REMINDER_TYPES = ("shipment_eta", "customer_delivery_notice", "process_po", "po_sheet_date")   # v4.3.119: + the 7am PO-sheet date reminder
 
     def _notice_reminder_tick(self):
         """v4.3.96 (live 15:50 10/13: a seeded invoice heads-up and a shipment notice sat past their due time
@@ -27219,6 +28908,14 @@ class OutlookWorkflowMonitor:
                 pass
             try:
                 self._run_shipment_notice_pass()
+            except Exception:
+                pass
+            try:
+                self._run_po_sheet_date_pass()   # v4.3.119: throttled inside (30 min)
+            except Exception:
+                pass
+            try:
+                self._run_stock_quote_resolution_pass()   # v4.3.116: throttled inside (10 min)
             except Exception:
                 pass
             now = datetime.now()
@@ -27344,6 +29041,72 @@ class OutlookWorkflowMonitor:
                 self._notice_popup("Shipment arriving", text, [("Got it", None), ("Remind me tomorrow", lambda: (_snooze(24 * 60), item.__setitem__("completed", False)))])
                 try:
                     ops_log("workflow", "shipment_eta_shown", job=str(item.get("job", "") or "")[:30], eta=str(item.get("eta", "") or ""))
+                except Exception:
+                    pass
+                return True
+            if kind == "po_sheet_date":
+                # v4.3.119: the 7am "keep track of this order" reminder from Danny's PO sheet
+                po = str(item.get("po", "") or item.get("subject", "") or item.get("job", "") or "")
+                dstr = str(item.get("date", "") or "")
+                try:
+                    _d = datetime.fromisoformat(dstr).date()
+                    dshow = _d.strftime("%a %m/%d")
+                    when = "today" if _d == now.date() else (("was %s" % _d.strftime("%m/%d")) if _d < now.date() else "")
+                except Exception:
+                    _d = None; dshow = dstr; when = ""
+                label = {"pu": "PU DATE", "ship": "SHIP DATE"}.get(str(item.get("kind", "") or ""), "Revised date")
+                hdr = ", ".join("%s %s" % (a, b) for a, b in (("ORDER", item.get("order_no")), ("CSR", item.get("csr")), ("FACTORY", item.get("factory"))) if b)
+                who = str(item.get("sender", "") or "the customer").strip()
+                text = "%s -- %s %s%s.\n" % (po, label, dshow, (" (%s)" % when) if when else "")
+                if hdr:
+                    text += hdr + "\n"
+                text += "\nThe PO sheet %s: check the order and update %s on the sheet." % (
+                    "is noted OK TO BO" if item.get("ok_to_bo", True) else "carries a factory order", who)
+                if str(item.get("kind", "") or "") == "note" and item.get("src"):
+                    text += "\n\nFrom the sheet: \"%s\"" % str(item.get("src", "") or "")[:140]
+                try:
+                    later = sorted(str(r.get("date", "") or "") for r in (getattr(self, "scenario_reminders", []) or [])
+                                   if isinstance(r, dict) and r is not item and r.get("type") == "po_sheet_date" and not r.get("cancelled")
+                                   and str(r.get("job", "") or "") == str(item.get("job", "") or "") and str(r.get("date", "") or "") > dstr)
+                    if later:
+                        text += "\n\nThe sheet also carries a later date: %s" % ", ".join(x[5:].replace("-", "/") for x in later[:4])
+                except Exception:
+                    pass
+                sheet = self._customer_sheet_row_for_job(po) or (self.get_email_by_id(str(item.get("entry_id", "") or "")) if item.get("entry_id") else None)
+                if item.get("from_sent") and item.get("entry_id"):
+                    # v4.3.120: the reminder came from a sheet WE forwarded; open that copy unless the customer has
+                    # since sent a newer one (the notes keep growing on the newest copy)
+                    try:
+                        _ours = {"entry_id": str(item.get("entry_id", "") or ""), "store_id": str(item.get("store_id", "") or ""),
+                                 "subject": str(item.get("subject", "") or "")}
+                        if not isinstance(sheet, dict) or float(sheet.get("received_timestamp", 0) or 0) <= float(item.get("baseline_received_timestamp", 0) or 0):
+                            sheet = _ours
+                    except Exception:
+                        pass
+
+                def _open_po_sheet():
+                    try:
+                        msg = self.get_message_object(sheet) if isinstance(sheet, dict) else None
+                        if msg is not None:
+                            self.display_outlook_item_foreground(msg)
+                            try:
+                                self.root.after(500, lambda m=msg: self.bring_outlook_inspector_to_front(m))
+                            except Exception:
+                                pass
+                        elif isinstance(sheet, dict):
+                            self.open_group_member_in_outlook(str(sheet.get("entry_id", "") or ""))
+                        try:
+                            ops_log("workflow", "po_sheet_date_opened_sheet", po=po[:30], found=bool(msg))
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+                _done("po_sheet_date_shown")
+                self._notice_popup("Order date on the PO sheet", text,
+                                   [("Open the PO sheet e-mail", _open_po_sheet if sheet else None), ("Got it", None),
+                                    ("Remind me in 1 hour", lambda: (_snooze(60), item.__setitem__("completed", False)))])
+                try:
+                    ops_log("workflow", "po_sheet_date_shown", po=po[:30], date=dstr, kind=str(item.get("kind", "") or ""))
                 except Exception:
                     pass
                 return True
@@ -28338,8 +30101,13 @@ class OutlookWorkflowMonitor:
             # are preserved. (Items from a pre-v3.9.83 ledger were already tagged
             # source="rfq_extraction", so they clear on the next re-feed too.)
             if replace_source:
+                # v4.3.118: a re-feed from ONE message replaces only the rows that message produced
+                # (source_ref); rows from the job's other messages -- the original request's list --
+                # stay. A group-wide re-feed (no source_ref) replaces every extractor row as before.
+                _sref = str(source_ref or "")
                 existing[:] = [it for it in existing
-                               if str((it or {}).get("source", "")) != replace_source]
+                               if str((it or {}).get("source", "")) != replace_source
+                               or (_sref and str((it or {}).get("source_ref", "") or "") != _sref)]
             # v3.9.24: dedupe requested line items on a SPECIFIC key -- part number when it is
             # a real part, otherwise the full normalized description -- instead of
             # coverage_item_keys(). The latter includes canonical_material_key(), whose coarse
@@ -28439,7 +30207,7 @@ class OutlookWorkflowMonitor:
         except Exception:
             return 0
 
-    def update_coverage_requested_from_rfq(self, group_id, materials, group=None, emails=None):
+    def update_coverage_requested_from_rfq(self, group_id, materials, group=None, emails=None, source_ref=""):
         """Hook used right after an RFQ is extracted/cached."""
         try:
             emails = emails or []
@@ -28477,6 +30245,7 @@ class OutlookWorkflowMonitor:
                 thread_key, materials, subject=subject, customer=customer,
                 customer_email=customer_email, group_id=group_id, conversation_id=conversation_id,
                 source="rfq_extraction", replace_source="rfq_extraction",  # v3.9.83
+                source_ref=str(source_ref or ""),   # v4.3.118: scoped replace for a single-email re-feed
             )
         except Exception:
             return 0
@@ -28651,6 +30420,55 @@ class OutlookWorkflowMonitor:
         except Exception:
             return None
 
+    def _coverage_sender_is_vendor(self, sender_email, entry_id=""):
+        """v4.3.117: True when the sender is a typed Vendor -- Saved Senders first, else the loaded
+        row's own type. Used to let a catalog-grade hit on ONE requested line link a quote that
+        arrived on the vendor's own thread. Never raises."""
+        try:
+            addr = extract_email_address(str(sender_email or "")).lower()
+            if addr:
+                try:
+                    _t = normalize_email_type_code(self.get_saved_contact_type(addr) or "")
+                    if _t:
+                        return _t == "V"
+                except Exception:
+                    pass
+            row = self.get_email_by_id(str(entry_id or "")) if entry_id else None
+            if isinstance(row, dict):
+                _rt = str(row.get("email_type", "") or "").strip().upper()
+                if _rt:
+                    return _rt == "V"
+        except Exception:
+            pass
+        return False
+
+    def _coverage_vendor_only_thread_group(self, gid, sender_email):
+        """v4.3.117: True when `gid` is a group with no coverage ledger whose loaded members all
+        come from the sender's own (non-public) domain -- the thread grouper's group for a
+        vendor's own conversation, not a quote job. Such a group must not scope the link."""
+        try:
+            gid = str(gid or "").strip()
+            if not gid or not self.get_group_by_id(gid):
+                return False
+            rec = self.get_coverage_record(self._coverage_group_key(gid), create=False)
+            if isinstance(rec, dict) and rec.get("requested"):
+                return False
+            dom = str(get_email_domain(extract_email_address(str(sender_email or "")).lower()) or "").lower()
+            if not dom or dom in COVERAGE_PUBLIC_EMAIL_DOMAINS:
+                return False
+            members = [m for m in (self.get_emails_for_group(gid) or []) if isinstance(m, dict)
+                       and not m.get("is_sent_waiting_placeholder")
+                       and not str(m.get("entry_id", "") or "").startswith("sentwait:")]
+            if not members:
+                return False
+            for m in members:
+                md = str(get_email_domain(extract_email_address(str(m.get("sender_email", "") or "")).lower()) or "").lower()
+                if md != dom:
+                    return False
+            return True
+        except Exception:
+            return False
+
     def _coverage_record_for_quote(self, subject="", body="", attachment_text="", sent_entry_id="", sender_email=""):
         """Find the coverage record a QUOTE covers, for a quote that isn't threaded to the
         original RFQ. Tries (1) subject reference, then (2) strong item match -- mirroring how
@@ -28668,6 +30486,19 @@ class OutlookWorkflowMonitor:
             has_price = bool(re.search(r"\$\s*\.?\d|\b\d+\.\d{2}\b", gate_text)) \
                 or bool(re.search(r"\$\s*\.?\d|\b\d+\.\d{2}\b", attachment_text or ""))
             _cov_debug(f"  LINK gate: is_request={is_req} has_price={has_price} attach_chars={len(attachment_text or '')} gate_text={gate_text[:120]!r}")
+            # v4.3.117: a vendor's courtesy line ("thank you for contacting us to request a quote ...
+            # please find your quote attached") is not OUR request. When an external sender delivers
+            # a quote in words and the attachment carries prices, the request-phrase veto is lifted.
+            if is_req and sender_email and attachment_text and re.search(r"\$\s*\.?\d|\b\d+\.\d{2}\b", attachment_text) \
+                    and re.search(r"(?:your|the|our|attached|this)\s+quot(?:e|ation)|quot(?:e|ation)\s+(?:is\s+)?attached"
+                                  r"|please\s+find\s+(?:your|the|our)\s+quot", gate_text, re.I):
+                _cov_debug("  LINK gate: request phrase inside a vendor's quote-delivery text -> treated as a quote")
+                try:
+                    ops_log("coverage", "quote_gate_request_phrase_lifted", sender=str(sender_email or "")[:60],
+                            subj=str(subject or "")[:60])
+                except Exception:
+                    pass
+                is_req = False
             if is_req:
                 return {}
             if not has_price:
@@ -28690,6 +30521,11 @@ class OutlookWorkflowMonitor:
                     reply_gid = str(self.get_group_id_for_email(sent_entry_id) or "").strip()
                 except Exception:
                     reply_gid = ""
+            # v4.3.117: a group that is nothing but the vendor's own thread (no ledger, every member
+            # from the sender's domain) is not a job -- it must not fence the link off.
+            if reply_gid and self._coverage_vendor_only_thread_group(reply_gid, sender_email):
+                _cov_debug(f"  LINK: reply group {reply_gid} is a vendor-only thread with no ledger -> not scoping")
+                reply_gid = ""
             if reply_gid:
                 for rec in recs:
                     if str(rec.get("group_id", "") or "").strip() == reply_gid:
@@ -28708,7 +30544,7 @@ class OutlookWorkflowMonitor:
             _lin_recs = []
             _se_lin = extract_email_address(str(sender_email or "")).lower()
             if _se_lin:
-                _lin_recs = [r for r in recs if _se_lin in _coverage_lineage_map(r)]
+                _lin_recs = [r for r in recs if _coverage_lineage_lines_for_sender(r, _se_lin)]   # v4.3.117: domain fallback
                 if _lin_recs:
                     _cov_debug(f"  LINK lineage: sender {_se_lin!r} was sent lines on {len(_lin_recs)} record(s)")
             msg_subj = self._normalized_thread_subject(subject or "")
@@ -28737,6 +30573,7 @@ class OutlookWorkflowMonitor:
             # threshold. A single hit qualifies only for an exact part-number tier or a line
             # this vendor was sent, and only when no other record in the pool has any hit.
             scored = []
+            _vendor_typed = self._coverage_sender_is_vendor(sender_email, sent_entry_id)   # v4.3.117
             _pools = [p for p in ((_lin_recs, "lineage"), (recs, "all")) if p[0]]
             if len(_pools) == 2 and len(_pools[0][0]) == len(_pools[1][0]):
                 _pools = _pools[1:]
@@ -28746,15 +30583,15 @@ class OutlookWorkflowMonitor:
                 for rec in _pool:
                     req = rec.get("requested", []) or []
                     common = _coverage_record_common_tokens(req)
-                    _lines_sent = _coverage_lineage_map(rec).get(_se_lin, set()) if _se_lin else set()
+                    _lines_sent = _coverage_lineage_lines_for_sender(rec, _se_lin) if _se_lin else set()   # v4.3.117
                     hits, best_tier, lin_hits = _coverage_unique_line_hits(req, quoted_items, common, _lines_sent)
                     _cov_debug(f"    vs record {rec.get('subject')!r}: unique hits={hits} best_tier={best_tier} lineage_hits={lin_hits} (req items={len(req)}, pool={_pool_name})")
                     if hits >= 1:
                         _any_hit_recs += 1
                     if hits >= 2:
                         scored.append((hits, rec))
-                    elif hits == 1 and (lin_hits >= 1 or best_tier >= 5):
-                        scored.append((1, rec))
+                    elif hits == 1 and (lin_hits >= 1 or best_tier >= 5 or (best_tier >= 3 and _vendor_typed)):
+                        scored.append((1, rec))   # v4.3.117: a typed vendor's catalog-grade hit on one line counts
                 if scored and any(h == 1 for h, _r in scored) and _any_hit_recs > 1:
                     scored = [(h, r) for h, r in scored if h >= 2]
                 if scored:
@@ -29181,7 +31018,7 @@ class OutlookWorkflowMonitor:
             _cov_debug(f"  QUOTED-FROM-SENT exception: {_e!r}")
             return 0
 
-    def update_coverage_waiting_from_request(self, subject="", body="", sent_entry_id="", sent_on=""):
+    def update_coverage_waiting_from_request(self, subject="", body="", sent_entry_id="", sent_on="", recipient=""):
         """A sent OUTGOING quote/price-availability REQUEST (an RFQ you sent out) moves the
         matching customer's requested items to 'Waiting'. The request is its own thread, so it
         is linked to a coverage record by EITHER (a) the record's subject being referenced in
@@ -29240,6 +31077,7 @@ class OutlookWorkflowMonitor:
                 quoted = rec.get("quoted", []) or []
                 auto_wait = rec.setdefault("auto_waiting_keys", [])
                 rec_changed = False
+                _flipped_ids = []
                 for req in to_flip:
                     pk = self.coverage_item_primary_key(req)
                     if not pk or pk in auto_wait:
@@ -29252,6 +31090,23 @@ class OutlookWorkflowMonitor:
                     auto_wait.append(pk)
                     rec_changed = True
                     changed_total += 1
+                    try:
+                        if str((req or {}).get("line_id", "") or ""):
+                            _flipped_ids.append(str(req.get("line_id")))
+                    except Exception:
+                        pass
+                # v4.3.117: remember WHO was sent these lines (lineage for the vendor's reply)
+                try:
+                    _to_lin = extract_email_address(str(recipient or "")).lower()
+                    if _to_lin and "@" in _to_lin and _flipped_ids:
+                        rec.setdefault("line_vendor_sends", []).append({
+                            "vendor": _to_lin, "cc": "", "line_ids": list(_flipped_ids),
+                            "descriptions": [str((_r or {}).get("description", ""))[:60] for _r in to_flip
+                                             if str((_r or {}).get("line_id", "") or "") in _flipped_ids],
+                            "at": datetime.now().isoformat(), "via": "sent_request"})
+                        rec_changed = True
+                except Exception:
+                    pass
                 if rec_changed:
                     rec["updated_at"] = datetime.now().isoformat()
             if changed_total:
@@ -29991,6 +31846,434 @@ class OutlookWorkflowMonitor:
         return self.update_coverage_requested(thread_key, mats, subject=subject, customer=customer,
                                               source="manual")  # v3.9.83: survives RFQ re-feeds
 
+    # ------------------------------------------------------------------
+    # v4.3.116: a request quoted from stock leaves Quote Coverage on its own.
+    # The ERP bid copy is the proof we quoted; the ledger says whether the bid
+    # covered every line; a "better pricing / lead time" note holds it open.
+    # ------------------------------------------------------------------
+    _STOCK_REQUOTE_RE = re.compile(
+        r"\b(?:"
+        r"(?:better|lower|improved|sharper|cheaper|reduced|revised|updated)\s+(?:\w+\s+){0,2}?"
+        r"(?:pric(?:e|es|ing)|cost|number|numbers|lead\s*time|leadtime|delivery|availability)"
+        r"|re-?quot(?:e|ed|ing)"
+        r"|(?:revised|updated|new)\s+quot(?:e|ation)"
+        r"|(?:still\s+)?(?:working|checking)\s+on\s+(?:a\s+|the\s+)?(?:better|lower|price|pricing|lead)"
+        r"|(?:try(?:ing)?|see\s+if\s+(?:i|we)\s+can|will\s+try|i'?ll\s+try|we'?ll\s+try)\s+(?:to\s+)?(?:get|find|do)\s+(?:you\s+)?(?:a\s+)?(?:better|lower|cheaper|sharper)"
+        r"|(?:beat|improve|sharpen|lower)\s+(?:th(?:e|at|is)\s+|my\s+|our\s+)?(?:pric(?:e|es|ing)|number|numbers|lead\s*time)"
+        r"|pric(?:e|es|ing)\s+(?:may|might|could|will|should)\s+(?:come\s+down|drop|improve|change|be\s+lower)"
+        r"|(?:better|revised|updated|lower)\s+(?:pric(?:e|es|ing)|quote|numbers)\s+to\s+follow"
+        r")\b", re.I)
+
+    def _stock_quote_mode(self):
+        """'auto' | 'ask' | 'off' from Settings (default auto)."""
+        try:
+            mode = str((getattr(self, "settings", {}) or {}).get("coverage_stock_quote_mode", "auto") or "auto").strip().lower()
+        except Exception:
+            mode = "auto"
+        return mode if mode in ("auto", "ask", "off") else "auto"
+
+    def _stock_quote_requote_phrase(self, text):
+        """The first 'I may re-quote this' phrase in `text`, or ''."""
+        try:
+            m = self._STOCK_REQUOTE_RE.search(str(text or ""))
+            return m.group(0).strip()[:60] if m else ""
+        except Exception:
+            return ""
+
+    def _coverage_note_requote_intent(self, conversation_id, subject, phrase, when_ts=0.0, msg_key=""):
+        """WORKER OR TK THREAD (coverage lock inside). Our own sent reply said we are after
+        better pricing / lead time: stamp the job's ledger so the stock-quote pass keeps the
+        request in Quote Coverage. Newest stamp wins; one save per new message. Never raises."""
+        try:
+            phrase = str(phrase or "").strip()
+            if not phrase:
+                return False
+            grp_id = self._coverage_group_id_for_conversation(conversation_id)
+            key = self._coverage_group_key(grp_id) or self.coverage_thread_key(conversation_id, subject)
+            if not key:
+                return False
+            with self._coverage_save_lock():
+                rec = self.get_coverage_record(key, create=False)
+                if not isinstance(rec, dict) or not rec.get("requested"):
+                    return False
+                prev = rec.get("requote_pending") if isinstance(rec.get("requote_pending"), dict) else {}
+                if msg_key and str(prev.get("msg", "") or "") == str(msg_key):
+                    return False
+                ts = float(when_ts or 0) or datetime.now().timestamp()
+                if prev and float(prev.get("ts", 0) or 0) > ts:
+                    return False   # an older message must not replace a newer stamp
+                rec["requote_pending"] = {"ts": ts, "at": datetime.fromtimestamp(ts).isoformat(),
+                                          "phrase": phrase[:60], "subject": str(subject or "")[:80],
+                                          "msg": str(msg_key or "")[:120]}
+                rec["updated_at"] = datetime.now().isoformat()
+                ok = bool(self.save_quote_coverage())
+            ops_log("coverage", "requote_intent_noted", thread=str(key)[:40], phrase=phrase[:40], saved=ok)
+            return ok
+        except Exception:
+            return False
+
+    def _stock_quote_requote_hold(self, rec, copy):
+        """('reason', 'phrase') when the request must stay in Quote Coverage although the bid
+        covered every line: the bid text / copy body carries a re-quote phrase, or our own sent
+        reply did (stamped by the Sent walk) after this bid went out. ('', '') otherwise."""
+        try:
+            texts = []
+            try:
+                texts.append(str(copy.get("body", "") or "")[:4000])
+            except Exception:
+                pass
+            try:
+                cache = getattr(self, "_attachment_text_cache", None)
+                if cache is None:
+                    cache = self._attachment_text_cache = self._load_attachment_text_cache()
+                v = cache.get(str(copy.get("entry_id", "") or "")) if isinstance(cache, dict) else None
+                if isinstance(v, (list, tuple)):
+                    v = "\n".join(str(x) for x in v)
+                if v:
+                    texts.append(str(v)[:20000])
+            except Exception:
+                pass
+            for t in texts:
+                ph = self._stock_quote_requote_phrase(t)
+                if ph:
+                    return "bid_text", ph
+            pend = rec.get("requote_pending") if isinstance(rec.get("requote_pending"), dict) else {}
+            if pend:
+                copy_ts = float(self._comparable_received_epoch(copy) or 0) or float(copy.get("received_timestamp", 0) or 0)
+                if float(pend.get("ts", 0) or 0) >= copy_ts - 900.0:
+                    return "sent_reply", str(pend.get("phrase", "") or "")[:60]
+        except Exception:
+            pass
+        return "", ""
+
+    def _stock_quote_bid_verdict(self, rec, copy):
+        """How the ledger stands once the bid was read: ('complete' | 'partial' | 'unread' |
+        'no_ledger' | 'dismissed', counts). 'complete' = every requested line has a quote
+        candidate from the bid (quoted / partial / check -- our OWN bid is the candidate, so an
+        uncertain match still means we quoted that line) or a manual status; 'partial' = a line
+        has no candidate at all (outstanding) or is still waiting on a vendor."""
+        counts = {"rows": 0, "open": 0, "quoted": 0, "check": 0}
+        try:
+            if not isinstance(rec, dict) or not rec.get("requested"):
+                return "no_ledger", counts
+            if rec.get("dismissed"):
+                return "dismissed", counts
+            eid = str(copy.get("entry_id", "") or "")
+            imid = str(copy.get("internet_message_id", "") or "")
+            processed = rec.get("processed_sent_ids") or []
+            if not ((eid and eid in processed) or (imid and ("imid:" + imid) in processed)):
+                return "unread", counts
+            rows, _outstanding = self.compute_coverage_for_record(rec)
+            rows = rows or []
+            counts["rows"] = len(rows)
+            for r in rows:
+                st = str((r or {}).get("status", "") or "").lower()
+                if st in ("outstanding", "waiting") or (r or {}).get("calculation_error"):
+                    counts["open"] += 1
+                elif st in ("quoted", "partial"):
+                    counts["quoted"] += 1
+                elif st == "check":
+                    counts["check"] += 1
+            if not rows:
+                return "no_ledger", counts
+            return ("partial" if counts["open"] else "complete"), counts
+        except Exception:
+            counts["open"] = -1
+            return "partial", counts
+
+    def _resolve_stock_quote_records(self, keys, how, copy_eid="", bid_subject="", group_name=""):
+        """Stamp + dismiss the coverage records in `keys` (one save, all-or-nothing through
+        coverage_dismiss_threads). Returns the number removed from the queue."""
+        keys = [k for k in (keys or []) if k]
+        if not keys:
+            return 0
+        try:
+            with self._coverage_save_lock():
+                for k in keys:
+                    rec = self.get_coverage_record(k, create=False)
+                    if isinstance(rec, dict) and rec:
+                        rec["stock_quote_resolved"] = {"at": datetime.now().isoformat(), "how": str(how or ""),
+                                                       "copy": str(copy_eid or "")[-16:], "bid": str(bid_subject or "")[:60]}
+                n, failed = self.coverage_dismiss_threads(keys, dismissed=True)
+                if not n:
+                    for k in keys:   # a failed save rolled the dismissal back; drop the stamp with it
+                        rec = self.get_coverage_record(k, create=False)
+                        if isinstance(rec, dict):
+                            rec.pop("stock_quote_resolved", None)
+        except Exception:
+            n, failed = 0, True
+        ops_log("coverage", "stock_quote_resolved", how=str(how or ""), keys=len(keys), removed=n, failed=bool(failed),
+                bid=str(bid_subject or "")[:40], group=str(group_name or "")[:40])
+        if n:
+            try:
+                self.log("Quote Coverage: %s removed (%s%s)." % (
+                    (("'" + str(group_name)[:50] + "'") if group_name else "%d request(s)" % n),
+                    "quoted from stock" if how == "manual" else "our quote %s covered every line" % str(bid_subject or "").strip()[:30],
+                    ", automatic" if how == "auto" else ""))
+            except Exception:
+                pass
+            try:
+                self.update_coverage_status_label()
+            except Exception:
+                pass
+        return n
+
+    def _run_stock_quote_resolution_pass(self, force=False):
+        """v4.3.116 (Steve: "a lot of times ... I will have the items in stock ... if the request
+        is complete then it should remove it from quote coverage but if only partial then leave
+        it in ... if I am trying to get an item for better pricing or lead time then I may
+        re-quote it"). Tk thread; throttled to 10 minutes; runs from the one-minute notice tick
+        and the AutoPilot tail. For every ERP quote copy of the last 3 days that the import
+        linked to a request (erp_outbound_copy == quote, a real customer recipient) and that has
+        no final decision yet: wait until the inbox quote scan has read the bid into the group's
+        ledger, then -- complete and no re-quote hold -> remove the request from Quote Coverage
+        (Automatic) or queue it for one prompt (Ask me); partial / hold / unread -> leave it and
+        look again next pass; after 3 days the copy is retired. Setting Off = nothing runs."""
+        try:
+            if getattr(self, "_closing", False):
+                return 0
+            mode = self._stock_quote_mode()
+            if mode == "off":
+                return 0
+            now_ts = datetime.now().timestamp()
+            last = float(getattr(self, "_stock_quote_pass_last", 0) or 0)
+            if not force and now_ts - last < 600.0:
+                return 0
+            self._stock_quote_pass_last = now_ts
+            resolved = 0
+            to_ask = []
+            checked = 0
+            for e in list(getattr(self, "emails", []) or []):
+                try:
+                    if not isinstance(e, dict) or str(e.get("erp_outbound_copy", "") or "") != "quote":
+                        continue
+                    dec = e.get("stock_quote_decision") if isinstance(e.get("stock_quote_decision"), dict) else {}
+                    if dec.get("final"):
+                        continue
+                    recipient = str(e.get("erp_copy_recipient", "") or "").strip().lower()
+                    if not recipient or "@" not in recipient or self._erp_sender_is_own_domain({"sender_email": recipient}):
+                        continue
+                    age = now_ts - float(e.get("received_timestamp", 0) or 0)
+                    if age < 0:
+                        age = 0
+                    eid = str(e.get("entry_id", "") or "")
+                    if age > 3 * 86400:
+                        self._stock_quote_stamp(e, "expired", final=True, why=str(dec.get("what", "") or ""))
+                        continue
+                    gid = self.get_group_id_for_email(eid) or ""
+                    rec = self.get_coverage_record(self._coverage_group_key(gid), create=False) if gid else {}
+                    checked += 1
+                    verdict, counts = self._stock_quote_bid_verdict(rec, e)
+                    gname = str((self.get_group_by_id(gid) or {}).get("name", "") or "") if gid else ""
+                    if verdict == "no_ledger":
+                        self._stock_quote_stamp(e, "no_ledger", final=False)
+                        continue
+                    if verdict == "dismissed":
+                        self._stock_quote_stamp(e, "already_dismissed", final=True)
+                        continue
+                    if verdict == "unread":
+                        self._stock_quote_stamp(e, "bid_not_read_yet", final=False)
+                        continue
+                    if verdict == "partial":
+                        self._stock_quote_stamp(e, "partial", final=False, open=counts.get("open"), rows=counts.get("rows"))
+                        continue
+                    hold, phrase = self._stock_quote_requote_hold(rec, e)
+                    if hold:
+                        self._stock_quote_stamp(e, "hold_requote", final=False, hold=hold, phrase=phrase)
+                        continue
+                    key = self._coverage_group_key(gid)
+                    subj = str(e.get("subject", "") or "").strip()
+                    if mode == "auto":
+                        n = self._resolve_stock_quote_records([key], "auto", copy_eid=eid, bid_subject=subj, group_name=gname)
+                        if n:
+                            resolved += n
+                            self._stock_quote_stamp(e, "resolved", final=True, rows=counts.get("rows"))
+                        else:
+                            self._stock_quote_stamp(e, "resolve_failed", final=False)
+                    else:
+                        to_ask.append((e, key, gid, gname, subj, counts))
+                except Exception:
+                    continue
+            if to_ask:
+                resolved += self._ask_stock_quote_resolutions(to_ask)
+            if checked or resolved:
+                ops_log("coverage", "stock_quote_pass", mode=mode, checked=checked, resolved=resolved, asked=len(to_ask))
+            return resolved
+        except Exception:
+            return 0
+
+    def _stock_quote_stamp(self, e, what, final=False, **extra):
+        """Record the pass's decision on the ERP copy row (saved only when it changed)."""
+        try:
+            prev = e.get("stock_quote_decision") if isinstance(e.get("stock_quote_decision"), dict) else {}
+            if prev.get("what") == what and bool(prev.get("final")) == bool(final):
+                return
+            d = {"what": str(what), "final": bool(final), "at": datetime.now().isoformat()}
+            for k, v in (extra or {}).items():
+                if v not in (None, ""):
+                    d[k] = v
+            e["stock_quote_decision"] = d
+            self.save_record(e)
+            ops_log("coverage", "stock_quote_decision", what=str(what), final=bool(final),
+                    eid=str(e.get("entry_id", "") or "")[-16:], subj=str(e.get("subject", "") or "")[:50],
+                    **{k: (str(v)[:60] if isinstance(v, str) else v) for k, v in (extra or {}).items() if v not in (None, "")})
+        except Exception:
+            pass
+
+    def _ask_stock_quote_resolutions(self, items):
+        """Ask-me mode: ONE dialog listing every request our quote covered in full (checkbox
+        each, all checked, a View button per group). Enter = Remove checked from Quote
+        Coverage, Escape = Keep tracking. Unchecked / kept copies are not asked again.
+        Skipped (asked next pass) while a draft is open, a loading window is up, or the app is
+        closing. Tk thread only. Returns the number removed."""
+        try:
+            items = [it for it in (items or []) if it and it[1]]
+            if not items:
+                return 0
+            if getattr(self, "draft_busy", False) or getattr(self, "loading_win", None) or getattr(self, "_closing", False):
+                return 0
+            result = {"choice": "keep"}
+            dialog = tk.Toplevel(self.root)
+            dialog.title("Quoted from stock -- remove from Quote Coverage?")
+            dialog.transient(self.root)
+            dialog.resizable(False, False)
+            tk.Label(dialog, text="Our ERP quote covered every line of these requests.",
+                     font=("Segoe UI", 11, "bold"), justify="left").pack(anchor="w", padx=14, pady=(14, 2))
+            tk.Label(dialog, text="Remove the checked ones from Quote Coverage? Uncheck one to keep tracking it "
+                                  "(a request stays automatically when the bid or your reply mentions better pricing / lead time).",
+                     justify="left", wraplength=620).pack(anchor="w", padx=14, pady=(0, 8))
+            vars_ = []
+            frame = tk.Frame(dialog)
+            frame.pack(fill="both", expand=True, padx=14, pady=(0, 8))
+            for e, key, gid, gname, subj, counts in items[:30]:
+                v = tk.BooleanVar(value=True)
+                vars_.append(v)
+                text = "%s   (quote %s; %d line(s) covered)" % ((gname or subj)[:60], subj[:40], int(counts.get("rows", 0) or 0))
+                _row = tk.Frame(frame)
+                _row.pack(fill="x", anchor="w")
+                tk.Checkbutton(_row, text=text, variable=v, anchor="w", justify="left").pack(side="left", anchor="w")
+                if gid:
+                    tk.Button(_row, text="View", width=6,
+                              command=lambda g=gid: self._view_group_from_prompt(g, dialog)).pack(side="left", padx=(8, 0))
+
+            def choose(v):
+                result["choice"] = v
+                try:
+                    dialog.destroy()
+                except Exception:
+                    pass
+
+            btns = tk.Frame(dialog)
+            btns.pack(fill="x", padx=14, pady=(0, 14))
+            ok_btn = tk.Button(btns, text="Remove checked", width=16, command=lambda: choose("remove"))
+            ok_btn.pack(side="left", padx=(0, 8))
+            tk.Button(btns, text="Keep tracking", width=14, command=lambda: choose("keep")).pack(side="left")
+            dialog.bind("<Return>", lambda ev: choose("remove"))
+            dialog.bind("<Escape>", lambda ev: choose("keep"))
+            dialog.protocol("WM_DELETE_WINDOW", lambda: choose("keep"))
+            try:
+                ok_btn.focus_set()
+            except Exception:
+                pass
+            self.safe_grab_set(dialog)
+            self.root.wait_window(dialog)
+            removed = 0
+            for (e, key, gid, gname, subj, counts), v in zip(items[:30], vars_):
+                if result["choice"] == "remove" and v.get():
+                    n = self._resolve_stock_quote_records([key], "ask", copy_eid=str(e.get("entry_id", "") or ""),
+                                                          bid_subject=subj, group_name=gname)
+                    if n:
+                        removed += n
+                        self._stock_quote_stamp(e, "resolved", final=True, rows=counts.get("rows"))
+                    else:
+                        self._stock_quote_stamp(e, "resolve_failed", final=False)
+                else:
+                    self._stock_quote_stamp(e, "declined", final=True)
+            ops_log("coverage", "stock_quote_prompt", choice=result["choice"], listed=len(items[:30]), removed=removed)
+            return removed
+        except Exception:
+            return 0
+
+    def _stock_quote_keys_for_emails(self, emails):
+        """[(key, gid, name, line_count)] -- the coverage records behind the given rows."""
+        out, seen = [], set()
+        for e in emails or []:
+            try:
+                eid = str(e.get("entry_id", "") or "")
+                gid = self.get_group_id_for_email(eid) or ""
+                key = self._coverage_group_key(gid) if gid else ""
+                rec = self.get_coverage_record(key, create=False) if key else {}
+                if not (rec and rec.get("requested")):
+                    key = self.coverage_thread_key_for_email(e)
+                    rec = self.get_coverage_record(key, create=False) if key else {}
+                    gid = str(rec.get("group_id", "") or "") if rec else gid
+                if not (rec and rec.get("requested")) or rec.get("dismissed") or key in seen:
+                    continue
+                seen.add(key)
+                name = str((self.get_group_by_id(gid) or {}).get("name", "") or "") if gid else ""
+                out.append((key, gid, name or str(rec.get("subject", "") or e.get("subject", "") or "")[:60],
+                            len(rec.get("requested") or [])))
+            except Exception:
+                continue
+        return out
+
+    def mark_group_quoted_from_stock(self, group_id, parent=None):
+        """Group menu: 'Quoted from stock' -- remove the group's request from Quote Coverage
+        after one confirmation (Enter = Remove, View group available). Returns True on a change."""
+        try:
+            gid = str(group_id or "")
+            group = self.get_group_by_id(gid)
+            if not group:
+                return False
+            key = self._coverage_group_key(gid)
+            rec = self.get_coverage_record(key, create=False)
+            if not (rec and rec.get("requested")) or rec.get("dismissed"):
+                try:
+                    messagebox.showinfo("Quoted from stock", "'%s' has nothing open in Quote Coverage." % str(group.get("name", "") or "")[:60],
+                                        parent=parent or self.root)
+                except Exception:
+                    pass
+                return False
+            n_lines = len(rec.get("requested") or [])
+            ok = self._ask_yes_no_view_group(
+                "Quoted from stock",
+                "Remove '%s' from Quote Coverage?\n\nIts %d requested line(s) will no longer show as outstanding. "
+                "The ledger is kept; Quote Coverage can show dismissed requests again." % (str(group.get("name", "") or "")[:60], n_lines),
+                gid, yes_text="Remove", no_text="Keep", parent=parent)
+            if not ok:
+                return False
+            return bool(self._resolve_stock_quote_records([key], "manual", group_name=str(group.get("name", "") or "")))
+        except Exception:
+            return False
+
+    def _mark_quoted_from_stock_for_selected(self):
+        """Main-list right-click: 'Quoted from stock' for the selected row(s)."""
+        try:
+            emails = self.get_selected_emails(show_warning=False)
+        except Exception:
+            emails = []
+        targets = self._stock_quote_keys_for_emails(emails)
+        if not targets:
+            try:
+                messagebox.showinfo("Quoted from stock", "No open Quote Coverage entry for the selected email(s).", parent=self.root)
+            except Exception:
+                pass
+            return 0
+        if len(targets) == 1 and targets[0][1]:
+            return 1 if self.mark_group_quoted_from_stock(targets[0][1]) else 0
+        names = "\n".join("  - %s (%d line(s))" % (t[2][:60], t[3]) for t in targets[:8])
+        if len(targets) > 8:
+            names += "\n  ... and %d more" % (len(targets) - 8)
+        try:
+            ok = messagebox.askyesno("Quoted from stock",
+                                     "Remove %d request(s) from Quote Coverage?\n\n%s\n\nTheir ledgers are kept." % (len(targets), names),
+                                     parent=self.root)
+        except Exception:
+            ok = False
+        if not ok:
+            return 0
+        return self._resolve_stock_quote_records([t[0] for t in targets], "manual")
+
     def coverage_dismiss_thread(self, thread_key, dismissed=True):
         """v4.3.26 (audit F1): True only when the change is on disk; a failed save restores
         the record so the queue never shows a dismissal the file does not carry."""
@@ -30389,17 +32672,12 @@ class OutlookWorkflowMonitor:
             pass
         win.configure(bg=_BG)
 
-        header = tk.Frame(win, bg=_BG2)
-        header.pack(fill="x")
-        tk.Label(header, text="Quote Coverage", font=("Segoe UI", 14, "bold"),
-                 fg=_FG, bg=_BG2).pack(side="left", padx=12, pady=8)
+        # v4.3.124: the main window's shell -- title band with the summary and icon buttons, the two lists as
+        # panels with section titles, icon buttons; the same variables, commands and bindings as before
         summary_var = tk.StringVar(value="")
-        tk.Label(header, textvariable=summary_var, font=("Segoe UI", 10),
-                 fg=_ACCENT, bg=_BG2).pack(side="left", padx=8)
-        tk.Button(header, text="\u21bb Refresh", command=lambda: reload_all(),
-                  bg=_ACCENT, fg="#ffffff", activebackground=_ACCENT2, activeforeground="#ffffff",
-                  relief="flat", padx=12, pady=4, cursor="hand2",
-                  font=("Segoe UI", _FONT_SIZE, "bold")).pack(side="right", padx=10, pady=6)
+        header = self._ui_window_shell(win, "Quote coverage", subtitle_var=summary_var)
+        self._ui_button(header, "refresh", "Refresh", lambda: reload_all(), "Run one coverage pass now",
+                        primary=True).pack(side="right", padx=(2, 14), pady=6)
         # v4.1.26 (round 8): the Attachment Review queue is one click away and shows
         # its backlog count right on the button.
         try:
@@ -30407,38 +32685,48 @@ class OutlookWorkflowMonitor:
             _arn_ct = len([e for e in _arn0 if isinstance(e, dict)]) if isinstance(_arn0, list) else 0
         except Exception:
             _arn_ct = 0
-        tk.Button(header,
-                  text=(f"\u26a0 Attachment review ({_arn_ct})" if _arn_ct else "Attachment review"),
-                  command=lambda: self.open_attachment_review_window(parent=win),
-                  relief="flat", padx=10, pady=4, cursor="hand2",
-                  bg=("#7a5a1e" if _arn_ct else _BG3), fg=_FG,
-                  font=("Segoe UI", _FONT_SIZE, "bold")).pack(side="right", padx=4, pady=6)
+        _arn_btn = self._ui_button(header, "quote",
+                                   (f"Attachment review ({_arn_ct})" if _arn_ct else "Attachment review"),
+                                   lambda: self.open_attachment_review_window(parent=win),
+                                   "Attachments the coverage scan could not read -- review them")
+        if _arn_ct:
+            _arn_btn.configure(bg="#7a5a1e", activebackground="#8f6a24")   # the backlog colour, as before
+        _arn_btn.pack(side="right", padx=4, pady=6)
+
+        hint = ("Requested items are captured when you run Quote RFQ on a customer email; quoted items are "
+                "detected from your sent replies in the same thread. Status auto-updates: Outstanding (no reply yet) "
+                "\u2192 Waiting (you sent a sourcing reply like 'I will advise') \u2192 Quoted (a priced item in your reply "
+                "matches). Use the buttons to override any item (Partial / No-bid / etc.); a manual status sticks.")
+        tk.Label(win, text=hint, fg=_FG_DIM, bg=_BG, font=(_FONT, 8), wraplength=1060,
+                 justify="left", anchor="w").pack(side="bottom", fill="x", padx=14, pady=(0, 8))   # from the bottom, before the body
 
         body = tk.Frame(win, bg=_BG)
-        body.pack(fill="both", expand=True, padx=8, pady=6)
+        body.pack(fill="both", expand=True, padx=14, pady=(8, 6))
 
-        left = tk.LabelFrame(body, text="Customer requests", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
-        left.pack(side="left", fill="both", expand=False, padx=(0, 6))
-        threads_tree = ttk.Treeview(left, columns=("thread", "out"), show="headings",
-                                    height=24, selectmode="extended")   # v4.3.25: Ctrl / Shift multi-select for batch dismiss
+        left_area = self._ui_list_panel(body, title="Customer requests", side="left", fill="both", expand=False,
+                                        padx=(0, 6), pady=0)
+        left = left_area._ui_panel
+        threads_tree = ttk.Treeview(left_area, columns=("thread", "out"), show="headings", style="Mainbox.Treeview",
+                                    height=6, selectmode="extended")   # v4.3.25: Ctrl / Shift multi-select for batch dismiss
         threads_tree.heading("thread", text="Customer / Subject")
         threads_tree.heading("out", text="Outstanding")
         threads_tree.column("thread", width=360)
         threads_tree.column("out", width=100, anchor="center")
-        threads_tree.pack(fill="both", expand=True, padx=4, pady=4)
+        self._ui_tree_scrollbars(left_area, threads_tree)
         threads_tree.tag_configure("has_out", foreground="#3ea6ff")
         threads_tree.tag_configure("done", foreground="#5bd17a")
 
-        right = tk.LabelFrame(body, text="Line items", bg=_BG2, fg=_ACCENT, font=(_FONT, 9, "bold"))
-        right.pack(side="left", fill="both", expand=True)
-        items_tree = ttk.Treeview(right, columns=("chk", "status", "item"), show="headings", selectmode="extended")
+        right_area = self._ui_list_panel(body, title="Line items", side="left", fill="both", expand=True, padx=0, pady=0)
+        right = right_area._ui_panel
+        items_tree = ttk.Treeview(right_area, columns=("chk", "status", "item"), show="headings", selectmode="extended",
+                                  height=6, style="Mainbox.Treeview")
         items_tree.heading("chk", text="\u2611", command=lambda: toggle_check_all())
         items_tree.heading("status", text="Status")
         items_tree.heading("item", text="Requested item")
         items_tree.column("chk", width=34, anchor="center", stretch=False)
         items_tree.column("status", width=130, anchor="center")
         items_tree.column("item", width=500)
-        items_tree.pack(fill="both", expand=True, padx=4, pady=4)
+        self._ui_tree_scrollbars(right_area, items_tree)
         items_tree.tag_configure("outstanding", foreground="#3ea6ff")
         items_tree.tag_configure("covered", foreground="#5bd17a")
         items_tree.tag_configure("waiting", foreground="#e6c84a")
@@ -30446,33 +32734,31 @@ class OutlookWorkflowMonitor:
         items_tree.tag_configure("no_bid", foreground="#9aa0a6")
         items_tree.tag_configure("check", foreground="#ff9933")
 
-        btns = tk.Frame(right, bg=_BG2)
-        btns.pack(fill="x", padx=4, pady=(0, 4))
-        tk.Label(btns, text="Set selected:", bg=_BG2, fg=_FG_DIM).pack(side="left", padx=(2, 4))
-        tk.Button(btns, text="Quoted", command=lambda: set_item_status("quoted")).pack(side="left", padx=2)
-        tk.Button(btns, text="Waiting", command=lambda: set_item_status("waiting")).pack(side="left", padx=2)
-        tk.Button(btns, text="Partial", command=lambda: set_item_status("partial")).pack(side="left", padx=2)
-        tk.Button(btns, text="No-bid", command=lambda: set_item_status("no_bid")).pack(side="left", padx=2)
-        tk.Button(btns, text="Outstanding", command=lambda: set_item_status("outstanding")).pack(side="left", padx=2)
-        tk.Button(btns, text="Re-quote", command=lambda: requote_selected(),
-                  bg=_ACCENT, fg="#ffffff", activebackground=_ACCENT2, activeforeground="#ffffff",
-                  relief="flat", padx=12, cursor="hand2", font=("Segoe UI", _FONT_SIZE, "bold")).pack(side="right", padx=3)
-        tk.Button(btns, text="Dismiss selected", command=lambda: dismiss_current()).pack(side="right", padx=3)
+        btns = self._ui_frame(right, "panel")
+        btns.pack(fill="x", padx=6, pady=(0, 4))
+        tk.Label(btns, text="Set selected", bg=_BG2, fg=_FG_DIM).pack(side="left", padx=(4, 6))
+        self._ui_text_button(btns, "Quoted", lambda: set_item_status("quoted"),
+                             "Mark the checked items quoted").pack(side="left", padx=2)
+        self._ui_text_button(btns, "Waiting", lambda: set_item_status("waiting"),
+                             "Mark the checked items waiting on a vendor").pack(side="left", padx=2)
+        self._ui_text_button(btns, "Partial", lambda: set_item_status("partial"),
+                             "Mark the checked items partially quoted").pack(side="left", padx=2)
+        self._ui_text_button(btns, "No-bid", lambda: set_item_status("no_bid"),
+                             "Mark the checked items no-bid").pack(side="left", padx=2)
+        self._ui_text_button(btns, "Outstanding", lambda: set_item_status("outstanding"),
+                             "Mark the checked items outstanding again").pack(side="left", padx=2)
+        self._ui_button(right_area._ui_header, "sent", "Re-quote", lambda: requote_selected(),
+                        "Re-quote the checked items", primary=True).pack(side="right")
+        self._ui_button(right_area._ui_header, "trash", "Dismiss selected", lambda: dismiss_current(),
+                        "Dismiss the selected requests from coverage").pack(side="right", padx=4)
 
         add_frame = tk.LabelFrame(right, text="Add requested items (paste one per line)",
                                   bg=_BG2, fg=_FG_DIM, font=(_FONT, 8, "bold"))
         add_frame.pack(fill="x", padx=4, pady=(0, 6))
         add_text = tk.Text(add_frame, height=3, wrap="word", bg=_BG3, fg=_FG, insertbackground=_FG)
         add_text.pack(fill="x", padx=4, pady=4)
-        tk.Button(add_frame, text="Add to selected request",
-                  command=lambda: add_lines()).pack(side="left", padx=4, pady=(0, 4))
-
-        hint = ("Requested items are captured when you run Quote RFQ on a customer email; quoted items are "
-                "detected from your sent replies in the same thread. Status auto-updates: Outstanding (no reply yet) "
-                "\u2192 Waiting (you sent a sourcing reply like 'I will advise') \u2192 Quoted (a priced item in your reply "
-                "matches). Use the buttons to override any item (Partial / No-bid / etc.); a manual status sticks.")
-        tk.Label(win, text=hint, fg=_FG_DIM, bg=_BG, font=(_FONT, 8), wraplength=1060,
-                 justify="left", anchor="w").pack(fill="x", padx=12, pady=(0, 8))
+        self._ui_button(add_frame, "plus", "Add to selected request", lambda: add_lines(),
+                        "Add these lines to the selected request").pack(side="left", padx=4, pady=(0, 4))
 
         CHK_OFF, CHK_ON = "\u2610", "\u2611"  # unchecked / checked glyphs
         state = {"current": None, "item_keys": {}, "checked": set()}
@@ -32666,7 +34952,137 @@ class OutlookWorkflowMonitor:
             return 0
         return n
 
-    def extract_materials_for_group(self, group_id, progress_callback=None):
+    def _rfq_email_is_vendor_reply(self, email):
+        """v4.3.118: True when a job member is a typed Vendor's reply (their quote), which a
+        group-wide RFQ scan must never read as the customer's request. Our own rows and
+        sent trackers are not vendor replies. Never raises."""
+        try:
+            if not isinstance(email, dict) or email.get("is_sent_waiting_placeholder"):
+                return False
+            if str(email.get("entry_id", "") or "").startswith("sentwait:"):
+                return False
+            addr = str(email.get("sender_email", "") or "")
+            if not addr or "@" not in addr:
+                return False
+            try:
+                if self._erp_sender_is_own_domain(email):
+                    return False
+            except Exception:
+                pass
+            return bool(self._coverage_sender_is_vendor(addr, str(email.get("entry_id", "") or "")))
+        except Exception:
+            return False
+
+    def _rfq_body_text_for_extraction(self, email, body, seen_lines, log=None):
+        """v4.3.118: (text, own_words_used) -- what the RFQ body parsers should read for one job email.
+
+        The sender's OWN words (above the quoted chain) come first: when they carry a
+        material list (>= 2 rows by any of the body parsers) that is the request and the
+        chain below is not re-read. Otherwise the full body is used -- a forward can hold the
+        list only in the quoted part -- but every line already read from an earlier email in
+        this run (`seen_lines`, normalised) is dropped, and so is a line repeated inside that
+        same body, so a chain quoted under six replies (or twice in one) is parsed once.
+        Own-words lines are never dropped (the same line sent twice is two requests) but are
+        remembered. Never raises; falls back to `body`."""
+        try:
+            body = str(body or "")
+            if not body.strip():
+                return body, False
+            if not isinstance(seen_lines, set):
+                seen_lines = set()
+
+            def _row_count(text):
+                best = 0
+                for fn in (extract_typed_list_materials_from_body, extract_numbered_qty_list_from_body,
+                           extract_qty_last_list_from_body, extract_materials_from_quote_text):
+                    try:
+                        best = max(best, len(fn(text) or []))
+                    except Exception:
+                        continue
+                    if best >= 2:
+                        break
+                return best
+
+            def _key(line):
+                return re.sub(r"\s+", " ", str(line or "").strip().lower())
+
+            own = ""
+            try:
+                own = str(_fresh_reply_text(body, limit=12000) or "")
+            except Exception:
+                own = ""
+            if own.strip() and _row_count(own) >= 2:
+                for ln in own.splitlines():
+                    k = _key(ln)
+                    if len(k) >= 4:
+                        seen_lines.add(k)
+                if log:
+                    try:
+                        log(f"Email body: reading {email.get('sender', '')}'s own words only "
+                            f"({len(own)} chars); the quoted chain below is not re-read")
+                    except Exception:
+                        pass
+                return own, True
+            kept, dropped = [], 0
+            _local = set()   # the same chain quoted twice inside ONE reply is read once as well
+            for ln in body.splitlines():
+                k = _key(ln)
+                if len(k) >= 4 and (k in seen_lines or k in _local):
+                    dropped += 1
+                    continue
+                if len(k) >= 4:
+                    _local.add(k)
+                kept.append(ln)
+            for ln in body.splitlines():
+                k = _key(ln)
+                if len(k) >= 4:
+                    seen_lines.add(k)
+            if dropped and log:
+                try:
+                    log(f"Email body: {dropped} quoted-chain line(s) already read from an earlier email in this job were skipped")
+                except Exception:
+                    pass
+            try:
+                if dropped:
+                    ops_log("rfq", "chain_lines_skipped", n=dropped, subj=str(email.get("subject", "") or "")[:60])
+            except Exception:
+                pass
+            return "\n".join(kept), False
+        except Exception:
+            return str(body or ""), False
+
+    @staticmethod
+    def _rfq_row_key(row):
+        """v4.3.118: identity of a parsed material row for the CHAIN filter: quantity + unit +
+        normalised description. Used on quoted-chain rows only (a sender's own words are never
+        filtered), so the same chain under six replies is read once. A chain that renders its
+        list twice in two layouts (a table and a text line) can still parse to two different
+        rows inside ONE reply -- that is the body parser's reading, left as it is."""
+        try:
+            q = re.sub(r"[^0-9.]", "", str((row or {}).get("qty", "") or ""))
+            u = re.sub(r"[^a-z]", "", str((row or {}).get("unit", "") or "").lower())
+            d = re.sub(r"[^a-z0-9]+", " ", str((row or {}).get("description", "") or "").lower()).strip()
+            return f"{q}|{u}|{d[:80]}"
+        except Exception:
+            return repr(row)
+
+    def _rfq_filter_chain_rows(self, rows, seen_keys):
+        """v4.3.118: rows parsed from a quoted chain (not the sender's own words): drop the ones
+        already read from an earlier email in this run and the repeats inside this list (a
+        chain often carries the same list twice, as a table and as text). Never raises."""
+        try:
+            out, local = [], set()
+            for r in rows or []:
+                k = self._rfq_row_key(r)
+                if k in (seen_keys or set()) or k in local:
+                    continue
+                local.add(k)
+                out.append(r)
+            return out
+        except Exception:
+            return list(rows or [])
+
+    def extract_materials_for_group(self, group_id, progress_callback=None, emails=None):
         """v4.2.0 wrapper -- see _deselect_letterhead_rows (FINDING E).
 
         The original body is preserved byte-identical as
@@ -32676,14 +35092,14 @@ class OutlookWorkflowMonitor:
         `normalize_material_items` (20+ callers) or inside the 2,463-line
         `open_quote_intelligence_window`.
         """
-        result = self.extract_materials_for_group_inner(group_id, progress_callback=progress_callback)
+        result = self.extract_materials_for_group_inner(group_id, progress_callback=progress_callback, emails=emails)   # v4.3.118
         try:
             self._deselect_letterhead_rows(result[0], where="extract_materials_for_group")
         except Exception:
             pass
         return result
 
-    def extract_materials_for_group_inner(self, group_id, progress_callback=None):
+    def extract_materials_for_group_inner(self, group_id, progress_callback=None, emails=None):
         r"""STRICT vision-only RFQ extraction build.
 
         v2.8.4K is intentionally diagnostic and routes each real Outlook attachment by type. PDFs now use fast text-first extraction before slower vision fallback:
@@ -32697,7 +35113,10 @@ class OutlookWorkflowMonitor:
         This prevents the old EMT/PVC fallback result from hiding the real failure.
         """
         group = self.get_group_by_id(group_id)
-        emails = self.get_emails_for_group(group_id)
+        # v4.3.118: "Send Quote RFQ" on one email scans THAT email (its own words, its own
+        # attachments); a group-level Quote RFQ still reads the whole job.
+        _scoped_emails = [e for e in (emails or []) if isinstance(e, dict)]
+        emails = _scoped_emails if _scoped_emails else self.get_emails_for_group(group_id)
         subject = group.get("name", "Quote Group") if group else "Quote Group"
         sender = emails[0].get("sender", "") if emails else ""
         detected_item_count = _rfq_expected_item_count_from_text("\n".join([subject] + [str(e.get("subject", "") or "") for e in emails]))
@@ -32988,11 +35407,19 @@ class OutlookWorkflowMonitor:
                 except Exception:
                     pass
 
+        _rfq_seen_lines = set()   # v4.3.118: lines already read in this run (the quoted chain is read once)
+        _rfq_seen_rows = set()    # v4.3.118: parsed rows already read in this run (row-level, for the chain filter)
         for email in sorted(emails, key=lambda e: e.get("received_timestamp", 0), reverse=True)[:12]:
+            # v4.3.118: in a group-wide scan a vendor's reply (their quote, their attachments) is
+            # never the customer's request
+            if len(emails) > 1 and self._rfq_email_is_vendor_reply(email):
+                log(f"Skipping {email.get('sender', '')}: a vendor's reply (their quote), not the customer's request")
+                continue
             try:
                 body = self.load_body_for_rfq(email)
             except Exception:
                 body = email.get("body", "") or ""
+            body, _rfq_own_words = self._rfq_body_text_for_extraction(email, body, _rfq_seen_lines, log)   # v4.3.118
             parts.append(f"\n--- Email ---\nFrom: {email.get('sender','')}\nSubject: {email.get('subject','')}\nBody:\n{body[:12000]}")
             try:
                 _rfq_debug_write("04_email_body_used_for_rfq.txt", body[:12000])
@@ -33007,6 +35434,16 @@ class OutlookWorkflowMonitor:
             # Edenwald RFQ). extract_typed_list_materials_from_body also recovers lines the quick
             # parser's filter drops because it doesn't recognize the unit (e.g. "500 mcm - CU black").
             typed_rows = extract_typed_list_materials_from_body(body)
+            # v4.3.118: rows read from a quoted chain (not the sender's own words) count once per run
+            if not _rfq_own_words:
+                _pre_rows = len(quick_rows) + len(typed_rows)
+                quick_rows = self._rfq_filter_chain_rows(quick_rows, _rfq_seen_rows)
+                typed_rows = self._rfq_filter_chain_rows(typed_rows, _rfq_seen_rows)
+                if _pre_rows and not (quick_rows or typed_rows) \
+                        and not self._rfq_filter_chain_rows(extract_numbered_qty_list_from_body(body), _rfq_seen_rows) \
+                        and not self._rfq_filter_chain_rows(extract_qty_last_list_from_body(body), _rfq_seen_rows):
+                    log("Email body: every material line here was already read from an earlier email in this job -- body skipped")
+                    body = ""
             list_like_lines = [
                 _ll for _ll in (body or "").splitlines()
                 # v3.9.58: also count wire-gauge lines that begin with "#4AWG", "#8 AWG", etc.
@@ -33039,6 +35476,11 @@ class OutlookWorkflowMonitor:
             # so the body fell through to the text model -- minutes, for one wrong row.
             numbered_rows = extract_numbered_qty_list_from_body(body)
             qty_last_rows = extract_qty_last_list_from_body(body)  # v4.2.47
+            if not _rfq_own_words:   # v4.3.118
+                numbered_rows = self._rfq_filter_chain_rows(numbered_rows, _rfq_seen_rows)
+                qty_last_rows = self._rfq_filter_chain_rows(qty_last_rows, _rfq_seen_rows)
+            for _r in (quick_rows + typed_rows + numbered_rows + qty_last_rows):   # v4.3.118
+                _rfq_seen_rows.add(self._rfq_row_key(_r))
             if len(numbered_rows) >= 2:
                 body_numbered_rows.extend(numbered_rows)
                 body_typed_list_handled = True
@@ -34277,7 +36719,7 @@ class OutlookWorkflowMonitor:
                 vendors = self.suggest_vendors_for_materials(materials, customer_hint)
                 self.record_rfq_cache(group_id, materials=materials, vendors=vendors, ocr_details=ocr_details,
                                       used_ai=used_ai, quote_text=quote_text, group=group, emails=emails,
-                                      customer_hint=customer_hint)
+                                      customer_hint=customer_hint, source_entry_id="")   # v4.3.118: group-wide scan
                 def finish_and_open_or_update():
                     try:
                         updater = getattr(self, "_rfq_live_windows", {}).get(group_id)
@@ -34352,7 +36794,10 @@ class OutlookWorkflowMonitor:
                      "created_at": datetime.now().isoformat()}
 
         cached = self.get_rfq_cache_record(group_id)
-        if cached and normalize_material_items(cached.get("materials", [])):
+        # v4.3.118: the cached extractor state is reused only when it was built from THIS email;
+        # a job's group-wide cache (or another email's) would otherwise reopen instantly.
+        if cached and normalize_material_items(cached.get("materials", [])) \
+                and str(cached.get("source_entry_id", "") or "") == entry_id:
             cached_materials = normalize_material_items(cached.get("materials", []))
             cached_vendors = list(cached.get("vendors", []))
             if not cached_vendors:
@@ -34455,12 +36900,13 @@ class OutlookWorkflowMonitor:
 
         def worker():
             try:
-                materials, quote_text, ocr_details, used_ai = self.extract_materials_for_group(group_id, progress_callback=progress_callback)
+                materials, quote_text, ocr_details, used_ai = self.extract_materials_for_group(
+                    group_id, progress_callback=progress_callback, emails=[email])   # v4.3.118: this email only
                 customer_hint = self.get_customer_hint_for_group(group, [email])
                 vendors = self.suggest_vendors_for_materials(materials, customer_hint)
                 self.record_rfq_cache(group_id, materials=materials, vendors=vendors, ocr_details=ocr_details,
                                       used_ai=used_ai, quote_text=quote_text, group=group, emails=[email],
-                                      customer_hint=customer_hint)
+                                      customer_hint=customer_hint, source_entry_id=entry_id)   # v4.3.118
                 def finish_and_open_or_update():
                     try:
                         updater = getattr(self, "_rfq_live_windows", {}).get(group_id)
@@ -36870,7 +39316,7 @@ class OutlookWorkflowMonitor:
                         new_vendors = self.suggest_vendors_for_materials(new_materials, new_customer_hint)
                         self.record_rfq_cache(group_id, materials=new_materials, vendors=new_vendors, ocr_details=new_details,
                                               used_ai=new_used_ai, quote_text=quote_text, group=group, emails=emails,
-                                              customer_hint=new_customer_hint)
+                                              customer_hint=new_customer_hint, source_entry_id="")   # v4.3.118: group-wide rescan
                         self.root.after(0, lambda: apply_rescan_results(new_materials, new_vendors, new_details, new_used_ai))
                         self.root.after(0, lambda: finish_progress(f"Finished rescan. Extracted {len(new_materials)} material row(s)."))
                     except Exception as exc:
@@ -36992,8 +39438,11 @@ class OutlookWorkflowMonitor:
             foreground=cur.get("color_accent", _ACCENT),
             font=self.bold_font)
         self.tree.tag_configure("group_header_new",
-            background=cur.get("color_group_header_new_bg", "#4a3800"),
-            foreground=cur.get("color_group_header_new_fg", "#ffd966"),
+            background=(_mainbox_mix(self.root, _ACCENT, _BG3, 0.88)
+                        if cur.get("color_group_header_new_bg", "#4a3800") in ("#4a3800", "#fff4cc")
+                        else cur["color_group_header_new_bg"]),
+            foreground=(_ACCENT if cur.get("color_group_header_new_fg", "#ffd966") in ("#ffd966", "#6b4c00")
+                        else cur["color_group_header_new_fg"]),
             font=self.bold_font)
 
     def _refresh_filter_button_styles(self):
@@ -43386,6 +45835,10 @@ class OutlookWorkflowMonitor:
             if self.groups_tree.exists(iid):
                 group["collapsed"] = not bool(self.groups_tree.item(iid, "open"))
         self.save_groups()
+        try:
+            self._ui_sync_expand_headers()   # v4.3.126
+        except Exception:
+            pass
 
     def on_email_tree_button_press(self, event=None):
         try:
@@ -47198,6 +49651,10 @@ class OutlookWorkflowMonitor:
                 self._run_shipment_notice_pass()    # v4.3.95: throttled inside (30 min)
             except Exception:
                 pass
+            try:
+                self._run_stock_quote_resolution_pass()   # v4.3.116: throttled inside (10 min)
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -48038,44 +50495,40 @@ class OutlookWorkflowMonitor:
         remember_window_geometry(win, "MaINbox Sent Queue", "1120x620")
         apply_theme(win)
 
-        top = tk.Frame(win, bg=_BG)
-        top.pack(fill="x", padx=12, pady=(10, 6))
-        tk.Label(top, text="Outlook Sent Queue", font=(_FONT, 15, "bold"),
-                 fg=_ACCENT, bg=_BG).pack(side="left")
-        tk.Label(top, text="  what you sent, and the job it belongs to",
-                 fg=_FG_DIM, bg=_BG).pack(side="left")
+        # v4.3.124: the main window's shell (title band with icon buttons, list panel, footer); the same
+        # variables, commands and bindings as before
+        top = self._ui_window_shell(win, "Sent queue", "what you sent, and the job it belongs to")
 
         self._sent_queue_ungrouped_only = getattr(
             self, "_sent_queue_ungrouped_only", tk.BooleanVar(value=True))
-        tk.Button(top, text="Refresh", width=10,
-                  command=lambda: self._sent_queue_refresh()).pack(side="right", padx=3)
-        tk.Button(top, text="Open in Outlook", width=15,
-                  command=self._sent_queue_open_selected).pack(side="right", padx=3)
-        tk.Button(top, text="Assign to Job…", width=14,
-                  command=self._sent_queue_assign_selected).pack(side="right", padx=3)
+        self._ui_button(top, "refresh", "", lambda: self._sent_queue_refresh(),
+                        "Refresh").pack(side="right", padx=(2, 14))
+        self._ui_button(top, "external", "Open in Outlook", self._sent_queue_open_selected,
+                        "Open the selected email in Outlook").pack(side="right", padx=2)
+        self._ui_button(top, "group", "Assign to job", self._sent_queue_assign_selected,
+                        "Assign the selected email to a job \u00b7 Enter / double-click",
+                        primary=True).pack(side="right", padx=2)
         tk.Checkbutton(top, text="Needs a job only", variable=self._sent_queue_ungrouped_only,
-                       command=lambda: self._render_sent_queue_rows(), bg=_BG, fg=_FG,
-                       selectcolor=_BG3, activebackground=_BG).pack(side="right", padx=8)
+                       command=lambda: self._render_sent_queue_rows(), bg=_BG2, fg=_FG,
+                       selectcolor=_BG3, activebackground=_BG2, activeforeground=_FG,
+                       highlightthickness=0, bd=0).pack(side="right", padx=8)
 
+        status_var = tk.StringVar(value="Loading…")
+        self._sent_queue_status_var = status_var
+        self._ui_window_footer(win, textvariable=status_var)
+
+        wrap = self._ui_list_panel(win)
         cols = ("sent", "to", "subject", "group")
-        tree = ttk.Treeview(win, columns=cols, show="headings", selectmode="browse")
+        tree = ttk.Treeview(wrap, columns=cols, show="headings", selectmode="browse", height=6, style="Mainbox.Treeview")
         for cid, text, w in (("sent", "Sent", 150), ("to", "To", 230),
                              ("subject", "Subject", 420), ("group", "Job", 260)):
             tree.heading(cid, text=text)
             tree.column(cid, width=w, stretch=(cid == "subject"))
-        vsb = ttk.Scrollbar(win, orient="vertical", command=tree.yview)
-        tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True, padx=(12, 0), pady=6)
-        vsb.pack(side="left", fill="y", padx=(0, 12), pady=6)
+        self._ui_tree_scrollbars(wrap, tree)
         tree.tag_configure("nogroup", foreground=_ACCENT)
         tree.bind("<Double-1>", lambda e: self._sent_queue_assign_selected())
         tree.bind("<Return>", lambda e: self._sent_queue_assign_selected())
         self._sent_queue_tree = tree
-
-        status_var = tk.StringVar(value="Loading…")
-        self._sent_queue_status_var = status_var
-        tk.Label(win, textvariable=status_var, bg=_BG, fg=_FG_DIM, anchor="w").pack(
-            side="bottom", fill="x", padx=12, pady=(0, 8))
 
         self._sent_queue_rows = []
         self._sent_queue_refresh()
@@ -48360,29 +50813,30 @@ class OutlookWorkflowMonitor:
         except Exception:
             pass
 
-        tk.Label(
-            win,
-            text=f"Sales emails with no Outlook category after {SALES_UNCATEGORIZED_AFTER_MINUTES} minutes",
-            font=("Segoe UI", 13, "bold"), fg=_ACCENT, bg=_BG
-        ).pack(anchor="w", padx=10, pady=(10, 2))
+        # v4.3.124: the main window's shell -- title band, a category bar, list panel, footer line, icon buttons;
+        # the same variables, commands and bindings as before
+        top = self._ui_window_shell(win, "Uncategorized",
+                                    f"Sales emails with no Outlook category after {SALES_UNCATEGORIZED_AFTER_MINUTES} minutes")
         info_var = tk.StringVar(value="")
-        tk.Label(win, textvariable=info_var, fg=_FG_DIM, bg=_BG).pack(anchor="w", padx=10, pady=(0, 8))
+        self._ui_window_footer(win, textvariable=info_var)
 
-        control = tk.Frame(win, bg=_BG)
-        control.pack(fill="x", padx=10, pady=(0, 6))
-        tk.Label(control, text="Categorize selected as:", bg=_BG, fg=_FG).pack(side="left")
+        control = self._ui_frame(win, "base")
+        control.pack(fill="x", padx=14, pady=(8, 4))
+        tk.Label(control, text="Categorize selected as", bg=_BG, fg=_FG_DIM).pack(side="left")
         cat_var = tk.StringVar(value=self.selected_sales_category)
         cat_combo = ttk.Combobox(control, textvariable=cat_var, values=self.load_sales_category_options(), state="readonly", width=32)
         cat_combo.pack(side="left", padx=6)
 
-        tree = ttk.Treeview(win, columns=("received", "sender", "subject"), show="headings", selectmode="extended")
+        wrap = self._ui_list_panel(win, pady=(4, 6))
+        tree = ttk.Treeview(wrap, columns=("received", "sender", "subject"), show="headings", selectmode="extended",
+                            height=6, style="Mainbox.Treeview")
         tree.heading("received", text="Received")
         tree.heading("sender", text="Sender")
         tree.heading("subject", text="Subject")
         tree.column("received", width=150)
         tree.column("sender", width=220)
         tree.column("subject", width=610)
-        tree.pack(fill="both", expand=True, padx=10, pady=6)
+        self._ui_tree_scrollbars(wrap, tree)
 
         def populate_from(fresh):
             # v3.9.78: pure-Tk render of already-collected rows (no Outlook walk). Used by the
@@ -48464,10 +50918,12 @@ class OutlookWorkflowMonitor:
                 except Exception:
                     pass
 
-        tk.Button(control, text="Apply Category", command=apply_category_to_selected).pack(side="left", padx=5)
-        tk.Button(control, text="Refresh Queue", command=refresh_queue).pack(side="left", padx=5)
-        tk.Button(control, text="Open in Outlook", command=open_selected_in_outlook).pack(side="left", padx=5)
-        tk.Button(control, text="Close", command=win.destroy).pack(side="right", padx=5)
+        self._ui_button(control, "check", "Apply category", apply_category_to_selected,
+                        "Give the selected emails this Outlook category", primary=True).pack(side="left", padx=5)
+        self._ui_button(top, "refresh", "", refresh_queue, "Re-scan the Sales inbox").pack(side="right", padx=2)
+        self._ui_button(control, "external", "Open in Outlook", open_selected_in_outlook,
+                        "Open the selected email in Outlook \u00b7 double-click").pack(side="left", padx=5)
+        self._ui_button(top, "close", "Close", win.destroy, "Close this window").pack(side="right", padx=(2, 14))
         tree.bind("<Double-1>", lambda event: open_selected_in_outlook())
         win._refresh_queue = refresh_queue
         win._populate_queue = populate_from
@@ -48802,9 +51258,18 @@ class OutlookWorkflowMonitor:
         detail.pack(fill="x", padx=10, pady=(4, 6))
 
         row_map = {}
+        state = {"acted": False}   # v5.0.0: an action happened in this popup (auto-close only after one)
 
         def reload_rows():
             nonlocal due_rows, row_map
+            # v5.0.0 (Steve): remember where the selection sat, so the NEXT follow-up is selected after an action
+            # (and the first one when the popup opens)
+            try:
+                _before = list(tree.get_children())
+                _sel = [i for i in tree.selection() if i in _before]
+                _keep_idx = _before.index(_sel[0]) if _sel else 0
+            except Exception:
+                _keep_idx = 0
             due_rows = self.get_due_followup_review_rows(datetime.now())
             row_map = {r["queue_id"]: r for r in due_rows}
             tree.delete(*tree.get_children())
@@ -48822,6 +51287,7 @@ class OutlookWorkflowMonitor:
                 detail.insert(tk.END, "No due follow-ups remain.")
             self.followup_status_var.set(f"Follow-ups: {len(due_rows)} due | {self.active_followup_count()} active")
             self.render_followup_preview_queue()
+            select_row_at(_keep_idx)   # v5.0.0: the first (or the next) follow-up is always selected
 
         def selected_rows(show_warning=True):
             selected = tree.selection()
@@ -48856,6 +51322,7 @@ class OutlookWorkflowMonitor:
                 return
             deployed = 0
             failed = 0
+            state["acted"] = True   # v5.0.0
             for row in rows:
                 if self.deploy_due_followup_row(row):
                     deployed += 1
@@ -48870,9 +51337,11 @@ class OutlookWorkflowMonitor:
             self.render_followup_preview_queue()
             reload_rows()
             messagebox.showinfo("Follow-Ups", f"Drafts deployed: {deployed}\nFailed/skipped: {failed}", parent=win)
+            maybe_auto_close()   # v5.0.0
 
         def cancel_rows(rows, reason):
             cancelled = 0
+            state["acted"] = True   # v5.0.0
             for row in rows:
                 item = row.get("item")
                 if item and not item.get("completed") and not item.get("cancelled"):
@@ -48925,6 +51394,7 @@ class OutlookWorkflowMonitor:
             if messagebox.askyesno("Cancel Selected", f"Cancel {len(rows)} selected due follow-up(s)?", parent=win):
                 count = cancel_rows(rows, "Cancelled from due follow-up popup")
                 messagebox.showinfo("Cancelled", f"Cancelled {count} follow-up(s).", parent=win)
+                maybe_auto_close()   # v5.0.0
 
         def cancel_all_due():
             rows = list(row_map.values())
@@ -48933,9 +51403,11 @@ class OutlookWorkflowMonitor:
             if messagebox.askyesno("Cancel All Due", f"Cancel ALL {len(rows)} due follow-up(s)?", parent=win):
                 count = cancel_rows(rows, "Cancel all due from due follow-up popup")
                 messagebox.showinfo("Cancelled", f"Cancelled {count} due follow-up(s).", parent=win)
+                maybe_auto_close()   # v5.0.0
 
         def snooze_rows(rows, due_at, label="custom"):
             changed = 0
+            state["acted"] = True   # v5.0.0
             for row in rows:
                 item = row.get("item")
                 if item and not item.get("completed") and not item.get("cancelled"):
@@ -48988,6 +51460,7 @@ class OutlookWorkflowMonitor:
             count = snooze_rows(rows, due_at, label=label)
             if count:
                 messagebox.showinfo("Snoozed", f"Snoozed {count} follow-up(s).", parent=win)
+            maybe_auto_close()   # v5.0.0
 
         def snooze_dropdown_apply():
             label = snooze_var.get()
@@ -49006,6 +51479,7 @@ class OutlookWorkflowMonitor:
                     count = snooze_rows(rows, target, label=label)
                     if count:
                         messagebox.showinfo("Snoozed", f"Snoozed {count} follow-up(s).", parent=win)
+                    maybe_auto_close()   # v5.0.0
                 return
             if label == "Custom date/time":
                 snooze_selected(None)
@@ -49020,6 +51494,80 @@ class OutlookWorkflowMonitor:
             self.due_followup_popup_open = False
             win.destroy()
 
+        # v5.0.0 (Steve: "when followups open by default ... always make the first followup selected? Esc will
+        # snooze with whatever minutes are there and del will cancel. after each selection it will automatically
+        # select the next followup and when there are 0 in the window automatically close"). Keys are silent (no
+        # confirmation / "Snoozed n" boxes); the buttons keep theirs. A key pressed while typing in the detail box
+        # stays with that box.
+        def select_row_at(index):
+            try:
+                children = list(tree.get_children())
+                if not children:
+                    return
+                iid = children[max(0, min(int(index), len(children) - 1))]
+                tree.selection_set(iid)
+                tree.focus(iid)
+                tree.see(iid)
+                show_detail()
+            except Exception:
+                pass
+
+        def maybe_auto_close():
+            if not state["acted"] or row_map:
+                return
+            try:
+                ops_log("followup", "due_popup_auto_closed")
+            except Exception:
+                pass
+            try:
+                if win.winfo_exists():
+                    on_close()
+            except Exception:
+                pass
+
+        def key_snooze(event=None):
+            try:
+                if self._ui_is_editing(event):
+                    return None
+            except Exception:
+                pass
+            rows = selected_rows(show_warning=False)
+            if not rows:
+                return "break"
+            label = snooze_var.get()
+            if label == "Custom date/time":
+                snooze_selected(None)
+                return "break"
+            if label == "Tomorrow 9 AM":
+                due_at = datetime.combine((datetime.now() + timedelta(days=1)).date(),
+                                          datetime.strptime("9:00 AM", "%I:%M %p").time())
+            else:
+                due_at = datetime.now() + timedelta(minutes={"15 min": 15, "30 min": 30, "1 hour": 60, "2 hours": 120}.get(label, 30))
+            count = snooze_rows(rows, due_at, label=label)
+            try:
+                ops_log("followup", "due_popup_key_snooze", n=int(count or 0), label=str(label), left=len(row_map))
+            except Exception:
+                pass
+            maybe_auto_close()
+            return "break"
+
+        def key_cancel(event=None):
+            try:
+                if self._ui_is_editing(event):
+                    return None
+            except Exception:
+                pass
+            rows = selected_rows(show_warning=False)
+            if not rows:
+                return "break"
+            count = cancel_rows(rows, "Cancelled with Delete from due follow-up popup")
+            try:
+                ops_log("followup", "due_popup_key_cancel", n=int(count or 0), left=len(row_map))
+            except Exception:
+                pass
+            maybe_auto_close()
+            return "break"
+
         btns = tk.Frame(win)
         btns.pack(fill="x", padx=10, pady=(0, 10))
         tk.Button(btns, text="Select All", command=select_all, width=12).pack(side="left", padx=4)
@@ -49033,6 +51581,8 @@ class OutlookWorkflowMonitor:
         tk.Button(btns, text="Close", command=on_close, width=12).pack(side="right", padx=4)
 
         tree.bind("<<TreeviewSelect>>", show_detail)
+        win.bind("<Escape>", key_snooze)   # v5.0.0
+        win.bind("<Delete>", key_cancel)   # v5.0.0
         win.protocol("WM_DELETE_WINDOW", on_close)
         reload_rows()
         # v3.9.60: a due-follow-up reminder can fire while MaINbox is minimized (e.g. during an
@@ -49047,6 +51597,10 @@ class OutlookWorkflowMonitor:
                 win.focus_force()
             except Exception:
                 pass
+        try:
+            tree.focus_set()   # v5.0.0: Esc / Delete / arrows land on the list
+        except Exception:
+            pass
 
     def get_active_followup_for_email(self, entry_id):
         # v3.8.12: the Follow Up column should show the earliest active reminder
@@ -52770,6 +55324,16 @@ class OutlookWorkflowMonitor:
             self.render_email_rows()
         except Exception:
             pass
+        if widget is self.root and hasattr(self, "_ui_retheme"):
+            self._ui_retheme()
+        if widget is self.root:   # v4.3.124: title bars follow a colour change too
+            try:
+                _mainbox_style_titlebar(self.root)
+                for child in self.root.winfo_children():
+                    if isinstance(child, tk.Toplevel):
+                        _mainbox_dress_window(child)
+            except Exception:
+                pass
         try:
             self.root.update_idletasks()
         except Exception:
@@ -53625,6 +56189,20 @@ class OutlookWorkflowMonitor:
                  "These are hard-vetoed from creating customer-request coverage even if a stale learned type says Customer.",
             bg=_BG2, fg=_FG_DIM, wraplength=600, justify="left"
         ).grid(row=2, column=0, columnspan=2, sticky="w", pady=(2, 4))
+        # v4.3.116: stock quotes -- what happens when our ERP quote covers every line of a request
+        stock_mode_var = tk.StringVar(value=str(settings.get("coverage_stock_quote_mode", "auto") or "auto"))
+        tk.Label(intake_frame, text="When our ERP quote covers every line of a request (quoted from stock):",
+                 bg=_BG2, fg=_FG).grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        _stock_row = tk.Frame(intake_frame, bg=_BG2)
+        _stock_row.grid(row=4, column=0, columnspan=2, sticky="w")
+        for _lbl, _val in (("Remove it from Quote Coverage automatically", "auto"),
+                           ("Ask me first", "ask"), ("Leave it (off)", "off")):
+            tk.Radiobutton(_stock_row, text=_lbl, value=_val, variable=stock_mode_var, bg=_BG2, fg=_FG,
+                           selectcolor=_BG3, activebackground=_BG2).pack(side="left", padx=(0, 12))
+        tk.Label(intake_frame, text="A partly quoted request always stays. A request also stays when the bid or your reply "
+                                    "mentions better pricing / lead time or a re-quote. Right-click any email or group: "
+                                    "\"Quoted from stock\" removes it by hand.",
+                 bg=_BG2, fg=_FG_DIM, wraplength=600, justify="left").grid(row=5, column=0, columnspan=2, sticky="w", pady=(2, 4))
         intake_frame.grid_columnconfigure(1, weight=1)
 
         updates = tk.LabelFrame(content, text="Manual Update", bg=_BG2, fg=_ACCENT, padx=10, pady=10)
@@ -53691,6 +56269,7 @@ class OutlookWorkflowMonitor:
                     "remote_ai_allow_insecure_http": bool(conn_insecure_var.get()),   # v4.1.26
                     "support_diagnostics_enabled": bool(diag_var.get()),              # v4.1.26
                     "coverage_intake_engine_enabled": bool(intake_enabled_var.get()),  # v4.1.31
+                    "coverage_stock_quote_mode": str(stock_mode_var.get() or "auto"),    # v4.3.116
                     "internal_domains": internal_domains_var.get().strip(),            # v4.1.31
                     "remote_ai_heavy_model": conn_heavy_var.get().strip(),
                     "remote_ai_light_model": conn_light_var.get().strip(),
@@ -55670,11 +58249,15 @@ class OutlookWorkflowMonitor:
                 "", "end", iid=header_iid,
                 values=(
                     "GROUP", "", "", "",
-                    f"{symbol} {group.get('name', 'Untitled Group')}  ({len(members)} email{'s' if len(members) != 1 else ''})",
+                    f"{group.get('name', 'Untitled Group')}  ({len(members)} email{'s' if len(members) != 1 else ''})",
                     "", "Quote Group", group_urgency, "", ""
                 ),
                 tags=("group_header_new",) if group.get("has_new") else ("group_header",)
             )
+            try:
+                self.tree.set(header_iid, "expand", symbol)   # v4.3.126: the arrow lives in the expand column
+            except Exception:
+                pass
             visible_count += 1
             inserted_members = set()
             if is_open:
@@ -55763,6 +58346,7 @@ class OutlookWorkflowMonitor:
             self.tree.selection_set(still_exists)
         current = self.filter_label_var.get() if hasattr(self, "filter_label_var") else "Current Filter: Show All"
         self.view_label.config(text=f"Sales category: '{self.selected_sales_category}' | {current.replace('Current Filter: ', '')} | Showing {visible_count}")
+        self._ui_sync_expand_headers()   # v4.3.126
 
     def get_email_type_code(self, email):
         code = infer_email_type_code(email)
@@ -56220,6 +58804,8 @@ class OutlookWorkflowMonitor:
             menu.add_command(label="AI Reply", command=self.create_ai_draft_reply)
             menu.add_command(label="Send Quote RFQ", command=self.open_quote_intelligence_for_selected_email)
             menu.add_command(label="Set Reminder from Email (scan dates)", command=self.scan_selected_email_for_reminders)
+            menu.add_command(label="Quoted from stock  (remove from Quote Coverage)",
+                             command=self._mark_quoted_from_stock_for_selected)   # v4.3.116
             menu.add_separator()
             menu.add_command(label="Mark as Read", command=lambda: self._mark_selected_read(True))        # v4.3.82
             menu.add_command(label="Mark as Unread", command=lambda: self._mark_selected_read(False))     # v4.3.82
@@ -56704,6 +59290,26 @@ class OutlookWorkflowMonitor:
         Mark Complete (review_tracking_items_before_complete) so the user can clear
         or keep the related follow-ups, then the row is Completed AND Low. Skip in
         that dialog leaves everything untouched. Nothing is deleted from Outlook."""
+        # v4.3.123 (Steve): in the Low / Hidden view the Delete KEY removes the selected rows from MaINbox itself --
+        # the same ask-first "Delete from App Only" path (confirmation, follow-up review, Deleted History, undo);
+        # the rows there are already Completed / Low, so hiding them again did nothing. Only the key is routed
+        # (keysym Delete): the "Low / Hidden" menu entry and Ctrl+Shift+H arrive with no event and keep hiding,
+        # and a Delete pressed while typing in a text field stays with that field.
+        if (getattr(self, "active_filter", "all") == "low" and event is not None
+                and str(getattr(event, "keysym", "") or "") == "Delete"):
+            try:
+                if self._ui_is_editing(event):
+                    return None
+            except Exception:
+                pass
+            _low_rows = self.get_selected_emails(show_warning=False)
+            if _low_rows:
+                try:
+                    ops_log("ui", "delete_key_app_delete_low_view", count=len(_low_rows))
+                except Exception:
+                    pass
+                self.delete_low_hidden_from_app()
+            return "break"
         selected_emails = self.get_selected_emails(show_warning=False)
         if not selected_emails:
             return "break"
@@ -58072,17 +60678,22 @@ class OutlookWorkflowMonitor:
         remember_window_geometry(win, "AI Triage Center", "1050x620")
         win.transient(self.root)
 
-        tk.Label(win, text="AI Triage History / Learning Rules", font=("Segoe UI", 15, "bold")).pack(anchor="w", padx=10, pady=(10, 3))
-        tk.Label(win, text="Select a recent triage and click Edit to correct it. Corrections are saved into learning rules.", fg=_FG_DIM).pack(anchor="w", padx=10, pady=(0, 8))
-
-        tree = ttk.Treeview(win, columns=("time", "sender", "subject", "category", "urgency", "status", "source"), show="headings", selectmode="extended")
+        # v4.3.124: the main window's shell -- title band, list panel, icon buttons; the same variables, commands
+        # and bindings as before
+        top = self._ui_window_shell(win, "AI triage",
+                                    "Select a recent triage and click Edit to correct it. Corrections are saved into learning rules.")
+        btns = self._ui_frame(win, "base")   # the action bar packs from the bottom before the list; filled below
+        btns.pack(side="bottom", fill="x", padx=14, pady=(0, 8))
+        wrap = self._ui_list_panel(win)
+        tree = ttk.Treeview(wrap, columns=("time", "sender", "subject", "category", "urgency", "status", "source"), show="headings", selectmode="extended",
+                            height=6, style="Mainbox.Treeview")
         for col, label, width in [
             ("time", "Time", 140), ("sender", "Sender", 180), ("subject", "Subject", 330),
             ("category", "Category", 135), ("urgency", "Urgency", 75), ("status", "Status", 125), ("source", "Source", 75)
         ]:
             tree.heading(col, text=label)
             tree.column(col, width=width)
-        tree.pack(fill="both", expand=True, padx=10, pady=5)
+        self._ui_tree_scrollbars(wrap, tree)
 
         def refresh():
             self._dedupe_triage_history()
@@ -58526,15 +61137,21 @@ class OutlookWorkflowMonitor:
         # Delete key acts as the "Clear Selected" button for the history list.
         tree.bind("<Delete>", lambda e: clear_selected())
 
-        btns = tk.Frame(win); btns.pack(fill="x", padx=10, pady=8)
-        tk.Button(btns, text="Edit Selected", command=edit_selected, width=15).pack(side="left", padx=4)
-        tk.Button(btns, text="Export Triage/Follow-Up Rules", command=export_rules, width=24).pack(side="left", padx=4)
-        tk.Button(btns, text="Import Triage/Follow-Up Rules", command=import_rules, width=24).pack(side="left", padx=4)
-        tk.Button(btns, text="View Follow-Up Rules", command=view_followup_rules, width=20).pack(side="left", padx=4)
-        tk.Button(btns, text="Learned Rules", command=lambda: self.open_learned_workflow_rules_window(win), width=14).pack(side="left", padx=4)   # v4.3.50
-        tk.Button(btns, text="Clear Selected", command=clear_selected, width=14).pack(side="left", padx=4)
-        tk.Button(btns, text="Clear All History", command=clear_all, width=15).pack(side="left", padx=4)
-        tk.Button(btns, text="Refresh", command=refresh, width=10).pack(side="right", padx=4)
+        self._ui_button(btns, "triage", "Edit selected", edit_selected, "Correct the selected triage and teach MaINbox",
+                        primary=True).pack(side="left", padx=(0, 4))
+        self._ui_button(btns, "save", "Export rules", export_rules,
+                        "Export the triage / follow-up rules to a file").pack(side="left", padx=4)
+        self._ui_button(btns, "download", "Import rules", import_rules,
+                        "Import triage / follow-up rules from a file").pack(side="left", padx=4)
+        self._ui_button(btns, "bell", "Follow-up rules", view_followup_rules,
+                        "View the adaptive follow-up learning rules").pack(side="left", padx=4)
+        self._ui_button(btns, "spark", "Learned rules", lambda: self.open_learned_workflow_rules_window(win),
+                        "Learned workflow rules (forget the ones you do not want)").pack(side="left", padx=4)   # v4.3.50
+        self._ui_button(btns, "trash", "Clear selected", clear_selected,
+                        "Remove the selected rows from the history \u00b7 Delete").pack(side="left", padx=4)
+        self._ui_button(btns, "trash", "Clear all", clear_all,
+                        "Clear the whole triage history").pack(side="left", padx=4)
+        self._ui_button(top, "refresh", "", refresh, "Refresh").pack(side="right", padx=(2, 14))
         refresh()
 
     def archive_selected_group(self):
@@ -58650,6 +61267,8 @@ class OutlookWorkflowMonitor:
             menu.add_command(label="Unarchive group", command=_unarchive)
         else:
             menu.add_command(label="Archive group", command=_archive)
+        menu.add_command(label="Quoted from stock  (remove from Quote Coverage)",
+                         command=lambda: _done(self.mark_group_quoted_from_stock(group_id, parent=parent)))   # v4.3.116
         menu.add_command(label="Delete group...", command=_delete)
         try:
             ops_log("ui", "group_menu", gid=str(group_id)[-12:], archived=archived, selected=_n_sel, where=str(getattr(master, "winfo_class", lambda: "")() or "")[:20])
@@ -58682,16 +61301,19 @@ class OutlookWorkflowMonitor:
         remember_window_geometry(win, "Archived Groups", "820x500")
         win.transient(self.root)
 
-        search_frame = tk.LabelFrame(win, text="Search Archived Groups")
-        search_frame.pack(fill="x", padx=10, pady=(10, 4))
-        tk.Label(search_frame, text="Search group / urgency / archived date:").pack(side="left", padx=6, pady=6)
+        # v4.3.124: the main window's shell -- title band with the search box and icon buttons, list panel, footer
+        # count; the same variables, commands and bindings as before
+        top = self._ui_window_shell(win, "Archived groups")
         search_var = tk.StringVar()
-        search_entry = tk.Entry(search_frame, textvariable=search_var, width=48)
-        search_entry.pack(side="left", padx=6, pady=6)
+        search_entry = self._ui_search_box(top, search_var, "Search group / urgency / archived date", width=26)
         count_var = tk.StringVar(value="")
-        tk.Label(search_frame, textvariable=count_var, fg=_FG_DIM).pack(side="right", padx=8)
+        self._ui_window_footer(win, textvariable=count_var)
+        btns = self._ui_frame(win, "base")   # the action bar packs from the bottom before the list; filled below
+        btns.pack(side="bottom", fill="x", padx=14, pady=(0, 8))
 
-        tree = ttk.Treeview(win, columns=("urgency", "emails", "archived", "notes"), show="tree headings", selectmode="extended")
+        wrap = self._ui_list_panel(win)
+        tree = ttk.Treeview(wrap, columns=("urgency", "emails", "archived", "notes"), show="tree headings", selectmode="extended",
+                            height=6, style="Mainbox.Treeview")
         tree.heading("#0", text="Group")
         tree.heading("urgency", text="Urgency")
         tree.heading("emails", text="Emails")
@@ -58702,7 +61324,7 @@ class OutlookWorkflowMonitor:
         tree.column("emails", width=80, anchor="center")
         tree.column("archived", width=160)
         tree.column("notes", width=140)
-        tree.pack(fill="both", expand=True, padx=10, pady=6)
+        self._ui_tree_scrollbars(wrap, tree)
 
         def _context(event):
             # v4.3.110: the same group menu here (View / Rename / Merge / Unarchive / Delete); the list re-lists after
@@ -58768,8 +61390,6 @@ class OutlookWorkflowMonitor:
 
         search_var.trace_add("write", refresh)
         search_entry.bind("<Return>", refresh)
-        btns = tk.Frame(win)
-        btns.pack(fill="x", padx=10, pady=(0, 10))
         def view_members():
             # v4.3.42: review an archived group before unarchiving it
             gid = tree.focus() or (tree.selection()[0] if tree.selection() else "")
@@ -58778,11 +61398,13 @@ class OutlookWorkflowMonitor:
                 return
             self._open_group_members_window(gid, parent=win, note="Archived group -- its emails are not shown in the main list.")
 
-        tk.Button(btns, text="Unarchive Selected", command=unarchive, width=18).pack(side="left", padx=4)
-        tk.Button(btns, text="View members", command=view_members, width=14).pack(side="left", padx=4)
-        tk.Button(btns, text="Clear Search", command=clear_search, width=12).pack(side="left", padx=4)
-        tk.Button(btns, text="Refresh", command=refresh, width=10).pack(side="left", padx=4)
-        tk.Button(btns, text="Close", command=win.destroy, width=10).pack(side="right", padx=4)
+        self._ui_button(top, "close", "", clear_search, "Clear the search").pack(side="left", padx=2)
+        self._ui_button(top, "close", "Close", win.destroy, "Close this window").pack(side="right", padx=(2, 14))
+        self._ui_button(top, "refresh", "", refresh, "Refresh").pack(side="right", padx=2)
+        self._ui_button(btns, "group", "Unarchive selected", unarchive, "Bring the selected groups back",
+                        primary=True).pack(side="left", padx=(0, 4))
+        self._ui_button(btns, "preview", "View members", view_members,
+                        "Review the selected group's emails").pack(side="left", padx=4)
         refresh()
         search_entry.focus_set()
 
@@ -58792,20 +61414,22 @@ class OutlookWorkflowMonitor:
         remember_window_geometry(win, "Deleted From App History", "1200x660")
         win.transient(self.root)
 
-        search_frame = tk.LabelFrame(win, text="Search Deleted Emails")
-        search_frame.pack(fill="x", padx=10, pady=(10, 4))
-        tk.Label(search_frame, text="Search sender / subject / received / deleted / category:").pack(side="left", padx=6, pady=6)
+        # v4.3.124: the main window's shell -- title band with the search box and icon buttons, list panel, footer
+        # count; the same variables, commands and bindings as before
+        top = self._ui_window_shell(win, "Deleted from MaINbox")
         search_var = tk.StringVar()
-        search_entry = tk.Entry(search_frame, textvariable=search_var, width=58)
-        search_entry.pack(side="left", padx=6, pady=6)
+        search_entry = self._ui_search_box(top, search_var, "Search sender / subject / received / deleted / category", width=40)
         count_var = tk.StringVar(value="")
-        tk.Label(search_frame, textvariable=count_var, fg=_FG_DIM).pack(side="right", padx=8)
+        self._ui_window_footer(win, textvariable=count_var)
 
+        wrap = self._ui_list_panel(win)
         tree = ttk.Treeview(
-            win,
+            wrap,
             columns=("deleted", "received", "sender", "subject", "category", "urgency", "status"),
             show="headings",
-            selectmode="extended"
+            selectmode="extended",
+            height=6,
+            style="Mainbox.Treeview"
         )
         for col, label, width in [
             ("deleted", "Deleted", 155),
@@ -58818,7 +61442,7 @@ class OutlookWorkflowMonitor:
         ]:
             tree.heading(col, text=label)
             tree.column(col, width=width)
-        tree.pack(fill="both", expand=True, padx=10, pady=6)
+        self._ui_tree_scrollbars(wrap, tree)
 
         def build_cache_lookup():
             lookup = {}
@@ -58959,12 +61583,11 @@ class OutlookWorkflowMonitor:
 
         search_var.trace_add("write", refresh)
         search_entry.bind("<Return>", refresh)
-        btns = tk.Frame(win)
-        btns.pack(fill="x", padx=10, pady=(0, 10))
-        tk.Button(btns, text="Restore Selected", command=restore, width=16).pack(side="left", padx=4)
-        tk.Button(btns, text="Clear Search", command=clear_search, width=12).pack(side="left", padx=4)
-        tk.Button(btns, text="Refresh", command=refresh, width=10).pack(side="left", padx=4)
-        tk.Button(btns, text="Close", command=win.destroy, width=10).pack(side="right", padx=4)
+        self._ui_button(top, "close", "", clear_search, "Clear the search").pack(side="left", padx=2)
+        self._ui_button(top, "close", "Close", win.destroy, "Close this window").pack(side="right", padx=(2, 14))
+        self._ui_button(top, "refresh", "", refresh, "Refresh").pack(side="right", padx=2)
+        self._ui_button(top, "reply", "Restore selected", restore, "Put the selected emails back into MaINbox",
+                        primary=True).pack(side="right", padx=2)
         refresh()
         search_entry.focus_set()
 
@@ -59017,11 +61640,16 @@ class OutlookWorkflowMonitor:
                 pass
             head = "%s  --  %d email(s)%s" % (str(group.get("name", "") or "")[:70], len(rows),
                                               "  (archived %s)" % str(group.get("archived_at", "") or "")[:16].replace("T", " ") if group.get("archived") else "")
-            tk.Label(win, text=head, font=("Segoe UI", 11, "bold"), bg=_BG, fg=_FG, justify="left").pack(anchor="w", padx=12, pady=(10, 2))
+            # v4.3.124: the main window's shell -- title band (group name + count), list panel, footer, icon close
+            top = self._ui_window_shell(win, str(group.get("name", "") or group_id)[:70], head.rsplit("  --  ", 1)[-1])
+            self._ui_button(top, "close", "Close", win.destroy, "Close this window").pack(side="right", padx=(2, 14))
             if note:
-                tk.Label(win, text=note, bg=_BG, fg=_FG_DIM, justify="left", wraplength=760).pack(anchor="w", padx=12, pady=(0, 6))
+                tk.Label(win, text=note, bg=_BG, fg=_FG_DIM, justify="left", wraplength=760).pack(anchor="w", padx=14, pady=(8, 0))
+            status_var = tk.StringVar(value="* saved record only (not loaded in this session).  Double-click an email to open it in Outlook.")
+            self._ui_window_footer(win, textvariable=status_var)
+            wrap = self._ui_list_panel(win)
             cols = ("received", "sender", "status", "subject")
-            tree = ttk.Treeview(win, columns=cols, show="headings", height=min(16, max(4, len(rows))))
+            tree = ttk.Treeview(wrap, columns=cols, show="headings", height=min(16, max(4, len(rows))), style="Mainbox.Treeview")
             for c, label, w in (("received", "Received", 130), ("sender", "From", 220), ("status", "Status", 130), ("subject", "Subject", 420)):
                 tree.heading(c, text=label)
                 tree.column(c, width=w, anchor="w")
@@ -59029,9 +61657,7 @@ class OutlookWorkflowMonitor:
             for i, (rcv, snd, st, subj, loaded, eid) in enumerate(rows):
                 tree.insert("", "end", iid=str(i), values=(rcv, snd, st + ("" if loaded else " *"), subj))
                 eids.append(eid)
-            tree.pack(fill="both", expand=True, padx=12, pady=6)
-            status_var = tk.StringVar(value="* saved record only (not loaded in this session).  Double-click an email to open it in Outlook.")
-            tk.Label(win, textvariable=status_var, bg=_BG, fg=_FG_DIM).pack(anchor="w", padx=12)
+            self._ui_tree_scrollbars(wrap, tree)
 
             def _open_in_outlook(event=None):
                 # v4.3.43 (Steve: "if the user double clicks on the emails associated with the
@@ -59061,7 +61687,6 @@ class OutlookWorkflowMonitor:
 
             tree.bind("<Double-1>", _open_in_outlook)
             tree.bind("<Return>", _open_in_outlook)
-            tk.Button(win, text="Close", command=win.destroy, width=10).pack(side="right", padx=12, pady=(4, 10))
             try:
                 win.lift()
             except Exception:
@@ -59411,22 +62036,20 @@ class OutlookWorkflowMonitor:
             pass
         win.transient(self.root)
 
-        bar = tk.LabelFrame(win, text="Search your loaded emails", bg=_BG2, fg=_ACCENT, font=(_FONT, 10, "bold"))
-        bar.pack(fill="x", padx=10, pady=(10, 4))
-        row1 = tk.Frame(bar, bg=_BG2)
-        row1.pack(fill="x", padx=8, pady=(8, 2))
-        tk.Label(row1, text="Find:", bg=_BG2, fg=_FG).pack(side="left")
+        # v4.3.124: the main window's shell -- title band with the search box, an "In" bar for the field toggles,
+        # list panel, footer count, icon buttons; the same variables, commands and bindings as before
+        top = self._ui_window_shell(win, "Search")
         q_var = tk.StringVar()
-        q_entry = tk.Entry(row1, textvariable=q_var, width=46, bg=_ENTRY_BG, fg=_FG, insertbackground=_FG)
-        q_entry.pack(side="left", padx=6)
-        tk.Button(row1, text="Search", command=lambda: do_search(),
-                  bg=_ACCENT, fg="#ffffff", activebackground=_ACCENT2, activeforeground="#ffffff",
-                  font=("Segoe UI", _FONT_SIZE, "bold")).pack(side="left", padx=6)
+        q_entry = self._ui_search_box(top, q_var, "Type words to match (all words must appear), then press Enter", width=40)
+        self._ui_button(top, "search", "Search", lambda: do_search(), "Search your loaded emails \u00b7 Enter",
+                        primary=True).pack(side="left", padx=(6, 0))
         count_var = tk.StringVar(value="Type words to match (all words must appear), then press Enter.")
-        tk.Label(row1, textvariable=count_var, bg=_BG2, fg=_FG_DIM, anchor="w").pack(side="left", padx=10)
-        row2 = tk.Frame(bar, bg=_BG2)
-        row2.pack(fill="x", padx=8, pady=(0, 8))
-        tk.Label(row2, text="In:", bg=_BG2, fg=_FG).pack(side="left")
+        self._ui_window_footer(win, textvariable=count_var)
+        row2 = self._ui_frame(win, "base")
+        row2.pack(fill="x", padx=14, pady=(8, 4))
+        tk.Label(row2, text="In", bg=_BG, fg=_FG_DIM).pack(side="left", padx=(0, 10))
+        btns = self._ui_frame(win, "base")   # the action bar packs from the bottom before the list; filled below
+        btns.pack(side="bottom", fill="x", padx=14, pady=(0, 8))
         f_subject = tk.BooleanVar(value=True)
         f_sender = tk.BooleanVar(value=True)
         f_body = tk.BooleanVar(value=True)
@@ -59434,16 +62057,17 @@ class OutlookWorkflowMonitor:
         f_group = tk.BooleanVar(value=True)
         for _txt, _var in (("Subject", f_subject), ("Sender", f_sender), ("Body", f_body),
                            ("Category/Status/Type", f_meta), ("Group", f_group)):
-            tk.Checkbutton(row2, text=_txt, variable=_var, bg=_BG2, fg=_FG,
-                           selectcolor=_BG3, activebackground=_BG2).pack(side="left", padx=(0, 6))
+            tk.Checkbutton(row2, text=_txt, variable=_var, bg=_BG, fg=_FG, selectcolor=_BG3, activebackground=_BG,
+                           activeforeground=_FG, highlightthickness=0, bd=0).pack(side="left", padx=(0, 10))
 
-        tree = ttk.Treeview(win, columns=("received", "sender", "type", "subject", "status", "group"),
-                            show="headings", selectmode="extended")
+        wrap = self._ui_list_panel(win, pady=(4, 6))
+        tree = ttk.Treeview(wrap, columns=("received", "sender", "type", "subject", "status", "group"),
+                            show="headings", selectmode="extended", height=6, style="Mainbox.Treeview")
         for col, label, width in [("received", "Received", 140), ("sender", "Sender", 190), ("type", "Type", 50),
                                   ("subject", "Subject", 380), ("status", "Status", 130), ("group", "Group", 180)]:
             tree.heading(col, text=label)
             tree.column(col, width=width, anchor="w")
-        tree.pack(fill="both", expand=True, padx=10, pady=6)
+        self._ui_tree_scrollbars(wrap, tree)
 
         def do_search(*_):
             q = q_var.get().strip().lower()
@@ -59552,13 +62176,13 @@ class OutlookWorkflowMonitor:
             messagebox.showinfo("Deleted", f"Removed {removed} email(s) from MaINbox only. Outlook was not changed.{note}", parent=win)
             do_search()
 
-        btns = tk.Frame(win, bg=_BG)
-        btns.pack(fill="x", padx=10, pady=(2, 10))
-        tk.Button(btns, text="Go to in app", command=go_to, width=14).pack(side="left", padx=3)
-        tk.Button(btns, text="Select All", command=select_all, width=10).pack(side="left", padx=3)
-        tk.Button(btns, text="Clear Selection", command=clear_selection, width=14).pack(side="left", padx=3)
-        tk.Button(btns, text="Delete from MaINbox", command=delete_selected, width=20).pack(side="left", padx=3)
-        tk.Button(btns, text="Close", command=win.destroy, width=10).pack(side="right", padx=3)
+        self._ui_button(btns, "home", "Go to in app", go_to,
+                        "Jump to the selected email in the main list \u00b7 double-click").pack(side="left", padx=(0, 4))
+        self._ui_button(btns, "check", "Select all", select_all, "Select every result").pack(side="left", padx=4)
+        self._ui_button(btns, "close", "Clear selection", clear_selection, "Clear the selection").pack(side="left", padx=4)
+        self._ui_button(btns, "trash", "Delete from MaINbox", delete_selected,
+                        "Remove the selected emails from MaINbox only (Outlook untouched)").pack(side="left", padx=4)
+        self._ui_button(top, "close", "Close", win.destroy, "Close this window").pack(side="right", padx=(2, 14))
 
         tree.bind("<Double-1>", go_to)
         q_entry.bind("<Return>", do_search)
@@ -63211,6 +65835,17 @@ class OutlookWorkflowMonitor:
                 rec["auto_coverage_created"] = True
                 rec["auto_coverage_from_sent_id"] = str(placeholder.get("sent_entry_id", "") or "")
                 rec["updated_at"] = datetime.now().isoformat()
+                # v4.3.117: the recipient of this RFQ was sent every line -- lineage for the vendor's reply
+                try:
+                    _to_lin = extract_email_address(str(placeholder.get("sender_email", "") or "")).lower()
+                    if _to_lin and "@" in _to_lin:
+                        rec.setdefault("line_vendor_sends", []).append({
+                            "vendor": _to_lin, "cc": "",
+                            "line_ids": [str((_it or {}).get("line_id", "") or "") for _it in (rec.get("requested", []) or []) if (_it or {}).get("line_id")],
+                            "descriptions": [str((_it or {}).get("description", ""))[:60] for _it in (rec.get("requested", []) or [])],
+                            "at": datetime.now().isoformat(), "via": "sent_rfq_auto"})
+                except Exception:
+                    pass
             # 3) tie in the ORIGINAL customer request. A real inbound row standing in as the
             # tracker IS the original request; an adopted/dominant candidate links directly;
             # anything ambiguous goes to the picker.
@@ -68212,6 +70847,11 @@ class OutlookWorkflowMonitor:
                           msg_to = getattr(msg, "To", "") or ""
                       except Exception:
                           msg_to = ""
+                      # v4.3.120: a PO sheet we forward back to the customer carries the order block Steve typed
+                      try:
+                          self._note_sent_po_sheet(msg, msg_subject, msg_to, sent_on, sent_entry_id, _sf_label)
+                      except Exception:
+                          pass
                       reply_intent = analyze_reply_intent(subject=msg_subject, body=msg_body, sender_or_recipient=msg_to, source="Sent Items", direction="outbound")
                       # v4.1.83 (audit: one real RFQ send classified closed-ack and skipped
                       # forever): a send whose OWN words explicitly ASK for pricing is a
@@ -68489,6 +71129,22 @@ class OutlookWorkflowMonitor:
 
                       if created_or_updated:
                           changed_count += 1
+                      # v4.3.116: our OWN words in this reply say we are after better pricing /
+                      # lead time -> the job's ledger is stamped so the stock-quote pass keeps it.
+                      try:
+                          _rq_phrase = self._stock_quote_requote_phrase(self._own_reply_text(msg_body))
+                          if _rq_phrase:
+                              _rq_cid = ""
+                              try:
+                                  _rq_cid = msg.ConversationID or ""
+                              except Exception:
+                                  _rq_cid = ""
+                              self._coverage_note_requote_intent(
+                                  _rq_cid, msg_subject, _rq_phrase,
+                                  when_ts=(sent_on.timestamp() if sent_on else 0.0),
+                                  msg_key=(outlook_msg_internet_id(msg) or sent_entry_id or ""))
+                      except Exception:
+                          pass
                       # v3.8.10: scan the sent message for dated commitments (ship/ETA,
                       # quote expiration, backorder, callbacks, payment due, etc.).
                       try:
@@ -68530,6 +71186,7 @@ class OutlookWorkflowMonitor:
                               body=msg_body,
                               sent_entry_id=sent_entry_id,
                               sent_on=sent_on.isoformat(),
+                              recipient=str((placeholder or {}).get("sender_email", "") or "") if isinstance(placeholder, dict) else "",   # v4.3.117
                           )
                       except Exception:
                           pass
@@ -71455,15 +74112,27 @@ class OutlookWorkflowMonitor:
         remember_window_geometry(win, "MaINbox Follow-Up Queue", "1050x520")
         win.transient(self.root)
 
-        header = tk.Frame(win)
-        header.pack(fill="x", padx=10, pady=8)
+        # v4.3.124: the main window's shell -- title band (the live "n active" title), list panel, the detail
+        # text as a panel, icon buttons; the same variables, commands and bindings as before
         title_var = tk.StringVar()
-        tk.Label(header, textvariable=title_var, font=("Segoe UI", 15, "bold")).pack(side="left")
+        header = self._ui_window_shell(win, title_var=title_var)
         show_completed_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(header, text="Show completed/cancelled", variable=show_completed_var).pack(side="right", padx=5)
+        tk.Checkbutton(header, text="Show completed/cancelled", variable=show_completed_var, bg=_BG2, fg=_FG,
+                       selectcolor=_BG3, activebackground=_BG2, activeforeground=_FG,
+                       highlightthickness=0, bd=0).pack(side="right", padx=(5, 14))
+        # the action bar and the detail text pack from the BOTTOM before the list, so a short window shortens the
+        # list instead of pushing them off (the v4.3.121 lesson); the buttons are added once their handlers exist
+        btns = self._ui_frame(win, "base")
+        btns.pack(side="bottom", fill="x", padx=14, pady=(0, 8))
+        detail = tk.Text(win, height=5, wrap="word", font=(_FONT, _FONT_SIZE), bg=_BG3, fg=_FG, insertbackground=_FG,
+                         padx=12, pady=9, bd=0, relief="flat", highlightthickness=1, highlightbackground=_BORDER,
+                         highlightcolor=_BORDER, selectbackground=_SEL_BG, selectforeground=_SEL_FG)
+        detail.pack(side="bottom", fill="x", padx=14, pady=(0, 6))
 
+        wrap = self._ui_list_panel(win)
         columns = ("due", "type", "status", "group", "subject", "note")
-        queue_tree = ttk.Treeview(win, columns=columns, show="headings", selectmode="extended")
+        queue_tree = ttk.Treeview(wrap, columns=columns, show="headings", selectmode="extended", height=6,
+                                  style="Mainbox.Treeview")
         queue_tree.heading("due", text="Due")
         queue_tree.heading("type", text="Type")
         queue_tree.heading("status", text="Status")
@@ -71476,14 +74145,11 @@ class OutlookWorkflowMonitor:
         queue_tree.column("group", width=190)
         queue_tree.column("subject", width=285)
         queue_tree.column("note", width=300)
-        queue_tree.pack(fill="both", expand=True, padx=10, pady=5)
+        self._ui_tree_scrollbars(wrap, queue_tree)
         queue_tree.tag_configure("due", background="#fff2cc", foreground="black")
         queue_tree.tag_configure("overdue", background="#f4cccc", foreground="black")
         queue_tree.tag_configure("completed", background="#d9ead3", foreground="black")
         queue_tree.tag_configure("cancelled", background="#eeeeee", foreground="#777777")
-
-        detail = tk.Text(win, height=5, wrap="word", font=("Segoe UI", 9))
-        detail.pack(fill="x", padx=10, pady=(4, 6))
 
         queue_rows = []
 
@@ -71687,16 +74353,18 @@ class OutlookWorkflowMonitor:
             self.check_due_followups()
             refresh_queue()
 
-        btns = tk.Frame(win)
-        btns.pack(fill="x", padx=10, pady=(0, 10))
-        tk.Button(btns, text="Open Related Email", command=open_related, width=18).pack(side="left", padx=4)
-        tk.Button(btns, text="Trigger Now Selected", command=trigger_now, width=18).pack(side="left", padx=4)
+        self._ui_button(btns, "external", "Open related email", open_related,
+                        "Open the first selected item's email in Outlook").pack(side="left", padx=(0, 4))
+        self._ui_button(btns, "bell", "Trigger now", trigger_now,
+                        "Fire the selected follow-ups now").pack(side="left", padx=4)
         snooze_var = tk.StringVar(value="30 min")
-        ttk.Combobox(btns, textvariable=snooze_var, values=["15 min", "30 min", "1 hour", "2 hours", "Tomorrow 9 AM", "Custom date/time"], state="readonly", width=18).pack(side="left", padx=4)
-        tk.Button(btns, text="Snooze Selected", command=snooze_dropdown_apply, width=16).pack(side="left", padx=4)
-        tk.Button(btns, text="Cancel Selected", command=cancel_selected, width=16).pack(side="left", padx=4)
-        tk.Button(btns, text="Refresh", command=refresh_queue, width=12).pack(side="right", padx=4)
-        tk.Button(btns, text="Close", command=win.destroy, width=12).pack(side="right", padx=4)
+        ttk.Combobox(btns, textvariable=snooze_var, values=["15 min", "30 min", "1 hour", "2 hours", "Tomorrow 9 AM", "Custom date/time"], state="readonly", width=18).pack(side="left", padx=(10, 4))
+        self._ui_button(btns, "clock", "Snooze", snooze_dropdown_apply,
+                        "Snooze the selected follow-ups by the chosen time").pack(side="left", padx=4)
+        self._ui_button(btns, "trash", "Cancel selected", cancel_selected,
+                        "Cancel the selected follow-ups").pack(side="left", padx=4)
+        self._ui_button(btns, "close", "Close", win.destroy, "Close this window").pack(side="right")
+        self._ui_button(btns, "refresh", "", refresh_queue, "Refresh").pack(side="right", padx=4)
 
         queue_tree.bind("<<TreeviewSelect>>", show_detail)
         show_completed_var.trace_add("write", lambda *_: refresh_queue())

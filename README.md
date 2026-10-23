@@ -33,7 +33,7 @@ dependency.
 
 ## How it's built
 
-Python and Tkinter, roughly 72K lines, deliberately in one file. For a
+Python and Tkinter, roughly 75K lines, deliberately in one file. For a
 one-developer production tool that runs a live sales desk, that buys real
 things: no deployment step, no dependency drift, and rollback is literally
 launching the previous file. Every release is a copy of the last one plus the
